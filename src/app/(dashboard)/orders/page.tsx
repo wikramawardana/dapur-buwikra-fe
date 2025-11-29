@@ -50,7 +50,7 @@ export default function OrdersPage() {
   const [filters, setFilters] = React.useState<OrderFilters>({
     page: 1,
     page_size: DEFAULT_PAGE_SIZE,
-    sort_by: "date",
+    sort_by: "created_at",
     sort_order: "desc",
   });
   const [isLoading, setIsLoading] = React.useState(true);

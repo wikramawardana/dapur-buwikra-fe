@@ -82,7 +82,7 @@ export function OrdersFilters({
     onFiltersChange({
       page: 1,
       page_size: filters.page_size,
-      sort_by: "date",
+      sort_by: "created_at",
       sort_order: "desc",
     });
   };
@@ -103,17 +103,17 @@ export function OrdersFilters({
 
   return (
     <div className="space-y-4">
-      {/* Main Filters Row */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Top Row: Search, Name, Day */}
+      <div className="flex flex-col gap-3 sm:flex-row">
         {/* Search */}
-        <div className="relative">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search orders..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
-            className="pl-9 neo-brutal neo-brutal-white"
+            className="pl-9 neo-brutal neo-brutal-white w-full"
           />
         </div>
 
@@ -123,137 +123,145 @@ export function OrdersFilters({
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
-          className="neo-brutal neo-brutal-white"
+          className="neo-brutal neo-brutal-white w-full sm:w-[200px]"
         />
 
         {/* Day Filter */}
-        <Select value={day} onValueChange={setDay}>
-          <SelectTrigger className="neo-brutal neo-brutal-white">
-            <SelectValue placeholder="All Days" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Days</SelectItem>
-            {DAYS_OF_WEEK.map((day) => (
-              <SelectItem key={day} value={day}>
-                {day}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Date Range & Sort Controls */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">
-            Date Range:
-          </span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="justify-start text-left font-normal min-w-[140px] neo-brutal neo-brutal-white"
-              >
-                {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={dateFrom}
-                onSelect={setDateFrom}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-
-          <span className="text-muted-foreground">→</span>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="justify-start text-left font-normal min-w-[140px] neo-brutal neo-brutal-white"
-              >
-                {dateTo ? format(dateTo, "MMM dd, yyyy") : "To date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={dateTo}
-                onSelect={setDateTo}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <Separator orientation="vertical" className="h-8" />
-
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">
-            Sort:
-          </span>
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger
-              className="w-[140px] neo-brutal neo-brutal-white"
-              size="sm"
-            >
-              <SelectValue placeholder="Sort by" />
+        <div className="w-full sm:w-[180px]">
+          <Select value={day} onValueChange={setDay}>
+            <SelectTrigger className="neo-brutal neo-brutal-white w-full">
+              <SelectValue placeholder="All Days" />
             </SelectTrigger>
             <SelectContent>
-              {SORT_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+              <SelectItem value="all">All Days</SelectItem>
+              {DAYS_OF_WEEK.map((day) => (
+                <SelectItem key={day} value={day}>
+                  {day}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+        </div>
+      </div>
 
-          <Select
-            value={sortOrder}
-            onValueChange={(value: "asc" | "desc") => setSortOrder(value)}
-          >
-            <SelectTrigger
-              className="w-[110px] neo-brutal neo-brutal-white"
-              size="sm"
+      {/* Bottom Row: Date, Sort, Actions */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Date Range */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+              Date Range:
+            </span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="justify-start text-left font-normal w-[130px] neo-brutal neo-brutal-white"
+                >
+                  {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateFrom}
+                  onSelect={setDateFrom}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+
+            <span className="text-muted-foreground">→</span>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="justify-start text-left font-normal w-[130px] neo-brutal neo-brutal-white"
+                >
+                  {dateTo ? format(dateTo, "MMM dd, yyyy") : "To date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dateTo}
+                  onSelect={setDateTo}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <Separator orientation="vertical" className="h-8 hidden sm:block" />
+
+          {/* Sort */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+              Sort:
+            </span>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger
+                className="w-[130px] neo-brutal neo-brutal-white"
+                size="sm"
+              >
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={sortOrder}
+              onValueChange={(value: "asc" | "desc") => setSortOrder(value)}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="asc">Ascending</SelectItem>
-              <SelectItem value="desc">Descending</SelectItem>
-            </SelectContent>
-          </Select>
+              <SelectTrigger
+                className="w-[110px] neo-brutal neo-brutal-white"
+                size="sm"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="asc">Ascending</SelectItem>
+                <SelectItem value="desc">Descending</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <Separator orientation="vertical" className="h-8" />
-
-        {/* Apply Filters Button */}
-        <Button
-          onClick={handleApplyFilters}
-          size="sm"
-          className="gap-2 neo-brutal neo-brutal-white"
-          variant={hasUnappliedChanges ? "default" : "outline"}
-        >
-          <Filter className="h-4 w-4" />
-          Apply Filters
-        </Button>
-
-        {hasActiveFilters && (
+        {/* Actions */}
+        <div className="flex items-center gap-2 mt-2 sm:mt-0">
           <Button
-            variant="ghost"
+            onClick={handleApplyFilters}
             size="sm"
-            onClick={handleClearFilters}
-            className="gap-2 neo-brutal neo-brutal-white"
+            className={`gap-2 neo-brutal ${
+              hasUnappliedChanges ? "" : "neo-brutal-white"
+            }`}
+            variant={hasUnappliedChanges ? "default" : "outline"}
           >
-            <X className="h-4 w-4" />
-            Clear All
+            <Filter className="h-4 w-4" />
+            Apply Filters
           </Button>
-        )}
+
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              className="gap-2 neo-brutal neo-brutal-white"
+            >
+              <X className="h-4 w-4" />
+              Clear All
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

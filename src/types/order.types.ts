@@ -1,7 +1,7 @@
 export interface Order {
   id: string;
-  day: string;
-  date: string;
+  days: string[];
+  dates: string[];
   name: string;
   ordered: string;
   qty: number;
@@ -34,8 +34,8 @@ export interface OrdersResponse {
 }
 
 export interface CreateOrderPayload {
-  day: string;
-  date: string;
+  days: string[];
+  dates: string[];
   name: string;
   ordered: string;
   qty: number;

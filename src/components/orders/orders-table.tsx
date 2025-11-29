@@ -36,74 +36,73 @@ export function OrdersTable({ orders, isLoading }: OrdersTableProps) {
   const columns = React.useMemo<ColumnDef<Order>[]>(
     () => [
       {
-        accessorKey: "date",
-        header: () => <div className="text-center">Date</div>,
-        cell: ({ row }) => (
-          <div className="font-medium text-center">
-            {formatDate(row.getValue("date"))}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "day",
-        header: () => <div className="text-center">Day</div>,
-        cell: ({ row }) => (
-          <div className="text-center">{row.getValue("day")}</div>
-        ),
-      },
-      {
         accessorKey: "name",
-        header: () => <div className="text-center">Name</div>,
+        header: () => <div className="text-left">Name</div>,
         cell: ({ row }) => (
-          <div className="text-center">{row.getValue("name")}</div>
+          <div className="text-left">{row.getValue("name")}</div>
         ),
+      },
+      {
+        accessorKey: "dates",
+        header: () => <div className="text-left">Date & Day</div>,
+        cell: ({ row }) => {
+          const dates = row.getValue("dates") as string[];
+          const days = (row.original as Order).days;
+          return (
+            <div className="font-medium text-left">
+              {dates.map((date, idx) => (
+                <div key={idx}>
+                  {days[idx]} - {formatDate(date)}
+                </div>
+              ))}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "ordered",
-        header: () => <div className="text-center">Ordered</div>,
+        header: () => <div className="text-left">Ordered</div>,
         cell: ({ row }) => (
-          <div className="text-center">{row.getValue("ordered")}</div>
+          <div className="text-left">{row.getValue("ordered")}</div>
+        ),
+      },
+      {
+        accessorKey: "notes",
+        header: () => <div className="text-left">Notes</div>,
+        cell: ({ row }) => (
+          <div className="text-left">{row.getValue("notes")}</div>
         ),
       },
       {
         accessorKey: "qty",
-        header: () => <div className="text-center">Qty</div>,
+        header: () => <div className="text-left">Qty</div>,
         cell: ({ row }) => (
-          <div className="text-center">{row.getValue("qty")}</div>
+          <div className="text-left">{row.getValue("qty")}</div>
         ),
       },
       {
         accessorKey: "unit_price",
-        header: () => <div className="text-center">Unit Price</div>,
+        header: () => <div className="text-left">Unit Price</div>,
         cell: ({ row }) => (
-          <div className="text-center">
+          <div className="text-left">
             {formatCurrency(row.getValue("unit_price"))}
           </div>
         ),
       },
       {
         accessorKey: "total_price",
-        header: () => <div className="text-center">Total</div>,
+        header: () => <div className="text-left">Total</div>,
         cell: ({ row }) => (
-          <div className="text-center font-semibold">
+          <div className="text-left font-semibold">
             {formatCurrency(row.getValue("total_price"))}
           </div>
         ),
       },
       {
-        accessorKey: "status",
-        header: () => <div className="text-center">Status</div>,
-        cell: ({ row }) => (
-          <div className="flex justify-center">
-            <StatusBadge status={row.getValue("status")} type="order" />
-          </div>
-        ),
-      },
-      {
         accessorKey: "payment_status",
-        header: () => <div className="text-center">Payment</div>,
+        header: () => <div className="text-left">Payment</div>,
         cell: ({ row }) => (
-          <div className="flex justify-center">
+          <div className="flex justify-left">
             <StatusBadge
               status={row.getValue("payment_status")}
               type="payment"
@@ -127,21 +126,20 @@ export function OrdersTable({ orders, isLoading }: OrdersTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-center">Date</TableHead>
-              <TableHead className="text-center">Day</TableHead>
-              <TableHead className="text-center">Name</TableHead>
-              <TableHead className="text-center">Ordered</TableHead>
-              <TableHead className="text-center">Qty</TableHead>
-              <TableHead className="text-center">Unit Price</TableHead>
-              <TableHead className="text-center">Total</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-center">Payment</TableHead>
+              <TableHead className="text-left">Name</TableHead>
+              <TableHead className="text-left">Date & Day</TableHead>
+              <TableHead className="text-left">Ordered</TableHead>
+              <TableHead className="text-left">Qty</TableHead>
+              <TableHead className="text-left">Unit Price</TableHead>
+              <TableHead className="text-left">Total</TableHead>
+              <TableHead className="text-left">Status</TableHead>
+              <TableHead className="text-left">Payment</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
-                {Array.from({ length: 9 }).map((_, j) => (
+                {Array.from({ length: 8 }).map((_, j) => (
                   <TableCell key={j}>
                     <Skeleton className="h-4 w-full" />
                   </TableCell>
