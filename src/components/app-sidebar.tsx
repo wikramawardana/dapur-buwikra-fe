@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChefHat, ShoppingCart } from "lucide-react";
+import { ChefHat, ShoppingCart, Shield } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -16,17 +16,38 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useSession } from "@/lib/auth-client";
 
 const menuItems = [
   {
     title: "Orders",
     url: "/orders",
     icon: ShoppingCart,
+    roles: ["admin", "staff"],
+  },
+];
+
+const adminMenuItems = [
+  {
+    title: "User Management",
+    url: "/admin/users",
+    icon: Shield,
+    roles: ["admin"],
   },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+
+  const filteredMenuItems = menuItems.filter(
+    (item) => item.roles.includes(userRole || "")
+  );
+
+  const filteredAdminMenuItems = adminMenuItems.filter(
+    (item) => item.roles.includes(userRole || "")
+  );
 
   return (
     <Sidebar collapsible="icon" className="bg-white dark:bg-black">
@@ -57,7 +78,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">
-              {menuItems.map((item) => {
+              {filteredMenuItems.map((item) => {
                 const isActive = pathname === item.url || pathname.startsWith(`${item.url}/`);
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -80,6 +101,38 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {filteredAdminMenuItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="border-b border-black/20 dark:border-white/20 mb-2">
+              Administration
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-2">
+                {filteredAdminMenuItems.map((item) => {
+                  const isActive = pathname === item.url || pathname.startsWith(`${item.url}/`);
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton 
+                        asChild 
+                        isActive={isActive}
+                        className={isActive 
+                          ? "border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]" 
+                          : "border-2 border-transparent hover:border-black dark:hover:border-white"
+                        }
+                      >
+                        <a href={item.url}>
+                          <item.icon className="size-4" />
+                          <span className="font-semibold">{item.title}</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarRail className="hover:after:bg-black dark:hover:after:bg-white after:w-[3px]" />

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSearchParams } from "next/navigation";
 import { ChefHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { signIn, useSession } from "@/lib/auth-client";
 
 function GoogleIcon({ className }: { className?: string }) {
     return (
@@ -39,15 +41,25 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 export default function LoginPage() {
+    const searchParams = useSearchParams();
+    const { data: session, isPending } = useSession();
     const [isLoading, setIsLoading] = React.useState(false);
+    const callbackUrl = searchParams.get("callbackUrl") || "/orders";
+
+    // Redirect if already logged in
+    React.useEffect(() => {
+        if (!isPending && session) {
+            window.location.href = callbackUrl;
+        }
+    }, [session, isPending, callbackUrl]);
 
     const handleGoogleSignIn = async () => {
         setIsLoading(true);
         try {
-            // TODO: Implement Google sign-in with better-auth
-            // Example:
-            // await authClient.signIn.social({ provider: "google" });
-            window.location.href = "/api/auth/signin/google";
+            await signIn.social({
+                provider: "google",
+                callbackURL: callbackUrl,
+            });
         } catch (error) {
             console.error("Sign in error:", error);
             setIsLoading(false);
