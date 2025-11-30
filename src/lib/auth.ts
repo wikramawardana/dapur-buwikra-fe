@@ -1,8 +1,15 @@
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
+import dns from "node:dns";
 import { Pool } from "pg";
 
+// Force Node.js to prefer IPv4 addresses (fixes Docker IPv6 connectivity issues)
+dns.setDefaultResultOrder("ipv4first");
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
 export const auth = betterAuth({
+  baseURL: appUrl,
   secret: process.env.BETTER_AUTH_SECRET,
   database: new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -14,6 +21,7 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      redirectURI: `${appUrl}/api/auth/callback/google`,
     },
   },
   plugins: [
@@ -29,7 +37,7 @@ export const auth = betterAuth({
       maxAge: 60 * 5, // 5 minutes
     },
   },
-  trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"],
+  trustedOrigins: [appUrl],
 });
 
 export type Session = typeof auth.$Infer.Session;
