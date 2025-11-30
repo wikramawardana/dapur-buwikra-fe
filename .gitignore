@@ -23,6 +23,11 @@
 # misc
 .DS_Store
 *.pem
+*.key
+
+# SSL certificates (sensitive)
+nginx/ssl/*.pem
+nginx/ssl/*.key
 
 # debug
 npm-debug.log*
