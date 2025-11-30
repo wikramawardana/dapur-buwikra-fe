@@ -23,6 +23,7 @@ import { OrdersFilters } from "@/components/orders/orders-filters";
 import { OrdersPagination } from "@/components/orders/orders-pagination";
 import { CreateOrderDialog } from "@/components/orders/create-order-dialog";
 import { OrderStatsCards } from "@/components/orders/order-stats-cards";
+import { ExportMarkdownButton } from "@/components/orders/export-markdown-button";
 import {
   getOrders,
   getOrdersCount,
@@ -146,7 +147,10 @@ export default function OrdersPage() {
                 Manage and track all customer orders
               </CardDescription>
             </div>
-            <CreateOrderDialog onOrderCreated={fetchOrders} />
+            <CreateOrderDialog onOrderCreated={() => {
+              fetchOrders();
+              fetchStats();
+            }} />
           </CardHeader>
           <CardContent className="space-y-6">
             <OrderStatsCards stats={stats} isLoading={isStatsLoading} />
@@ -154,7 +158,21 @@ export default function OrdersPage() {
               filters={filters}
               onFiltersChange={handleFiltersChange}
             />
-            <OrdersTable orders={orders} isLoading={isLoading} />
+            <div className="flex justify-end">
+              <ExportMarkdownButton orders={orders} disabled={isLoading} />
+            </div>
+            <OrdersTable
+              orders={orders}
+              isLoading={isLoading}
+              onOrderUpdated={() => {
+                fetchOrders();
+                fetchStats();
+              }}
+              onOrderDeleted={() => {
+                fetchOrders();
+                fetchStats();
+              }}
+            />
             {!isLoading && orders.length > 0 && (
               <OrdersPagination
                 pagination={pagination}

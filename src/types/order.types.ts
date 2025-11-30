@@ -4,11 +4,8 @@ export interface Order {
   dates: string[];
   name: string;
   ordered: string;
-  qty: number;
-  unit_price: number;
   total_price: number;
   notes: string;
-  status: OrderStatus;
   payment_status: PaymentStatus;
   created_at: string;
   updated_at: string;
@@ -38,9 +35,9 @@ export interface CreateOrderPayload {
   dates: string[];
   name: string;
   ordered: string;
-  qty: number;
-  unit_price: number;
+  total_price: number;
   payment_status: PaymentStatus;
+  notes?: string;
 }
 
 export interface OrderFilters {

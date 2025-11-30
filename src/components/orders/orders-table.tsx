@@ -23,6 +23,7 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty";
 import { StatusBadge } from "./status-badge";
+import { OrderActionDialog } from "./order-action-dialog";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 import type { Order } from "@/types/order.types";
@@ -30,9 +31,11 @@ import type { Order } from "@/types/order.types";
 interface OrdersTableProps {
   orders: Order[];
   isLoading?: boolean;
+  onOrderUpdated?: () => void;
+  onOrderDeleted?: () => void;
 }
 
-export function OrdersTable({ orders, isLoading }: OrdersTableProps) {
+export function OrdersTable({ orders, isLoading, onOrderUpdated, onOrderDeleted }: OrdersTableProps) {
   const columns = React.useMemo<ColumnDef<Order>[]>(
     () => [
       {
@@ -74,24 +77,8 @@ export function OrdersTable({ orders, isLoading }: OrdersTableProps) {
         ),
       },
       {
-        accessorKey: "qty",
-        header: () => <div className="text-left">Qty</div>,
-        cell: ({ row }) => (
-          <div className="text-left">{row.getValue("qty")}</div>
-        ),
-      },
-      {
-        accessorKey: "unit_price",
-        header: () => <div className="text-left">Unit Price</div>,
-        cell: ({ row }) => (
-          <div className="text-left">
-            {formatCurrency(row.getValue("unit_price"))}
-          </div>
-        ),
-      },
-      {
         accessorKey: "total_price",
-        header: () => <div className="text-left">Total</div>,
+        header: () => <div className="text-left">Total Price</div>,
         cell: ({ row }) => (
           <div className="text-left font-semibold">
             {formatCurrency(row.getValue("total_price"))}
@@ -110,8 +97,21 @@ export function OrdersTable({ orders, isLoading }: OrdersTableProps) {
           </div>
         ),
       },
+      {
+        id: "actions",
+        header: () => <div className="text-center">Actions</div>,
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <OrderActionDialog
+              order={row.original}
+              onOrderUpdated={onOrderUpdated}
+              onOrderDeleted={onOrderDeleted}
+            />
+          </div>
+        ),
+      },
     ],
-    []
+    [onOrderUpdated, onOrderDeleted]
   );
 
   const table = useReactTable({
@@ -129,17 +129,16 @@ export function OrdersTable({ orders, isLoading }: OrdersTableProps) {
               <TableHead className="text-left">Name</TableHead>
               <TableHead className="text-left">Date & Day</TableHead>
               <TableHead className="text-left">Ordered</TableHead>
-              <TableHead className="text-left">Qty</TableHead>
-              <TableHead className="text-left">Unit Price</TableHead>
-              <TableHead className="text-left">Total</TableHead>
-              <TableHead className="text-left">Status</TableHead>
+              <TableHead className="text-left">Notes</TableHead>
+              <TableHead className="text-left">Total Price</TableHead>
               <TableHead className="text-left">Payment</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
-                {Array.from({ length: 8 }).map((_, j) => (
+                {Array.from({ length: 7 }).map((_, j) => (
                   <TableCell key={j}>
                     <Skeleton className="h-4 w-full" />
                   </TableCell>
