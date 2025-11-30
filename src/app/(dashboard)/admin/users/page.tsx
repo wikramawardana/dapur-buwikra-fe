@@ -14,6 +14,13 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -46,6 +53,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Table,
   TableBody,
@@ -54,6 +63,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { UserMenu } from "@/components/user-menu";
 import { authClient, useSession } from "@/lib/auth-client";
 
 interface User {
@@ -211,252 +221,272 @@ export default function AdminUsersPage() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-black text-black dark:text-white flex items-center gap-3">
-            <div className="p-2 bg-purple-400 border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
-              <Shield className="w-6 h-6" />
-            </div>
-            User Management
-          </h1>
-          <p className="text-black/60 dark:text-white/60 mt-1">
-            Manage user roles and permissions
-          </p>
+    <>
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Admin</BreadcrumbPage>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>User Management</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <div className="ml-auto">
+          <UserMenu />
         </div>
-      </div>
+      </header>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="neo-brutal neo-brutal-white">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-black/60 dark:text-white/60 font-medium">
-              Total Users
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-black dark:text-white">
-              {users.length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="neo-brutal neo-brutal-white">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-black/60 dark:text-white/60 font-medium">
-              Admins
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-red-600">
-              {users.filter((u) => u.role === "admin").length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="neo-brutal neo-brutal-white">
-          <CardHeader className="pb-2">
-            <CardDescription className="text-black/60 dark:text-white/60 font-medium">
-              Staff
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-black text-blue-600">
-              {users.filter((u) => u.role === "staff").length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Users Table */}
-      <Card className="neo-brutal neo-brutal-white">
-        <CardHeader>
-          <div className="flex items-center justify-between">
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        <Card className="neo-brutal neo-brutal-white border-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <div>
-              <CardTitle className="text-xl font-bold text-black dark:text-white flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Users
+              <CardTitle className="text-2xl font-bold">
+                User Management
               </CardTitle>
-              <CardDescription className="text-black/60 dark:text-white/60">
-                View and manage user access
+              <CardDescription>
+                Manage user roles and permissions
               </CardDescription>
             </div>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40" />
-              <Input
-                placeholder="Search users..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 border-2 border-black dark:border-white"
-              />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="neo-brutal neo-brutal-white">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-black/60 dark:text-white/60 font-medium">
+                    Total Users
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-black text-black dark:text-white">
+                    {users.length}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="neo-brutal neo-brutal-white">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-black/60 dark:text-white/60 font-medium">
+                    Admins
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-black text-red-600">
+                    {users.filter((u) => u.role === "admin").length}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="neo-brutal neo-brutal-white">
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-black/60 dark:text-white/60 font-medium">
+                    Staff
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-black text-blue-600">
+                    {users.filter((u) => u.role === "staff").length}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
-            </div>
-          ) : (
-            <>
-              <div className="border-2 border-black dark:border-white">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-b-2 border-black dark:border-white bg-gray-100 dark:bg-gray-800">
-                      <TableHead className="font-bold text-black dark:text-white">
-                        User
-                      </TableHead>
-                      <TableHead className="font-bold text-black dark:text-white">
-                        Email
-                      </TableHead>
-                      <TableHead className="font-bold text-black dark:text-white">
-                        Role
-                      </TableHead>
-                      <TableHead className="font-bold text-black dark:text-white">
-                        Status
-                      </TableHead>
-                      <TableHead className="font-bold text-black dark:text-white text-right">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow
-                        key={user.id}
-                        className="border-b border-black/20 dark:border-white/20"
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="border-2 border-black dark:border-white">
-                              <AvatarImage src={user.image || undefined} />
-                              <AvatarFallback className="bg-yellow-400 text-black font-bold">
-                                {getInitials(user.name, user.email)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium text-black dark:text-white">
-                              {user.name || "No name"}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-black/70 dark:text-white/70">
-                          {user.email}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`${getRoleBadgeColor(user.role)} border-2 font-bold`}
-                          >
-                            {user.role || "user"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`border-2 font-bold ${
-                              user.banned
-                                ? "bg-red-400 text-black border-black"
-                                : "bg-green-400 text-black border-black"
-                            }`}
-                          >
-                            {user.banned ? "Banned" : "Active"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="border-2 border-black dark:border-white"
-                                disabled={user.id === session?.user?.id}
-                              >
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align="end"
-                              className="border-2 border-black dark:border-white"
-                            >
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setSelectedRole(user.role || "user");
-                                  setIsRoleDialogOpen(true);
-                                }}
-                              >
-                                <UserCog className="w-4 h-4 mr-2" />
-                                Change Role
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleBanUser(user)}
-                              >
-                                <Shield className="w-4 h-4 mr-2" />
-                                {user.banned ? "Unban User" : "Ban User"}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setIsDeleteDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Remove User
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {filteredUsers.length === 0 && (
-                      <TableRow>
-                        <TableCell
-                          colSpan={5}
-                          className="text-center py-8 text-black/60 dark:text-white/60"
-                        >
-                          No users found
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-black/60 dark:text-white/60">
-                    Page {currentPage} of {totalPages}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className="border-2 border-black dark:border-white"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setCurrentPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      disabled={currentPage === totalPages}
-                      className="border-2 border-black dark:border-white"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
+            {/* Users Table Card */}
+            <Card className="neo-brutal neo-brutal-white">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl font-bold text-black dark:text-white flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      Users
+                    </CardTitle>
+                    <CardDescription className="text-black/60 dark:text-white/60">
+                      View and manage user access
+                    </CardDescription>
+                  </div>
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40" />
+                    <Input
+                      placeholder="Search users..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 border-2 border-black dark:border-white"
+                    />
                   </div>
                 </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="border-2 border-black dark:border-white">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-b-2 border-black dark:border-white bg-gray-100 dark:bg-gray-800">
+                            <TableHead className="font-bold text-black dark:text-white">
+                              User
+                            </TableHead>
+                            <TableHead className="font-bold text-black dark:text-white">
+                              Email
+                            </TableHead>
+                            <TableHead className="font-bold text-black dark:text-white">
+                              Role
+                            </TableHead>
+                            <TableHead className="font-bold text-black dark:text-white">
+                              Status
+                            </TableHead>
+                            <TableHead className="font-bold text-black dark:text-white text-right">
+                              Actions
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUsers.map((user) => (
+                            <TableRow
+                              key={user.id}
+                              className="border-b border-black/20 dark:border-white/20"
+                            >
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="border-2 border-black dark:border-white">
+                                    <AvatarImage src={user.image || undefined} />
+                                    <AvatarFallback className="bg-yellow-400 text-black font-bold">
+                                      {getInitials(user.name, user.email)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="font-medium text-black dark:text-white">
+                                    {user.name || "No name"}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-black/70 dark:text-white/70">
+                                {user.email}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={`${getRoleBadgeColor(user.role)} border-2 font-bold`}
+                                >
+                                  {user.role || "user"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={`border-2 font-bold ${
+                                    user.banned
+                                      ? "bg-red-400 text-black border-black"
+                                      : "bg-green-400 text-black border-black"
+                                  }`}
+                                >
+                                  {user.banned ? "Banned" : "Active"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="border-2 border-black dark:border-white"
+                                      disabled={user.id === session?.user?.id}
+                                    >
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align="end"
+                                    className="border-2 border-black dark:border-white"
+                                  >
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setSelectedUser(user);
+                                        setSelectedRole(user.role || "user");
+                                        setIsRoleDialogOpen(true);
+                                      }}
+                                    >
+                                      <UserCog className="w-4 h-4 mr-2" />
+                                      Change Role
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleBanUser(user)}
+                                    >
+                                      <Shield className="w-4 h-4 mr-2" />
+                                      {user.banned ? "Unban User" : "Ban User"}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-red-600"
+                                      onClick={() => {
+                                        setSelectedUser(user);
+                                        setIsDeleteDialogOpen(true);
+                                      }}
+                                    >
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      Remove User
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {filteredUsers.length === 0 && (
+                            <TableRow>
+                              <TableCell
+                                colSpan={5}
+                                className="text-center py-8 text-black/60 dark:text-white/60"
+                              >
+                                No users found
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between mt-4">
+                        <p className="text-sm text-black/60 dark:text-white/60">
+                          Page {currentPage} of {totalPages}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="border-2 border-black dark:border-white"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setCurrentPage((p) => Math.min(totalPages, p + 1))
+                            }
+                            disabled={currentPage === totalPages}
+                            className="border-2 border-black dark:border-white"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Change Role Dialog */}
       <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
@@ -537,6 +567,6 @@ export default function AdminUsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
