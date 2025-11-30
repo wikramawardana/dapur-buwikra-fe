@@ -355,7 +355,9 @@ export default function AdminUsersPage() {
                               <TableCell>
                                 <div className="flex items-center gap-3">
                                   <Avatar className="border-2 border-black dark:border-white">
-                                    <AvatarImage src={user.image || undefined} />
+                                    <AvatarImage
+                                      src={user.image || undefined}
+                                    />
                                     <AvatarFallback className="bg-yellow-400 text-black font-bold">
                                       {getInitials(user.name, user.email)}
                                     </AvatarFallback>
@@ -402,7 +404,9 @@ export default function AdminUsersPage() {
                                     align="end"
                                     className="border-2 border-black dark:border-white"
                                   >
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuLabel>
+                                      Actions
+                                    </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                       onClick={() => {
@@ -460,7 +464,9 @@ export default function AdminUsersPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            onClick={() =>
+                              setCurrentPage((p) => Math.max(1, p - 1))
+                            }
                             disabled={currentPage === 1}
                             className="border-2 border-black dark:border-white"
                           >
