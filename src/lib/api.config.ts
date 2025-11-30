@@ -1,3 +1,7 @@
+"use client";
+
+import { getSession } from "@/lib/auth-client";
+
 /**
  * API Configuration
  * Configure the base URL for the backend API
@@ -5,6 +9,36 @@
 
 // Use environment variable or fallback to localhost
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+
+// Cache for the session token promise to avoid multiple get-session calls
+let tokenPromise: Promise<string | null> | null = null;
+let tokenExpiry = 0;
+const TOKEN_CACHE_DURATION = 5000; // Cache token for 5 seconds
+
+/**
+ * Get the session token for API authorization (with caching)
+ */
+export async function getAuthToken(): Promise<string | null> {
+  const now = Date.now();
+  
+  // Return cached promise if still valid
+  if (tokenPromise && now < tokenExpiry) {
+    return tokenPromise;
+  }
+  
+  // Create new token promise
+  tokenPromise = (async () => {
+    try {
+      const session = await getSession();
+      return session?.data?.session?.token ?? null;
+    } catch {
+      return null;
+    }
+  })();
+  
+  tokenExpiry = now + TOKEN_CACHE_DURATION;
+  return tokenPromise;
+}
 
 /**
  * Build query string from object
@@ -37,7 +71,7 @@ export class ApiError extends Error {
 }
 
 /**
- * Generic fetch wrapper with error handling
+ * Generic fetch wrapper with error handling and authorization
  */
 export async function apiFetch<T>(
   endpoint: string,
@@ -45,11 +79,15 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   
+  // Get the auth token
+  const token = await getAuthToken();
+  
   try {
     const response = await fetch(url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
         ...options?.headers,
       },
     });
