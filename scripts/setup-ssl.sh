@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# SSL Certificate Setup Script for wikra.cloud
+# SSL Certificate Setup Script for dapurbuwikra.wikra.cloud
 # Run this script on your production server
 
 set -e
 
-DOMAIN="wikra.cloud"
+DOMAIN="dapurbuwikra.wikra.cloud"
 EMAIL="your-email@example.com"  # Change this to your email
 
 echo "=== SSL Certificate Setup for $DOMAIN ==="
