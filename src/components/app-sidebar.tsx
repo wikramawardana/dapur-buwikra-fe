@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { ChefHat, ShoppingCart, Shield } from "lucide-react";
+import { ChefHat, Shield, ShoppingCart } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -41,12 +40,12 @@ export function AppSidebar() {
   const { data: session } = useSession();
   const userRole = session?.user?.role;
 
-  const filteredMenuItems = menuItems.filter(
-    (item) => item.roles.includes(userRole || "")
+  const filteredMenuItems = menuItems.filter((item) =>
+    item.roles.includes(userRole || ""),
   );
 
-  const filteredAdminMenuItems = adminMenuItems.filter(
-    (item) => item.roles.includes(userRole || "")
+  const filteredAdminMenuItems = adminMenuItems.filter((item) =>
+    item.roles.includes(userRole || ""),
   );
 
   return (
@@ -54,13 +53,19 @@ export function AppSidebar() {
       <SidebarHeader className="border-b-2 border-black dark:border-white pb-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild className="hover:bg-transparent hover:border-transparent">
+            <SidebarMenuButton
+              size="lg"
+              asChild
+              className="hover:bg-transparent hover:border-transparent"
+            >
               <a href="/">
                 <div className="flex aspect-square size-10 items-center justify-center border-2 border-black dark:border-white bg-blue-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
                   <ChefHat className="size-6 text-black" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-bold text-black dark:text-white">Dapur Bu Wikra</span>
+                  <span className="truncate font-bold text-black dark:text-white">
+                    Dapur Bu Wikra
+                  </span>
                   <span className="truncate text-xs font-medium text-black/70 dark:text-white/70">
                     Catering Management
                   </span>
@@ -79,15 +84,17 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">
               {filteredMenuItems.map((item) => {
-                const isActive = pathname === item.url || pathname.startsWith(`${item.url}/`);
+                const isActive =
+                  pathname === item.url || pathname.startsWith(`${item.url}/`);
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
-                      asChild 
+                    <SidebarMenuButton
+                      asChild
                       isActive={isActive}
-                      className={isActive 
-                        ? "border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]" 
-                        : "border-2 border-transparent hover:border-black dark:hover:border-white"
+                      className={
+                        isActive
+                          ? "border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]"
+                          : "border-2 border-transparent hover:border-black dark:hover:border-white"
                       }
                     >
                       <a href={item.url}>
@@ -110,15 +117,18 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu className="gap-2">
                 {filteredAdminMenuItems.map((item) => {
-                  const isActive = pathname === item.url || pathname.startsWith(`${item.url}/`);
+                  const isActive =
+                    pathname === item.url ||
+                    pathname.startsWith(`${item.url}/`);
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild 
+                      <SidebarMenuButton
+                        asChild
                         isActive={isActive}
-                        className={isActive 
-                          ? "border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]" 
-                          : "border-2 border-transparent hover:border-black dark:hover:border-white"
+                        className={
+                          isActive
+                            ? "border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]"
+                            : "border-2 border-transparent hover:border-black dark:hover:border-white"
                         }
                       >
                         <a href={item.url}>

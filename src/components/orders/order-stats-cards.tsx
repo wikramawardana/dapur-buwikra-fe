@@ -1,10 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
-import { Package, DollarSign } from "lucide-react";
 import type { OrderStats } from "@/types/order.types";
 
 interface OrderStatsCardsProps {

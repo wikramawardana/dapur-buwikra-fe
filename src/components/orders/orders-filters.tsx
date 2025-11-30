@@ -1,10 +1,16 @@
 "use client";
 
+import { format } from "date-fns";
+import { Filter, Search, X } from "lucide-react";
 import * as React from "react";
-import { Search, X, Filter } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -12,14 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
-import { DAYS_OF_WEEK, ORDER_STATUSES, SORT_OPTIONS } from "@/lib/constants";
+import { Separator } from "@/components/ui/separator";
+import { DAYS_OF_WEEK, SORT_OPTIONS } from "@/lib/constants";
 import type { OrderFilters } from "@/types/order.types";
 
 interface OrdersFiltersProps {
@@ -36,14 +36,14 @@ export function OrdersFilters({
   const [name, setName] = React.useState(filters.name || "");
   const [day, setDay] = React.useState(filters.day || "all");
   const [dateFrom, setDateFrom] = React.useState<Date | undefined>(
-    filters.date_from ? new Date(filters.date_from) : undefined
+    filters.date_from ? new Date(filters.date_from) : undefined,
   );
   const [dateTo, setDateTo] = React.useState<Date | undefined>(
-    filters.date_to ? new Date(filters.date_to) : undefined
+    filters.date_to ? new Date(filters.date_to) : undefined,
   );
   const [sortBy, setSortBy] = React.useState(filters.sort_by || "date");
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">(
-    filters.sort_order || "desc"
+    filters.sort_order || "desc",
   );
 
   // Sync local state with external filter changes (e.g., from clear or pagination)

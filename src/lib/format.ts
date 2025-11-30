@@ -15,7 +15,10 @@ export function formatCurrency(amount: number): string {
 /**
  * Format a date string to a readable format
  */
-export function formatDate(dateString: string, formatStr = "dd MMM yyyy"): string {
+export function formatDate(
+  dateString: string,
+  formatStr = "dd MMM yyyy",
+): string {
   try {
     const date = parseISO(dateString);
     return format(date, formatStr);

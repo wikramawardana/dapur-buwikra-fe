@@ -1,10 +1,20 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react";
 import * as React from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import * as z from "zod";
-import { Plus, Loader2, Check, ChevronsUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +32,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -29,27 +45,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { toast } from "sonner";
-import { DAYS_OF_WEEK, PAYMENT_STATUSES, MENU_ITEMS } from "@/lib/constants";
+import { DAYS_OF_WEEK, MENU_ITEMS, PAYMENT_STATUSES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { createOrder } from "@/services/orders.service";
 import type { CreateOrderPayload } from "@/types/order.types";
 
@@ -66,7 +65,10 @@ const orderFormSchema = z.object({
 type OrderFormValues = z.infer<typeof orderFormSchema>;
 
 // Helper function to calculate total price with different logic for perDay items
-const calculateTotalPrice = (orderedItems: string[], datesCount: number): number => {
+const calculateTotalPrice = (
+  orderedItems: string[],
+  datesCount: number,
+): number => {
   let perDayTotal = 0;
   let oneTimeTotal = 0;
 
@@ -81,7 +83,7 @@ const calculateTotalPrice = (orderedItems: string[], datesCount: number): number
     }
   }
 
-  return (perDayTotal * datesCount) + oneTimeTotal;
+  return perDayTotal * datesCount + oneTimeTotal;
 };
 
 // Helper to get breakdown details
@@ -101,11 +103,22 @@ const getPriceBreakdown = (orderedItems: string[], datesCount: number) => {
   }
 
   const perDaySubtotal = perDayItems.reduce((sum, item) => sum + item.price, 0);
-  const oneTimeSubtotal = oneTimeItems.reduce((sum, item) => sum + item.price, 0);
+  const oneTimeSubtotal = oneTimeItems.reduce(
+    (sum, item) => sum + item.price,
+    0,
+  );
   const perDayTotal = perDaySubtotal * datesCount;
   const grandTotal = perDayTotal + oneTimeSubtotal;
 
-  return { perDayItems, oneTimeItems, perDaySubtotal, oneTimeSubtotal, perDayTotal, grandTotal, datesCount };
+  return {
+    perDayItems,
+    oneTimeItems,
+    perDaySubtotal,
+    oneTimeSubtotal,
+    perDayTotal,
+    grandTotal,
+    datesCount,
+  };
 };
 
 interface CreateOrderDialogProps {
@@ -135,7 +148,10 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
 
   // Auto-calculate total price when ordered items or dates change
   React.useEffect(() => {
-    const calculatedPrice = calculateTotalPrice(orderedItems || [], selectedDates?.length || 0);
+    const calculatedPrice = calculateTotalPrice(
+      orderedItems || [],
+      selectedDates?.length || 0,
+    );
     form.setValue("total_price", calculatedPrice);
   }, [orderedItems, selectedDates, form]);
 
@@ -152,7 +168,9 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       // Convert ordered array to comma-separated string for API
       const payload: CreateOrderPayload = {
         ...data,
-        ordered: data.ordered.map((v) => MENU_ITEMS.find((item) => item.value === v)?.label || v).join(", "),
+        ordered: data.ordered
+          .map((v) => MENU_ITEMS.find((item) => item.value === v)?.label || v)
+          .join(", "),
       };
       await createOrder(payload);
       toast.success("Order created successfully!");
@@ -160,7 +178,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       onOrderCreated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create order"
+        error instanceof Error ? error.message : "Failed to create order",
       );
     } finally {
       setIsSubmitting(false);
@@ -194,7 +212,9 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
             {/* Section 1: Schedule */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
-                <h3 className="text-lg font-bold uppercase tracking-wide">Order Schedule</h3>
+                <h3 className="text-lg font-bold uppercase tracking-wide">
+                  Order Schedule
+                </h3>
               </div>
               <div className="grid gap-6 md:grid-cols-2 items-start">
                 {/* Days */}
@@ -220,7 +240,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                               className={cn(
                                 "w-full justify-between h-12 text-base font-medium border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black",
                                 (!field.value || field.value.length === 0) &&
-                                  "text-black/50 dark:text-white/50"
+                                  "text-black/50 dark:text-white/50",
                               )}
                             >
                               {field.value && field.value.length > 0
@@ -246,7 +266,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                       const isSelected = current.includes(day);
                                       if (isSelected) {
                                         field.onChange(
-                                          current.filter((d) => d !== day)
+                                          current.filter((d) => d !== day),
                                         );
                                       } else {
                                         field.onChange([...current, day]);
@@ -258,7 +278,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                         "mr-2 h-4 w-4",
                                         field.value?.includes(day)
                                           ? "opacity-100"
-                                          : "opacity-0"
+                                          : "opacity-0",
                                       )}
                                     />
                                     {day}
@@ -270,7 +290,9 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                         </PopoverContent>
                       </Popover>
                       <div className="text-sm text-muted-foreground min-h-[20px]">
-                        {field.value && field.value.length > 0 ? `Selected: ${field.value.join(", ")}` : "\u00A0"}
+                        {field.value && field.value.length > 0
+                          ? `Selected: ${field.value.join(", ")}`
+                          : "\u00A0"}
                       </div>
                       <FormMessage />
                     </FormItem>
@@ -313,7 +335,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                             onSelect={(dates) => {
                               const formattedDates =
                                 dates?.map((date) =>
-                                  format(date, "yyyy-MM-dd")
+                                  format(date, "yyyy-MM-dd"),
                                 ) || [];
                               field.onChange(formattedDates);
                             }}
@@ -322,7 +344,9 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                         </PopoverContent>
                       </Popover>
                       <div className="text-sm text-muted-foreground min-h-[20px]">
-                        {field.value && field.value.length > 0 ? `Selected: ${field.value.sort().join(", ")}` : "\u00A0"}
+                        {field.value && field.value.length > 0
+                          ? `Selected: ${field.value.sort().join(", ")}`
+                          : "\u00A0"}
                       </div>
                       <FormMessage />
                     </FormItem>
@@ -371,70 +395,86 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                       </FormLabel>
                       <FormControl>
                         <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className={cn(
-                                "w-full justify-between h-12 text-base font-medium border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black",
-                                (!field.value || field.value.length === 0) &&
-                                  "text-black/50 dark:text-white/50"
-                              )}
-                            >
-                              {field.value && field.value.length > 0
-                                ? `${field.value.length} item(s) selected`
-                                : "Select items"}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-70" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent
-                          className="w-[--radix-popover-trigger-width] p-0"
-                          align="start"
-                        >
-                          <Command>
-                            <CommandList>
-                              <CommandGroup>
-                                {MENU_ITEMS.map((item) => (
-                                  <CommandItem
-                                    key={item.value}
-                                    value={item.value}
-                                    onSelect={() => {
-                                      const current = field.value || [];
-                                      const isSelected = current.includes(item.value);
-                                      if (isSelected) {
-                                        field.onChange(
-                                          current.filter((v) => v !== item.value)
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-full justify-between h-12 text-base font-medium border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black",
+                                  (!field.value || field.value.length === 0) &&
+                                    "text-black/50 dark:text-white/50",
+                                )}
+                              >
+                                {field.value && field.value.length > 0
+                                  ? `${field.value.length} item(s) selected`
+                                  : "Select items"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-70" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            className="w-[--radix-popover-trigger-width] p-0"
+                            align="start"
+                          >
+                            <Command>
+                              <CommandList>
+                                <CommandGroup>
+                                  {MENU_ITEMS.map((item) => (
+                                    <CommandItem
+                                      key={item.value}
+                                      value={item.value}
+                                      onSelect={() => {
+                                        const current = field.value || [];
+                                        const isSelected = current.includes(
+                                          item.value,
                                         );
-                                      } else {
-                                        field.onChange([...current, item.value]);
-                                      }
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        field.value?.includes(item.value)
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                    <span className="flex-1">{item.label}</span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {formatCurrency(item.price)}
-                                    </span>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                                        if (isSelected) {
+                                          field.onChange(
+                                            current.filter(
+                                              (v) => v !== item.value,
+                                            ),
+                                          );
+                                        } else {
+                                          field.onChange([
+                                            ...current,
+                                            item.value,
+                                          ]);
+                                        }
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          field.value?.includes(item.value)
+                                            ? "opacity-100"
+                                            : "opacity-0",
+                                        )}
+                                      />
+                                      <span className="flex-1">
+                                        {item.label}
+                                      </span>
+                                      <span className="text-sm text-muted-foreground">
+                                        {formatCurrency(item.price)}
+                                      </span>
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                       </FormControl>
                       {field.value && field.value.length > 0 && (
                         <p className="text-sm text-muted-foreground">
-                          Selected: {field.value.map((v) => MENU_ITEMS.find((item) => item.value === v)?.label).join(", ")}
+                          Selected:{" "}
+                          {field.value
+                            .map(
+                              (v) =>
+                                MENU_ITEMS.find((item) => item.value === v)
+                                  ?.label,
+                            )
+                            .join(", ")}
                         </p>
                       )}
                       <FormMessage />
@@ -468,7 +508,9 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
             {/* Section 3: Pricing */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
-                <h3 className="text-lg font-bold uppercase tracking-wide">Pricing & Payment</h3>
+                <h3 className="text-lg font-bold uppercase tracking-wide">
+                  Pricing & Payment
+                </h3>
               </div>
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Price Breakdown */}
@@ -478,23 +520,35 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                   </p>
                   <div className="border-2 border-black dark:border-white p-4 bg-gray-50 dark:bg-gray-900 space-y-2">
                     {orderedItems && orderedItems.length > 0 ? (
-                      () => {
-                        const breakdown = getPriceBreakdown(orderedItems, selectedDates?.length || 0);
+                      (() => {
+                        const breakdown = getPriceBreakdown(
+                          orderedItems,
+                          selectedDates?.length || 0,
+                        );
                         return (
                           <>
                             {/* Per Day Items */}
                             {breakdown.perDayItems.length > 0 && (
                               <>
-                                <p className="text-xs font-semibold text-muted-foreground uppercase">Per Day Items</p>
+                                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                                  Per Day Items
+                                </p>
                                 {breakdown.perDayItems.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-sm">
+                                  <div
+                                    key={idx}
+                                    className="flex justify-between text-sm"
+                                  >
                                     <span>{item.label}</span>
                                     <span>{formatCurrency(item.price)}</span>
                                   </div>
                                 ))}
                                 <div className="flex justify-between text-sm font-medium border-t border-dashed border-black/30 dark:border-white/30 pt-1">
-                                  <span>Subtotal × {breakdown.datesCount} day(s)</span>
-                                  <span>{formatCurrency(breakdown.perDayTotal)}</span>
+                                  <span>
+                                    Subtotal × {breakdown.datesCount} day(s)
+                                  </span>
+                                  <span>
+                                    {formatCurrency(breakdown.perDayTotal)}
+                                  </span>
                                 </div>
                               </>
                             )}
@@ -502,9 +556,14 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                             {/* One Time Items */}
                             {breakdown.oneTimeItems.length > 0 && (
                               <>
-                                <p className="text-xs font-semibold text-muted-foreground uppercase mt-3">One Time Add-ons</p>
+                                <p className="text-xs font-semibold text-muted-foreground uppercase mt-3">
+                                  One Time Add-ons
+                                </p>
                                 {breakdown.oneTimeItems.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between text-sm">
+                                  <div
+                                    key={idx}
+                                    className="flex justify-between text-sm"
+                                  >
                                     <span>{item.label}</span>
                                     <span>{formatCurrency(item.price)}</span>
                                   </div>
@@ -516,14 +575,18 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                             <div className="border-t-2 border-black dark:border-white pt-2 mt-2">
                               <div className="flex justify-between text-sm font-bold">
                                 <span>Total</span>
-                                <span>{formatCurrency(breakdown.grandTotal)}</span>
+                                <span>
+                                  {formatCurrency(breakdown.grandTotal)}
+                                </span>
                               </div>
                             </div>
                           </>
                         );
-                      }
-                    )() : (
-                      <p className="text-sm text-muted-foreground">No items selected</p>
+                      })()
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No items selected
+                      </p>
                     )}
                   </div>
                 </div>

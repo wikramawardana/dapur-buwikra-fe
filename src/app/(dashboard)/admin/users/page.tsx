@@ -1,16 +1,19 @@
 "use client";
 
-import * as React from "react";
 import {
-  Shield,
-  Users,
-  Search,
-  MoreHorizontal,
-  UserCog,
-  Trash2,
   ChevronLeft,
   ChevronRight,
+  MoreHorizontal,
+  Search,
+  Shield,
+  Trash2,
+  UserCog,
+  Users,
 } from "lucide-react";
+import * as React from "react";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,23 +22,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -45,16 +31,30 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { authClient, useSession } from "@/lib/auth-client";
-import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -67,8 +67,16 @@ interface User {
 }
 
 const ROLES = [
-  { value: "admin", label: "Admin", description: "Full access to all features" },
-  { value: "staff", label: "Staff", description: "Can manage orders and customers" },
+  {
+    value: "admin",
+    label: "Admin",
+    description: "Full access to all features",
+  },
+  {
+    value: "staff",
+    label: "Staff",
+    description: "Can manage orders and customers",
+  },
   { value: "user", label: "User", description: "No access (pending approval)" },
 ];
 
@@ -97,7 +105,7 @@ export default function AdminUsersPage() {
           searchField: searchQuery ? "email" : undefined,
         },
       });
-      
+
       if (response.data) {
         setUsers(response.data.users as User[]);
         setTotalPages(Math.ceil((response.data.total || 0) / pageSize));
@@ -123,8 +131,10 @@ export default function AdminUsersPage() {
         userId: selectedUser.id,
         role: selectedRole as "user" | "admin",
       });
-      
-      toast.success(`Role updated to ${selectedRole} for ${selectedUser.email}`);
+
+      toast.success(
+        `Role updated to ${selectedRole} for ${selectedUser.email}`,
+      );
       setIsRoleDialogOpen(false);
       setSelectedUser(null);
       setSelectedRole("");
@@ -197,7 +207,7 @@ export default function AdminUsersPage() {
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.name?.toLowerCase().includes(searchQuery.toLowerCase())
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (

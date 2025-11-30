@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Pagination,
   PaginationContent,
@@ -43,7 +42,9 @@ export function OrdersPagination({
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="whitespace-nowrap text-sm text-muted-foreground">Rows per page:</span>
+          <span className="whitespace-nowrap text-sm text-muted-foreground">
+            Rows per page:
+          </span>
           <Select
             value={String(page_size)}
             onValueChange={(value) => onPageSizeChange(Number(value))}
@@ -66,7 +67,11 @@ export function OrdersPagination({
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => onPageChange(Math.max(1, page - 1))}
-                className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                className={
+                  page === 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
               />
             </PaginationItem>
 
@@ -99,7 +104,9 @@ export function OrdersPagination({
               <PaginationNext
                 onClick={() => onPageChange(Math.min(total_pages, page + 1))}
                 className={
-                  page === total_pages ? "pointer-events-none opacity-50" : "cursor-pointer"
+                  page === total_pages
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
                 }
               />
             </PaginationItem>

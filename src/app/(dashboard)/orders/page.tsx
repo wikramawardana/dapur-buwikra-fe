@@ -1,15 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { CreateOrderDialog } from "@/components/orders/create-order-dialog";
+import { ExportMarkdownButton } from "@/components/orders/export-markdown-button";
+import { OrderStatsCards } from "@/components/orders/order-stats-cards";
+import { OrdersFilters } from "@/components/orders/orders-filters";
+import { OrdersPagination } from "@/components/orders/orders-pagination";
+import { OrdersTable } from "@/components/orders/orders-table";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import {
   Card,
@@ -18,26 +21,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { OrdersTable } from "@/components/orders/orders-table";
-import { OrdersFilters } from "@/components/orders/orders-filters";
-import { OrdersPagination } from "@/components/orders/orders-pagination";
-import { CreateOrderDialog } from "@/components/orders/create-order-dialog";
-import { OrderStatsCards } from "@/components/orders/order-stats-cards";
-import { ExportMarkdownButton } from "@/components/orders/export-markdown-button";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { UserMenu } from "@/components/user-menu";
+import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import {
   getOrders,
   getOrdersCount,
   getOrdersSum,
 } from "@/services/orders.service";
-import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import type {
   Order,
   OrderFilters,
-  PaginationInfo,
   OrderStats,
+  PaginationInfo,
 } from "@/types/order.types";
-import { toast } from "sonner";
-import { UserMenu } from "@/components/user-menu";
 
 export default function OrdersPage() {
   const [orders, setOrders] = React.useState<Order[]>([]);
@@ -65,7 +63,7 @@ export default function OrdersPage() {
       setPagination(response.data.pagination);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to fetch orders"
+        error instanceof Error ? error.message : "Failed to fetch orders",
       );
       setOrders([]);
     } finally {
@@ -94,7 +92,7 @@ export default function OrdersPage() {
       });
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to fetch statistics"
+        error instanceof Error ? error.message : "Failed to fetch statistics",
       );
       setStats(null);
     } finally {
@@ -147,10 +145,12 @@ export default function OrdersPage() {
                 Manage and track all customer orders
               </CardDescription>
             </div>
-            <CreateOrderDialog onOrderCreated={() => {
-              fetchOrders();
-              fetchStats();
-            }} />
+            <CreateOrderDialog
+              onOrderCreated={() => {
+                fetchOrders();
+                fetchStats();
+              }}
+            />
           </CardHeader>
           <CardContent className="space-y-6">
             <OrderStatsCards stats={stats} isLoading={isStatsLoading} />

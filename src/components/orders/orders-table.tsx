@@ -1,12 +1,19 @@
 "use client";
 
-import * as React from "react";
 import {
+  type ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
-  type ColumnDef,
 } from "@tanstack/react-table";
+import * as React from "react";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -15,18 +22,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-} from "@/components/ui/empty";
-import { StatusBadge } from "./status-badge";
-import { OrderActionDialog } from "./order-action-dialog";
 import { formatCurrency, formatDate } from "@/lib/format";
-
 import type { Order } from "@/types/order.types";
+import { OrderActionDialog } from "./order-action-dialog";
+import { StatusBadge } from "./status-badge";
 
 interface OrdersTableProps {
   orders: Order[];
@@ -35,7 +34,12 @@ interface OrdersTableProps {
   onOrderDeleted?: () => void;
 }
 
-export function OrdersTable({ orders, isLoading, onOrderUpdated, onOrderDeleted }: OrdersTableProps) {
+export function OrdersTable({
+  orders,
+  isLoading,
+  onOrderUpdated,
+  onOrderDeleted,
+}: OrdersTableProps) {
   const columns = React.useMemo<ColumnDef<Order>[]>(
     () => [
       {
@@ -111,7 +115,7 @@ export function OrdersTable({ orders, isLoading, onOrderUpdated, onOrderDeleted 
         ),
       },
     ],
-    [onOrderUpdated, onOrderDeleted]
+    [onOrderUpdated, onOrderDeleted],
   );
 
   const table = useReactTable({
@@ -179,7 +183,7 @@ export function OrdersTable({ orders, isLoading, onOrderUpdated, onOrderDeleted 
                     ? null
                     : flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                 </TableHead>
               ))}

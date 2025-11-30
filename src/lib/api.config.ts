@@ -8,7 +8,8 @@ import { getSession } from "@/lib/auth-client";
  */
 
 // Use environment variable or fallback to localhost
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
 
 // Cache for the session token promise to avoid multiple get-session calls
 let tokenPromise: Promise<string | null> | null = null;
@@ -20,12 +21,12 @@ const TOKEN_CACHE_DURATION = 5000; // Cache token for 5 seconds
  */
 export async function getAuthToken(): Promise<string | null> {
   const now = Date.now();
-  
+
   // Return cached promise if still valid
   if (tokenPromise && now < tokenExpiry) {
     return tokenPromise;
   }
-  
+
   // Create new token promise
   tokenPromise = (async () => {
     try {
@@ -35,7 +36,7 @@ export async function getAuthToken(): Promise<string | null> {
       return null;
     }
   })();
-  
+
   tokenExpiry = now + TOKEN_CACHE_DURATION;
   return tokenPromise;
 }
@@ -45,13 +46,13 @@ export async function getAuthToken(): Promise<string | null> {
  */
 export function buildQueryString(params: Record<string, any>): string {
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
       searchParams.append(key, String(value));
     }
   });
-  
+
   const queryString = searchParams.toString();
   return queryString ? `?${queryString}` : "";
 }
@@ -63,7 +64,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public status?: number,
-    public data?: any
+    public data?: any,
   ) {
     super(message);
     this.name = "ApiError";
@@ -75,13 +76,13 @@ export class ApiError extends Error {
  */
 export async function apiFetch<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   // Get the auth token
   const token = await getAuthToken();
-  
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -97,7 +98,7 @@ export async function apiFetch<T>(
       throw new ApiError(
         errorData.message || `HTTP error! status: ${response.status}`,
         response.status,
-        errorData
+        errorData,
       );
     }
 
@@ -107,7 +108,7 @@ export async function apiFetch<T>(
       throw error;
     }
     throw new ApiError(
-      error instanceof Error ? error.message : "An unknown error occurred"
+      error instanceof Error ? error.message : "An unknown error occurred",
     );
   }
 }

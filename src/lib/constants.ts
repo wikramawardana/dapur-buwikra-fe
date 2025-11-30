@@ -7,10 +7,30 @@ export const DAYS_OF_WEEK = [
 
 export const MENU_ITEMS = [
   { value: "nasi", label: "Nasi", price: 17500, perDay: true },
-  { value: "add_on_kulit_kecil", label: "Add On Kulit Kecil", price: 7500, perDay: false },
-  { value: "add_on_kulit_besar", label: "Add On Kulit Besar", price: 15000, perDay: false },
-  { value: "add_on_tambah_porsi", label: "Add On Tambah Porsi", price: 2500, perDay: true },
-  { value: "add_on_tambah_porsi_besar", label: "Add On Tambah Porsi Besar", price: 7500, perDay: true },
+  {
+    value: "add_on_kulit_kecil",
+    label: "Add On Kulit Kecil",
+    price: 7500,
+    perDay: false,
+  },
+  {
+    value: "add_on_kulit_besar",
+    label: "Add On Kulit Besar",
+    price: 15000,
+    perDay: false,
+  },
+  {
+    value: "add_on_tambah_porsi",
+    label: "Add On Tambah Porsi",
+    price: 2500,
+    perDay: true,
+  },
+  {
+    value: "add_on_tambah_porsi_besar",
+    label: "Add On Tambah Porsi Besar",
+    price: 7500,
+    perDay: true,
+  },
 ] as const;
 
 export const ORDER_STATUSES = [

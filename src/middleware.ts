@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
+import { type NextRequest, NextResponse } from "next/server";
 
 // Routes that don't require authentication
 const publicRoutes = ["/login", "/api/auth"];
@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
         headers: {
           cookie: request.headers.get("cookie") || "",
         },
-      }
+      },
     );
 
     if (!sessionResponse.ok) {

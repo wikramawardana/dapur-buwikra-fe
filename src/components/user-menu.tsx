@@ -2,6 +2,8 @@
 
 import { LogOut, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,8 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { signOut, useSession } from "@/lib/auth-client";
 
 export function UserMenu() {
@@ -53,31 +53,43 @@ export function UserMenu() {
   };
 
   if (isPending) {
-    return (
-      <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
-    );
+    return <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />;
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full border-2 border-black dark:border-white">
+        <Button
+          variant="ghost"
+          className="relative h-8 w-8 rounded-full border-2 border-black dark:border-white"
+        >
           <Avatar className="h-8 w-8">
-            <AvatarImage src={session?.user?.image || undefined} alt={session?.user?.name || "User"} />
+            <AvatarImage
+              src={session?.user?.image || undefined}
+              alt={session?.user?.name || "User"}
+            />
             <AvatarFallback className="bg-yellow-400 text-black font-bold">
               {getInitials(session?.user?.name, session?.user?.email || "")}
             </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 border-2 border-black dark:border-white" align="end" forceMount>
+      <DropdownMenuContent
+        className="w-56 border-2 border-black dark:border-white"
+        align="end"
+        forceMount
+      >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-2">
-            <p className="text-sm font-bold leading-none">{session?.user?.name || "User"}</p>
+            <p className="text-sm font-bold leading-none">
+              {session?.user?.name || "User"}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
               {session?.user?.email}
             </p>
-            <Badge className={`${getRoleBadgeColor(session?.user?.role)} border w-fit text-xs font-bold`}>
+            <Badge
+              className={`${getRoleBadgeColor(session?.user?.role)} border w-fit text-xs font-bold`}
+            >
               {session?.user?.role || "user"}
             </Badge>
           </div>
@@ -94,7 +106,10 @@ export function UserMenu() {
           <span>Toggle theme</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="text-red-600 focus:text-red-600">
+        <DropdownMenuItem
+          onClick={handleSignOut}
+          className="text-red-600 focus:text-red-600"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>
