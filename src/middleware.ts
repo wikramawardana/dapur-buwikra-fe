@@ -39,14 +39,11 @@ export async function middleware(request: NextRequest) {
   // For session validation and role checking, we need to call the auth API
   try {
     const baseUrl = getBaseUrl(request);
-    const sessionResponse = await fetch(
-      `${baseUrl}/api/auth/get-session`,
-      {
-        headers: {
-          cookie: request.headers.get("cookie") || "",
-        },
+    const sessionResponse = await fetch(`${baseUrl}/api/auth/get-session`, {
+      headers: {
+        cookie: request.headers.get("cookie") || "",
       },
-    );
+    });
 
     if (!sessionResponse.ok) {
       const loginUrl = new URL("/login", request.url);
