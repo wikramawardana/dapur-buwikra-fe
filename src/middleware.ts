@@ -7,6 +7,17 @@ const publicRoutes = ["/login", "/api/auth"];
 // Routes that require admin role
 const adminRoutes = ["/admin"];
 
+// Get the base URL for internal API calls
+function getBaseUrl(request: NextRequest): string {
+  // In production, use the internal URL (localhost) to avoid DNS/network issues
+  // The app runs on port 3000 inside the container
+  if (process.env.NODE_ENV === "production") {
+    return "http://localhost:3000";
+  }
+  // In development, use the request URL
+  return request.nextUrl.origin;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -27,8 +38,9 @@ export async function middleware(request: NextRequest) {
 
   // For session validation and role checking, we need to call the auth API
   try {
+    const baseUrl = getBaseUrl(request);
     const sessionResponse = await fetch(
-      new URL("/api/auth/get-session", request.url),
+      `${baseUrl}/api/auth/get-session`,
       {
         headers: {
           cookie: request.headers.get("cookie") || "",
