@@ -1,6 +1,6 @@
+import dns from "node:dns";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
-import dns from "node:dns";
 import { Pool } from "pg";
 
 // Force Node.js to prefer IPv4 addresses (fixes Docker IPv6 connectivity issues)
