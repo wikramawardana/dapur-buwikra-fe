@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChefHat } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ function GoogleIcon({ className }: { className?: string }) {
     );
 }
 
-export default function LoginPage() {
+function LoginForm() {
     const searchParams = useSearchParams();
     const { data: session, isPending } = useSession();
     const [isLoading, setIsLoading] = React.useState(false);
@@ -139,5 +140,35 @@ export default function LoginPage() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+function LoginLoading() {
+    return (
+        <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-yellow-100 via-pink-100 to-cyan-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+            <Card className="w-full max-w-md neo-brutal neo-brutal-white relative">
+                <CardHeader className="text-center space-y-4 pb-2">
+                    <div className="mx-auto flex items-center justify-center w-20 h-20 bg-blue-400 border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
+                        <ChefHat className="w-12 h-12 text-black" />
+                    </div>
+                    <div className="space-y-2">
+                        <CardTitle className="text-3xl font-black tracking-tight text-black dark:text-white">
+                            Dapur Bu Wikra
+                        </CardTitle>
+                        <CardDescription className="text-base font-medium text-black/70 dark:text-white/70">
+                            Loading...
+                        </CardDescription>
+                    </div>
+                </CardHeader>
+            </Card>
+        </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<LoginLoading />}>
+            <LoginForm />
+        </Suspense>
     );
 }
