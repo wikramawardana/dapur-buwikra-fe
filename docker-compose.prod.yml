@@ -1,4 +1,3 @@
-# Production docker-compose with Nginx reverse proxy and SSL
 services:
   app:
     image: ${DOCKER_IMAGE:-dapur-buwikra-fe}:${DOCKER_TAG:-latest}
@@ -27,6 +26,8 @@ services:
     image: nginx:alpine
     container_name: dapur-nginx
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # ← TAMBAHKAN INI
     ports:
       - "80:80"
       - "443:443"
@@ -37,8 +38,6 @@ services:
       - app
     networks:
       - dapur-network
-
-  # certbot tidak diperlukan lagi dengan Cloudflare Origin Certificate
 
 networks:
   dapur-network:
