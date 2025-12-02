@@ -1,6 +1,6 @@
 "use client";
 
-import { ChefHat, Shield, ShoppingCart } from "lucide-react";
+import { ChefHat, Home, Shield, ShoppingCart } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -17,12 +17,20 @@ import {
 } from "@/components/ui/sidebar";
 import { useSession } from "@/lib/auth-client";
 
+// Home is accessible to all authenticated users
+const homeItem = {
+  title: "Home",
+  url: "/home",
+  icon: Home,
+};
+
+// Orders only accessible to admin and chef
 const menuItems = [
   {
     title: "Orders",
     url: "/orders",
     icon: ShoppingCart,
-    roles: ["admin", "staff"],
+    roles: ["admin", "chef"],
   },
 ];
 
@@ -83,6 +91,28 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">
+              {/* Home - always visible */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={
+                    pathname === homeItem.url ||
+                    pathname.startsWith(`${homeItem.url}/`)
+                  }
+                  className={
+                    pathname === homeItem.url ||
+                    pathname.startsWith(`${homeItem.url}/`)
+                      ? "border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]"
+                      : "border-2 border-transparent hover:border-black dark:hover:border-white"
+                  }
+                >
+                  <a href={homeItem.url}>
+                    <homeItem.icon className="size-4" />
+                    <span className="font-semibold">{homeItem.title}</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {/* Role-restricted menu items */}
               {filteredMenuItems.map((item) => {
                 const isActive =
                   pathname === item.url || pathname.startsWith(`${item.url}/`);

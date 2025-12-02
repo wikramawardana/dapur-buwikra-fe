@@ -7,6 +7,12 @@ const publicRoutes = ["/login", "/api/auth"];
 // Routes that require admin role
 const adminRoutes = ["/admin"];
 
+// Routes that require admin or chef role (orders management)
+const staffRoutes = ["/orders"];
+
+// Routes accessible to all authenticated users (including 'user' role)
+const authenticatedRoutes = ["/home"];
+
 // Get the base URL for internal API calls
 function getBaseUrl(request: NextRequest): string {
   // In production, use the internal URL (localhost) to avoid DNS/network issues
@@ -66,21 +72,21 @@ export async function middleware(request: NextRequest) {
 
     const userRole = session.user.role;
 
-    // Check if user has no role or role is "user" (no access)
-    if (!userRole || userRole === "user") {
-      // Redirect to unauthorized page if trying to access protected routes
-      if (pathname !== "/unauthorized") {
-        return NextResponse.redirect(new URL("/unauthorized", request.url));
+    // Check if trying to access staff routes (orders) - requires admin or chef
+    if (staffRoutes.some((route) => pathname.startsWith(route))) {
+      if (userRole !== "admin" && userRole !== "chef") {
+        return NextResponse.redirect(new URL("/home", request.url));
       }
     }
 
-    // Check admin routes
+    // Check admin routes - requires admin only
     if (adminRoutes.some((route) => pathname.startsWith(route))) {
       if (userRole !== "admin") {
-        return NextResponse.redirect(new URL("/unauthorized", request.url));
+        return NextResponse.redirect(new URL("/home", request.url));
       }
     }
 
+    // All authenticated users can access dashboard and other general routes
     return NextResponse.next();
   } catch (error) {
     console.error("Middleware auth error:", error);

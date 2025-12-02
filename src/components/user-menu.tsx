@@ -67,6 +67,7 @@ export function UserMenu() {
             <AvatarImage
               src={session?.user?.image || undefined}
               alt={session?.user?.name || "User"}
+              referrerPolicy="no-referrer"
             />
             <AvatarFallback className="bg-yellow-400 text-black font-bold">
               {getInitials(session?.user?.name, session?.user?.email || "")}
