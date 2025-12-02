@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Build and Deploy Frontend
 
 on:
   push:
@@ -146,9 +146,21 @@ jobs:
             docker image prune -af --filter "until=24h"
             
             # Show status
-            docker ps
+            docker ps | grep dapur-buwikra
 
-      - name: Health check
+  # ================================
+  # Job 4: Health Check
+  # ================================
+  health-check:
+    name: Health Check
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Wait for service to start
+        run: sleep 30
+
+      - name: Check app health
         run: |
-          sleep 30
-          curl -f ${{ secrets.NEXT_PUBLIC_APP_URL }}/api/auth/get-session || echo "Health check endpoint not responding yet"
+          curl -f https://dapurbuwikra.wikra.cloud/api/auth/get-session || echo "Health check failed - please verify deployment"

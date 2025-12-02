@@ -1,10 +1,10 @@
 services:
   app:
-    image: ${DOCKER_IMAGE:-dapur-buwikra-fe}:${DOCKER_TAG:-latest}
+    image: ${DOCKER_IMAGE:-ghcr.io/wikramawardana/dapur-buwikra-fe}:${DOCKER_TAG:-latest}
     container_name: dapur-buwikra-fe
     restart: unless-stopped
-    expose:
-      - "3000"
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
@@ -13,32 +13,9 @@ services:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-    networks:
-      - dapur-network
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/auth/get-session"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  nginx:
-    image: nginx:alpine
-    container_name: dapur-nginx
-    restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"  # ← TAMBAHKAN INI
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - app
-    networks:
-      - dapur-network
-
-networks:
-  dapur-network:
-    driver: bridge
