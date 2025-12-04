@@ -45,8 +45,8 @@ export function UserMenu() {
     switch (role) {
       case "admin":
         return "bg-red-400 text-black border-black";
-      case "staff":
-        return "bg-blue-400 text-black border-black";
+      case "chef":
+        return "bg-green-400 text-black border-black";
       default:
         return "bg-gray-300 text-black border-black";
     }

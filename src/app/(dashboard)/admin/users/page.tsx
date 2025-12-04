@@ -47,6 +47,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
+  StatsCardSkeleton,
+  TableSkeleton,
+} from "@/components/ui/page-loading";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -83,9 +87,9 @@ const ROLES = [
     description: "Full access to all features",
   },
   {
-    value: "staff",
-    label: "Staff",
-    description: "Can manage orders and customers",
+    value: "chef",
+    label: "Chef",
+    description: "Can manage orders",
   },
   { value: "user", label: "User", description: "No access (pending approval)" },
 ];
@@ -195,8 +199,8 @@ export default function AdminUsersPage() {
     switch (role) {
       case "admin":
         return "bg-red-400 text-black border-black";
-      case "staff":
-        return "bg-blue-400 text-black border-black";
+      case "chef":
+        return "bg-green-400 text-black border-black";
       default:
         return "bg-gray-300 text-black border-black";
     }
@@ -255,44 +259,55 @@ export default function AdminUsersPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="neo-brutal neo-brutal-white">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-black/60 dark:text-white/60 font-medium">
-                    Total Users
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-black text-black dark:text-white">
-                    {users.length}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="neo-brutal neo-brutal-white">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-black/60 dark:text-white/60 font-medium">
-                    Admins
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-black text-red-600">
-                    {users.filter((u) => u.role === "admin").length}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="neo-brutal neo-brutal-white">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-black/60 dark:text-white/60 font-medium">
-                    Staff
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-black text-blue-600">
-                    {users.filter((u) => u.role === "staff").length}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <StatsCardSkeleton color="blue" />
+                <StatsCardSkeleton color="red" />
+                <StatsCardSkeleton color="green" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="neo-brutal bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                    <CardDescription className="text-blue-600 font-medium">
+                      Total Users
+                    </CardDescription>
+                    <Users className="h-5 w-5 text-blue-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-black text-blue-700">
+                      {users.length}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="neo-brutal bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800">
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                    <CardDescription className="text-red-600 font-medium">
+                      Admins
+                    </CardDescription>
+                    <Shield className="h-5 w-5 text-red-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-black text-red-700">
+                      {users.filter((u) => u.role === "admin").length}
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="neo-brutal bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+                  <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+                    <CardDescription className="text-green-600 font-medium">
+                      Chefs
+                    </CardDescription>
+                    <UserCog className="h-5 w-5 text-green-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-black text-green-700">
+                      {users.filter((u) => u.role === "chef").length}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Users Table Card */}
             <Card className="neo-brutal neo-brutal-white">
@@ -320,9 +335,7 @@ export default function AdminUsersPage() {
               </CardHeader>
               <CardContent>
                 {isLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
-                  </div>
+                  <TableSkeleton rows={5} columns={5} />
                 ) : (
                   <>
                     <div className="border-2 border-black dark:border-white">

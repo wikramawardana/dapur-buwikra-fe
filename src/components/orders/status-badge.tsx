@@ -16,15 +16,15 @@ export function StatusBadge({
   const variants = {
     order: {
       pending:
-        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+        "bg-yellow-100 text-yellow-700 border border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400",
       completed:
-        "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-      cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+        "bg-green-100 text-green-700 border border-green-300 dark:bg-green-900/30 dark:text-green-400",
+      cancelled: "bg-red-100 text-red-700 border border-red-300 dark:bg-red-900/30 dark:text-red-400",
     },
     payment: {
-      paid: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
+      paid: "bg-green-100 text-green-700 border border-green-300 dark:bg-green-900/30 dark:text-green-400",
       unpaid:
-        "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+        "bg-red-100 text-red-700 border border-red-300 dark:bg-red-900/30 dark:text-red-400",
     },
   };
 

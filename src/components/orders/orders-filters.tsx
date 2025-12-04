@@ -22,6 +22,41 @@ import { Separator } from "@/components/ui/separator";
 import { DAYS_OF_WEEK, SORT_OPTIONS } from "@/lib/constants";
 import type { OrderFilters } from "@/types/order.types";
 
+/**
+ * Get the current work week (Monday to Friday).
+ * If today is Saturday or Sunday, return next week's Monday to Friday.
+ */
+function getCurrentWorkWeek(): { dateFrom: Date; dateTo: Date } {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+  let monday: Date;
+  let friday: Date;
+
+  if (dayOfWeek === 0) {
+    // Sunday: get next week (Monday is tomorrow)
+    monday = new Date(today);
+    monday.setDate(today.getDate() + 1);
+  } else if (dayOfWeek === 6) {
+    // Saturday: get next week (Monday is in 2 days)
+    monday = new Date(today);
+    monday.setDate(today.getDate() + 2);
+  } else {
+    // Weekday: get current week's Monday
+    monday = new Date(today);
+    monday.setDate(today.getDate() - (dayOfWeek - 1));
+  }
+
+  // Friday is 4 days after Monday
+  friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
+
+  return {
+    dateFrom: monday,
+    dateTo: friday,
+  };
+}
+
 interface OrdersFiltersProps {
   filters: OrderFilters;
   onFiltersChange: (filters: OrderFilters) => void;
@@ -72,11 +107,12 @@ export function OrdersFilters({
   };
 
   const handleClearFilters = () => {
+    const workWeek = getCurrentWorkWeek();
     setSearch("");
     setName("");
     setDay("all");
-    setDateFrom(undefined);
-    setDateTo(undefined);
+    setDateFrom(workWeek.dateFrom);
+    setDateTo(workWeek.dateTo);
     setSortBy("date");
     setSortOrder("desc");
     onFiltersChange({
@@ -84,11 +120,23 @@ export function OrdersFilters({
       page_size: filters.page_size,
       sort_by: "created_at",
       sort_order: "desc",
+      date_from: format(workWeek.dateFrom, "yyyy-MM-dd"),
+      date_to: format(workWeek.dateTo, "yyyy-MM-dd"),
     });
   };
 
+  // Get current work week for comparison
+  const currentWorkWeek = React.useMemo(() => getCurrentWorkWeek(), []);
+  const isDefaultDateRange =
+    dateFrom &&
+    dateTo &&
+    format(dateFrom, "yyyy-MM-dd") ===
+      format(currentWorkWeek.dateFrom, "yyyy-MM-dd") &&
+    format(dateTo, "yyyy-MM-dd") ===
+      format(currentWorkWeek.dateTo, "yyyy-MM-dd");
+
   const hasActiveFilters =
-    search || name || day !== "all" || dateFrom || dateTo;
+    search || name || day !== "all" || !isDefaultDateRange;
 
   // Check if local state differs from applied filters
   const hasUnappliedChanges =

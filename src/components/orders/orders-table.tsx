@@ -13,7 +13,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TableSkeleton } from "@/components/ui/page-loading";
 import {
   Table,
   TableBody,
@@ -44,22 +44,22 @@ export function OrdersTable({
     () => [
       {
         accessorKey: "name",
-        header: () => <div className="text-left">Name</div>,
+        header: () => <div className="text-left font-semibold">Name</div>,
         cell: ({ row }) => (
-          <div className="text-left">{row.getValue("name")}</div>
+          <div className="text-left font-bold text-black">{row.getValue("name")}</div>
         ),
       },
       {
         accessorKey: "dates",
-        header: () => <div className="text-left">Date & Day</div>,
+        header: () => <div className="text-left font-semibold">Date & Day</div>,
         cell: ({ row }) => {
           const dates = row.getValue("dates") as string[];
           const days = (row.original as Order).days;
           return (
-            <div className="font-medium text-left">
+            <div className="font-medium text-left text-blue-600">
               {dates.map((date, idx) => (
                 <div key={idx}>
-                  {days[idx]} - {formatDate(date)}
+                  <span className="font-semibold">{days[idx]}</span> - {formatDate(date)}
                 </div>
               ))}
             </div>
@@ -68,30 +68,30 @@ export function OrdersTable({
       },
       {
         accessorKey: "ordered",
-        header: () => <div className="text-left">Ordered</div>,
+        header: () => <div className="text-left font-semibold">Ordered</div>,
         cell: ({ row }) => (
-          <div className="text-left">{row.getValue("ordered")}</div>
+          <div className="text-left text-gray-700">{row.getValue("ordered")}</div>
         ),
       },
       {
         accessorKey: "notes",
-        header: () => <div className="text-left">Notes</div>,
+        header: () => <div className="text-left font-semibold">Notes</div>,
         cell: ({ row }) => (
-          <div className="text-left">{row.getValue("notes")}</div>
+          <div className="text-left text-gray-500 italic">{row.getValue("notes") || "-"}</div>
         ),
       },
       {
         accessorKey: "total_price",
-        header: () => <div className="text-left">Total Price</div>,
+        header: () => <div className="text-left font-semibold">Total Price</div>,
         cell: ({ row }) => (
-          <div className="text-left font-semibold">
+          <div className="text-left font-bold text-green-600">
             {formatCurrency(row.getValue("total_price"))}
           </div>
         ),
       },
       {
         accessorKey: "payment_status",
-        header: () => <div className="text-left">Payment</div>,
+        header: () => <div className="text-left font-semibold">Payment</div>,
         cell: ({ row }) => (
           <div className="flex justify-left">
             <StatusBadge
@@ -103,7 +103,7 @@ export function OrdersTable({
       },
       {
         id: "actions",
-        header: () => <div className="text-center">Actions</div>,
+        header: () => <div className="text-center font-semibold">Actions</div>,
         cell: ({ row }) => (
           <div className="flex justify-center">
             <OrderActionDialog
@@ -125,34 +125,7 @@ export function OrdersTable({
   });
 
   if (isLoading) {
-    return (
-      <div className="neo-brutal neo-brutal-white">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-left">Name</TableHead>
-              <TableHead className="text-left">Date & Day</TableHead>
-              <TableHead className="text-left">Ordered</TableHead>
-              <TableHead className="text-left">Notes</TableHead>
-              <TableHead className="text-left">Total Price</TableHead>
-              <TableHead className="text-left">Payment</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <TableRow key={i}>
-                {Array.from({ length: 7 }).map((_, j) => (
-                  <TableCell key={j}>
-                    <Skeleton className="h-4 w-full" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    );
+    return <TableSkeleton rows={5} columns={7} />;
   }
 
   if (orders.length === 0) {

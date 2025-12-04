@@ -1,5 +1,6 @@
 "use client";
 
+import { format } from "date-fns";
 import * as React from "react";
 import { toast } from "sonner";
 import { CreateOrderDialog } from "@/components/orders/create-order-dialog";
@@ -37,6 +38,41 @@ import type {
   PaginationInfo,
 } from "@/types/order.types";
 
+/**
+ * Get the current work week (Monday to Friday).
+ * If today is Saturday or Sunday, return next week's Monday to Friday.
+ */
+function getCurrentWorkWeek(): { dateFrom: string; dateTo: string } {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+  let monday: Date;
+  let friday: Date;
+
+  if (dayOfWeek === 0) {
+    // Sunday: get next week (Monday is tomorrow)
+    monday = new Date(today);
+    monday.setDate(today.getDate() + 1);
+  } else if (dayOfWeek === 6) {
+    // Saturday: get next week (Monday is in 2 days)
+    monday = new Date(today);
+    monday.setDate(today.getDate() + 2);
+  } else {
+    // Weekday: get current week's Monday
+    monday = new Date(today);
+    monday.setDate(today.getDate() - (dayOfWeek - 1));
+  }
+
+  // Friday is 4 days after Monday
+  friday = new Date(monday);
+  friday.setDate(monday.getDate() + 4);
+
+  return {
+    dateFrom: format(monday, "yyyy-MM-dd"),
+    dateTo: format(friday, "yyyy-MM-dd"),
+  };
+}
+
 export default function OrdersPage() {
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [stats, setStats] = React.useState<OrderStats | null>(null);
@@ -46,11 +82,17 @@ export default function OrdersPage() {
     total_items: 0,
     total_pages: 0,
   });
+
+  // Get current work week for default date filter
+  const defaultWorkWeek = React.useMemo(() => getCurrentWorkWeek(), []);
+
   const [filters, setFilters] = React.useState<OrderFilters>({
     page: 1,
     page_size: DEFAULT_PAGE_SIZE,
     sort_by: "created_at",
     sort_order: "desc",
+    date_from: defaultWorkWeek.dateFrom,
+    date_to: defaultWorkWeek.dateTo,
   });
   const [isLoading, setIsLoading] = React.useState(true);
   const [isStatsLoading, setIsStatsLoading] = React.useState(true);

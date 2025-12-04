@@ -16,6 +16,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  ActionCardSkeleton,
+  WelcomeCardSkeleton,
+} from "@/components/ui/page-loading";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { UserMenu } from "@/components/user-menu";
@@ -55,45 +59,55 @@ export default function HomePage() {
 
       {/* Content */}
       <div className="flex-1 space-y-6 p-6">
-        {/* Welcome Section */}
-        <Card className="border-4 border-black dark:border-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900 dark:to-orange-900">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-16 h-16 bg-yellow-400 border-4 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]">
-                <ChefHat className="w-10 h-10 text-black" />
+        {/* Welcome Section - Show skeleton when loading */}
+        {isPending ? (
+          <WelcomeCardSkeleton />
+        ) : (
+          <Card className="border-4 border-black dark:border-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900 dark:to-orange-900">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-16 h-16 bg-yellow-400 border-4 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]">
+                  <ChefHat className="w-10 h-10 text-black" />
+                </div>
+                <div>
+                  <CardTitle className="text-3xl font-black text-black dark:text-white">
+                    Welcome, {userName}!
+                  </CardTitle>
+                  <CardDescription className="text-lg font-medium text-black/70 dark:text-white/70">
+                    Dapur Bu Wikra - Catering Management System
+                  </CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle className="text-3xl font-black text-black dark:text-white">
-                  Welcome, {userName}! 👋
-                </CardTitle>
-                <CardDescription className="text-lg font-medium text-black/70 dark:text-white/70">
-                  Dapur Bu Wikra - Catering Management System
-                </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-sm font-medium text-black/60 dark:text-white/60">
+                  Your role:
+                </span>
+                <span
+                  className={`px-3 py-1 text-sm font-bold border-2 border-black dark:border-white ${
+                    userRole === "admin"
+                      ? "bg-red-400"
+                      : userRole === "chef"
+                        ? "bg-green-400"
+                        : "bg-gray-300"
+                  } text-black`}
+                >
+                  {userRole || "user"}
+                </span>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm font-medium text-black/60 dark:text-white/60">
-                Your role:
-              </span>
-              <span
-                className={`px-3 py-1 text-sm font-bold border-2 border-black dark:border-white ${
-                  userRole === "admin"
-                    ? "bg-purple-400"
-                    : userRole === "chef"
-                      ? "bg-green-400"
-                      : "bg-gray-300"
-                } text-black`}
-              >
-                {userRole || "user"}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Role-based Content */}
-        {canAccessOrders ? (
+        {isPending ? (
+          /* Loading State - Using reusable ActionCardSkeleton */
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <ActionCardSkeleton />
+            <ActionCardSkeleton />
+          </div>
+        ) : canAccessOrders ? (
           /* Admin/Chef View */
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card
@@ -124,12 +138,12 @@ export default function HomePage() {
 
             {userRole === "admin" && (
               <Card
-                className="border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer bg-purple-100 dark:bg-purple-900"
+                className="border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer bg-yellow-100 dark:bg-yellow-900"
                 onClick={() => router.push("/admin/users")}
               >
                 <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-12 h-12 bg-purple-400 border-2 border-black dark:border-white">
+                    <div className="flex items-center justify-center w-12 h-12 bg-yellow-400 border-2 border-black dark:border-white">
                       <Users className="w-6 h-6 text-black" />
                     </div>
                     <div>
@@ -143,7 +157,7 @@ export default function HomePage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Button className="w-full font-bold bg-purple-400 text-black border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px]">
+                  <Button className="w-full font-bold bg-yellow-400 text-black border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px]">
                     Manage Users →
                   </Button>
                 </CardContent>
