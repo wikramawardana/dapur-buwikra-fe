@@ -46,7 +46,9 @@ export function OrdersTable({
         accessorKey: "name",
         header: () => <div className="text-left font-semibold">Name</div>,
         cell: ({ row }) => (
-          <div className="text-left font-bold text-black">{row.getValue("name")}</div>
+          <div className="text-left font-bold text-black">
+            {row.getValue("name")}
+          </div>
         ),
       },
       {
@@ -59,7 +61,8 @@ export function OrdersTable({
             <div className="font-medium text-left text-blue-600">
               {dates.map((date, idx) => (
                 <div key={idx}>
-                  <span className="font-semibold">{days[idx]}</span> - {formatDate(date)}
+                  <span className="font-semibold">{days[idx]}</span> -{" "}
+                  {formatDate(date)}
                 </div>
               ))}
             </div>
@@ -70,19 +73,25 @@ export function OrdersTable({
         accessorKey: "ordered",
         header: () => <div className="text-left font-semibold">Ordered</div>,
         cell: ({ row }) => (
-          <div className="text-left text-gray-700">{row.getValue("ordered")}</div>
+          <div className="text-left text-gray-700">
+            {row.getValue("ordered")}
+          </div>
         ),
       },
       {
         accessorKey: "notes",
         header: () => <div className="text-left font-semibold">Notes</div>,
         cell: ({ row }) => (
-          <div className="text-left text-gray-500 italic">{row.getValue("notes") || "-"}</div>
+          <div className="text-left text-gray-500 italic">
+            {row.getValue("notes") || "-"}
+          </div>
         ),
       },
       {
         accessorKey: "total_price",
-        header: () => <div className="text-left font-semibold">Total Price</div>,
+        header: () => (
+          <div className="text-left font-semibold">Total Price</div>
+        ),
         cell: ({ row }) => (
           <div className="text-left font-bold text-green-600">
             {formatCurrency(row.getValue("total_price"))}

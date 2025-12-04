@@ -13,7 +13,10 @@ interface PageLoadingProps {
  * Reusable page loading skeleton component.
  * Use this for consistent loading states across the app.
  */
-export function PageLoading({ variant = "default", className }: PageLoadingProps) {
+export function PageLoading({
+  variant = "default",
+  className,
+}: PageLoadingProps) {
   switch (variant) {
     case "home":
       return <HomePageSkeleton className={className} />;
@@ -31,7 +34,12 @@ export function PageLoading({ variant = "default", className }: PageLoadingProps
  */
 export function WelcomeCardSkeleton({ className }: { className?: string }) {
   return (
-    <Card className={cn("border-4 border-black dark:border-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900 dark:to-orange-900", className)}>
+    <Card
+      className={cn(
+        "border-4 border-black dark:border-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900 dark:to-orange-900",
+        className,
+      )}
+    >
       <CardHeader className="pb-2">
         <div className="flex items-center gap-4">
           <Skeleton className="w-16 h-16 border-4 border-black dark:border-white" />
@@ -56,7 +64,12 @@ export function WelcomeCardSkeleton({ className }: { className?: string }) {
  */
 export function ActionCardSkeleton({ className }: { className?: string }) {
   return (
-    <Card className={cn("border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] bg-gray-100 dark:bg-gray-900", className)}>
+    <Card
+      className={cn(
+        "border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] bg-gray-100 dark:bg-gray-900",
+        className,
+      )}
+    >
       <CardHeader>
         <div className="flex items-center gap-3">
           <Skeleton className="w-12 h-12" />
@@ -76,18 +89,20 @@ export function ActionCardSkeleton({ className }: { className?: string }) {
 /**
  * Stats card skeleton - used for metric cards
  */
-export function StatsCardSkeleton({ 
+export function StatsCardSkeleton({
   className,
-  color = "gray"
-}: { 
+  color = "gray",
+}: {
   className?: string;
   color?: "blue" | "green" | "red" | "yellow" | "gray";
 }) {
   const colorClasses = {
     blue: "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800",
-    green: "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800",
+    green:
+      "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800",
     red: "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800",
-    yellow: "bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800",
+    yellow:
+      "bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800",
     gray: "neo-brutal neo-brutal-white",
   };
 
@@ -108,11 +123,11 @@ export function StatsCardSkeleton({
 /**
  * Table skeleton - used for data tables
  */
-export function TableSkeleton({ 
+export function TableSkeleton({
   rows = 5,
   columns = 6,
-  className 
-}: { 
+  className,
+}: {
   rows?: number;
   columns?: number;
   className?: string;
@@ -130,8 +145,8 @@ export function TableSkeleton({
         </div>
         {/* Table Rows */}
         {Array.from({ length: rows }).map((_, rowIndex) => (
-          <div 
-            key={rowIndex} 
+          <div
+            key={rowIndex}
             className="flex border-b border-gray-200 dark:border-gray-700 p-3"
           >
             {Array.from({ length: columns }).map((_, colIndex) => (
@@ -243,4 +258,9 @@ function DefaultSkeleton({ className }: { className?: string }) {
   );
 }
 
-export { HomePageSkeleton, OrdersPageSkeleton, UsersPageSkeleton, DefaultSkeleton };
+export {
+  HomePageSkeleton,
+  OrdersPageSkeleton,
+  UsersPageSkeleton,
+  DefaultSkeleton,
+};
