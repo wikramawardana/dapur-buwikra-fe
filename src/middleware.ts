@@ -10,9 +10,6 @@ const adminRoutes = ["/admin"];
 // Routes that require admin or chef role (orders management)
 const staffRoutes = ["/orders"];
 
-// Routes accessible to all authenticated users (including 'user' role)
-const authenticatedRoutes = ["/home"];
-
 // Get the base URL for internal API calls
 function getBaseUrl(request: NextRequest): string {
   // In production, use the internal URL (localhost) to avoid DNS/network issues

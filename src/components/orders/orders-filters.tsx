@@ -31,7 +31,6 @@ function getCurrentWorkWeek(): { dateFrom: Date; dateTo: Date } {
   const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
   let monday: Date;
-  let friday: Date;
 
   if (dayOfWeek === 0) {
     // Sunday: get next week (Monday is tomorrow)
@@ -48,7 +47,7 @@ function getCurrentWorkWeek(): { dateFrom: Date; dateTo: Date } {
   }
 
   // Friday is 4 days after Monday
-  friday = new Date(monday);
+  const friday = new Date(monday);
   friday.setDate(monday.getDate() + 4);
 
   return {

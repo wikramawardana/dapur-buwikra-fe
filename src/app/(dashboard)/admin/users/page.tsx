@@ -46,10 +46,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  StatsCardSkeleton,
-  TableSkeleton,
-} from "@/components/ui/page-loading";
+import { StatsCardSkeleton, TableSkeleton } from "@/components/ui/page-loading";
 import {
   Select,
   SelectContent,
