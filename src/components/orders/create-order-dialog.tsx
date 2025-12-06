@@ -209,7 +209,10 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6 sm:space-y-8"
+          >
             {/* Section 1: Schedule */}
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">

@@ -166,11 +166,14 @@ export function OrdersTable({
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-black truncate">{order.name}</h3>
+                  <h3 className="font-bold text-black truncate">
+                    {order.name}
+                  </h3>
                   <div className="mt-1 text-sm text-blue-600">
                     {order.dates.map((date, idx) => (
                       <div key={idx} className="truncate">
-                        <span className="font-semibold">{order.days[idx]}</span> - {formatDate(date)}
+                        <span className="font-semibold">{order.days[idx]}</span>{" "}
+                        - {formatDate(date)}
                       </div>
                     ))}
                   </div>
@@ -181,20 +184,26 @@ export function OrdersTable({
                   onOrderDeleted={onOrderDeleted}
                 />
               </div>
-              
+
               <div className="mt-3 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">Ordered:</span>
-                  <span className="text-gray-700 text-right max-w-[60%] truncate">{order.ordered}</span>
+                  <span className="text-gray-700 text-right max-w-[60%] truncate">
+                    {order.ordered}
+                  </span>
                 </div>
                 {order.notes && (
                   <div className="flex items-center justify-between">
                     <span className="text-gray-500">Notes:</span>
-                    <span className="text-gray-500 italic text-right max-w-[60%] truncate">{order.notes}</span>
+                    <span className="text-gray-500 italic text-right max-w-[60%] truncate">
+                      {order.notes}
+                    </span>
                   </div>
                 )}
                 <div className="flex items-center justify-between pt-2 border-t">
-                  <span className="font-bold text-green-600">{formatCurrency(order.total_price)}</span>
+                  <span className="font-bold text-green-600">
+                    {formatCurrency(order.total_price)}
+                  </span>
                   <StatusBadge status={order.payment_status} type="payment" />
                 </div>
               </div>

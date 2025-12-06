@@ -140,7 +140,11 @@ export function OrdersFilters({
       format(currentWorkWeek.dateTo, "yyyy-MM-dd");
 
   const hasActiveFilters =
-    search || name || day !== "all" || paymentStatus !== "all" || !isDefaultDateRange;
+    search ||
+    name ||
+    day !== "all" ||
+    paymentStatus !== "all" ||
+    !isDefaultDateRange;
 
   // Check if local state differs from applied filters
   const hasUnappliedChanges =
@@ -301,8 +305,8 @@ export function OrdersFilters({
             onClick={handleApplyFilters}
             size="sm"
             className={`gap-2 neo-brutal ${
-              hasUnappliedChanges 
-                ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-600 shadow-lg ring-2 ring-blue-400 ring-offset-2 animate-pulse" 
+              hasUnappliedChanges
+                ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-600 shadow-lg ring-2 ring-blue-400 ring-offset-2 animate-pulse"
                 : "bg-blue-500 hover:bg-blue-600 text-white border-blue-600"
             }`}
           >

@@ -34,7 +34,9 @@ export function OrderStatsCards({ stats, isLoading }: OrderStatsCardsProps) {
           <div className="text-xl font-bold text-blue-700 sm:text-3xl">
             {stats?.total_count ?? 0}
           </div>
-          <p className="text-[10px] text-blue-500 mt-1 sm:text-xs">Orders in current filter</p>
+          <p className="text-[10px] text-blue-500 mt-1 sm:text-xs">
+            Orders in current filter
+          </p>
         </CardContent>
       </Card>
       <Card className="neo-brutal bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
