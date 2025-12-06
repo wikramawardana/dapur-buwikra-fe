@@ -57,6 +57,7 @@ export interface OrderFilters {
 export interface OrderStats {
   total_count: number;
   total_sum: number;
+  count_by_day: number;
 }
 
 export interface OrderStatsResponse {
@@ -78,5 +79,19 @@ export interface OrderSumResponse {
   message: string;
   data: {
     total_amount: number;
+  };
+}
+
+export interface OrderCountByDayItem {
+  day: string;
+  count: number;
+}
+
+export interface OrderCountByDayResponse {
+  status: string;
+  message: string;
+  data: {
+    days: OrderCountByDayItem[];
+    total: number;
   };
 }

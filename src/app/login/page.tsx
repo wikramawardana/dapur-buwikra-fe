@@ -1,6 +1,7 @@
 "use client";
 
-import { ChefHat } from "lucide-react";
+import { ChefHat, Home } from "lucide-react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import { Suspense } from "react";
@@ -45,7 +46,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const { data: session, isPending } = useSession();
   const [isLoading, setIsLoading] = React.useState(false);
-  const callbackUrl = searchParams.get("callbackUrl") || "/orders";
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -117,6 +118,18 @@ function LoginForm() {
                 <span>Continue with Google</span>
               </div>
             )}
+          </Button>
+
+          {/* Back to Home Button */}
+          <Button
+            asChild
+            variant="outline"
+            className="w-full h-14 text-lg font-bold bg-yellow-400 dark:bg-yellow-500 text-black border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all duration-150"
+          >
+            <Link href="/">
+              <Home className="w-6 h-6 mr-3" />
+              Back to Home
+            </Link>
           </Button>
 
           {/* Divider */}

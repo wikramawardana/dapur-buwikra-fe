@@ -150,18 +150,22 @@ const getPriceBreakdown = (orderedItems: string[], datesCount: number) => {
 // Helper function to parse ordered string to array (for backward compatibility)
 const parseOrderedToArray = (ordered: string | string[]): string[] => {
   if (Array.isArray(ordered)) return ordered;
-  // Try to match with menu items
-  const orderedLower = ordered.toLowerCase();
+  // Split by comma and match each item exactly with menu items
+  const orderedParts = ordered
+    .split(",")
+    .map((part) => part.trim().toLowerCase());
   const matched: string[] = [];
-  for (const item of MENU_ITEMS) {
-    if (
-      orderedLower.includes(item.label.toLowerCase()) ||
-      orderedLower.includes(item.value.replace(/_/g, " "))
-    ) {
-      matched.push(item.value);
+  for (const part of orderedParts) {
+    const menuItem = MENU_ITEMS.find(
+      (item) =>
+        item.label.toLowerCase() === part ||
+        item.value.replace(/_/g, " ") === part,
+    );
+    if (menuItem) {
+      matched.push(menuItem.value);
     }
   }
-  return matched.length > 0 ? matched : [];
+  return matched;
 };
 
 type ActionMode = "view" | "edit";

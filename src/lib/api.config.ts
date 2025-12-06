@@ -17,6 +17,14 @@ let tokenExpiry = 0;
 const TOKEN_CACHE_DURATION = 5000; // Cache token for 5 seconds
 
 /**
+ * Clear the token cache (call this on logout or auth errors)
+ */
+export function clearAuthTokenCache(): void {
+  tokenPromise = null;
+  tokenExpiry = 0;
+}
+
+/**
  * Get the session token for API authorization (with caching)
  */
 export async function getAuthToken(): Promise<string | null> {
@@ -83,18 +91,36 @@ export async function apiFetch<T>(
   // Get the auth token
   const token = await getAuthToken();
 
+  // If no token available, redirect to login
+  if (!token) {
+    clearAuthTokenCache();
+    if (typeof window !== "undefined") {
+      window.location.href = `/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`;
+    }
+    throw new ApiError("No authentication token available", 401);
+  }
+
   try {
     const response = await fetch(url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
         ...options?.headers,
       },
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+
+      // Handle authentication errors - redirect to login
+      if (response.status === 401 || response.status === 403) {
+        clearAuthTokenCache();
+        if (typeof window !== "undefined") {
+          window.location.href = `/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`;
+        }
+      }
+
       throw new ApiError(
         errorData.message || `HTTP error! status: ${response.status}`,
         response.status,

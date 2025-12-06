@@ -1,6 +1,6 @@
 "use client";
 
-import { DollarSign, ShoppingCart } from "lucide-react";
+import { Calendar, DollarSign, ShoppingCart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsCardSkeleton } from "@/components/ui/page-loading";
 import { formatCurrency } from "@/lib/format";
@@ -14,19 +14,20 @@ interface OrderStatsCardsProps {
 export function OrderStatsCards({ stats, isLoading }: OrderStatsCardsProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-3 grid-cols-2 sm:gap-4">
+      <div className="grid gap-3 grid-cols-3 sm:gap-4">
         <StatsCardSkeleton color="blue" />
+        <StatsCardSkeleton color="purple" />
         <StatsCardSkeleton color="green" />
       </div>
     );
   }
 
   return (
-    <div className="grid gap-3 grid-cols-2 sm:gap-4">
+    <div className="grid gap-3 grid-cols-3 sm:gap-4">
       <Card className="neo-brutal bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 pt-3 sm:px-6 sm:pt-6">
           <CardTitle className="text-xs font-medium text-blue-600 sm:text-sm">
-            Total Orders
+            Total Order User
           </CardTitle>
           <ShoppingCart className="h-4 w-4 text-blue-500 sm:h-5 sm:w-5" />
         </CardHeader>
@@ -36,6 +37,22 @@ export function OrderStatsCards({ stats, isLoading }: OrderStatsCardsProps) {
           </div>
           <p className="text-[10px] text-blue-500 mt-1 sm:text-xs">
             Orders in current filter
+          </p>
+        </CardContent>
+      </Card>
+      <Card className="neo-brutal bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 pt-3 sm:px-6 sm:pt-6">
+          <CardTitle className="text-xs font-medium text-purple-600 sm:text-sm">
+            Total Order By Day
+          </CardTitle>
+          <Calendar className="h-4 w-4 text-purple-500 sm:h-5 sm:w-5" />
+        </CardHeader>
+        <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
+          <div className="text-xl font-bold text-purple-700 sm:text-3xl">
+            {stats?.count_by_day ?? 0}
+          </div>
+          <p className="text-[10px] text-purple-500 mt-1 sm:text-xs">
+            Daily orders in filter
           </p>
         </CardContent>
       </Card>

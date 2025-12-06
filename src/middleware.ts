@@ -2,7 +2,7 @@ import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 
 // Routes that don't require authentication
-const publicRoutes = ["/login", "/api/auth"];
+const publicRoutes = ["/", "/login", "/api/auth"];
 
 // Routes that require admin role
 const adminRoutes = ["/admin"];
@@ -72,14 +72,14 @@ export async function middleware(request: NextRequest) {
     // Check if trying to access staff routes (orders) - requires admin or chef
     if (staffRoutes.some((route) => pathname.startsWith(route))) {
       if (userRole !== "admin" && userRole !== "chef") {
-        return NextResponse.redirect(new URL("/home", request.url));
+        return NextResponse.redirect(new URL("/dashboard", request.url));
       }
     }
 
     // Check admin routes - requires admin only
     if (adminRoutes.some((route) => pathname.startsWith(route))) {
       if (userRole !== "admin") {
-        return NextResponse.redirect(new URL("/home", request.url));
+        return NextResponse.redirect(new URL("/dashboard", request.url));
       }
     }
 

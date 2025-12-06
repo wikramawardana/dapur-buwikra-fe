@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import { CreateOrderDialog } from "@/components/orders/create-order-dialog";
@@ -24,11 +25,14 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Spinner } from "@/components/ui/spinner";
 import { UserMenu } from "@/components/user-menu";
+import { useSession } from "@/lib/auth-client";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import {
   getOrders,
   getOrdersCount,
+  getOrdersCountByDay,
   getOrdersSum,
 } from "@/services/orders.service";
 import type {
@@ -73,6 +77,9 @@ function getCurrentWorkWeek(): { dateFrom: string; dateTo: string } {
 }
 
 export default function OrdersPage() {
+  const router = useRouter();
+  const { data: session, isPending: isSessionLoading } = useSession();
+
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [stats, setStats] = React.useState<OrderStats | null>(null);
   const [pagination, setPagination] = React.useState<PaginationInfo>({
@@ -96,6 +103,17 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isStatsLoading, setIsStatsLoading] = React.useState(true);
 
+  // Track if user is authenticated (stable boolean instead of object reference)
+  const isAuthenticated = !!session?.user;
+  const hasInitiallyFetched = React.useRef(false);
+
+  // Check authentication and redirect if not logged in
+  React.useEffect(() => {
+    if (!isSessionLoading && !session?.user) {
+      router.replace(`/login?callbackUrl=${encodeURIComponent("/orders")}`);
+    }
+  }, [session, isSessionLoading, router]);
+
   const fetchOrders = React.useCallback(async () => {
     setIsLoading(true);
     try {
@@ -103,6 +121,10 @@ export default function OrdersPage() {
       setOrders(response.data.data);
       setPagination(response.data.pagination);
     } catch (error) {
+      // Don't show toast for auth errors - let the redirect handle it
+      if (error instanceof Error && error.message.includes("401")) {
+        return;
+      }
       toast.error(
         error instanceof Error ? error.message : "Failed to fetch orders",
       );
@@ -120,18 +142,25 @@ export default function OrdersPage() {
       delete statsFilters.page;
       delete statsFilters.page_size;
 
-      // Call both APIs in parallel
-      const [countResponse, sumResponse] = await Promise.all([
-        getOrdersCount(statsFilters),
-        getOrdersSum(statsFilters),
-      ]);
+      // Call all APIs in parallel
+      const [countResponse, sumResponse, countByDayResponse] =
+        await Promise.all([
+          getOrdersCount(statsFilters),
+          getOrdersSum(statsFilters),
+          getOrdersCountByDay(statsFilters),
+        ]);
 
       // Combine the results
       setStats({
         total_count: countResponse.data.count,
         total_sum: sumResponse.data.total_amount,
+        count_by_day: countByDayResponse.data.total,
       });
     } catch (error) {
+      // Don't show toast for auth errors - let the redirect handle it
+      if (error instanceof Error && error.message.includes("401")) {
+        return;
+      }
       toast.error(
         error instanceof Error ? error.message : "Failed to fetch statistics",
       );
@@ -141,10 +170,23 @@ export default function OrdersPage() {
     }
   }, [filters]);
 
+  // Initial fetch when authenticated
   React.useEffect(() => {
-    fetchOrders();
-    fetchStats();
-  }, [fetchOrders, fetchStats]);
+    if (isAuthenticated && !hasInitiallyFetched.current) {
+      hasInitiallyFetched.current = true;
+      fetchOrders();
+      fetchStats();
+    }
+  }, [isAuthenticated, fetchOrders, fetchStats]);
+
+  // Re-fetch when filters change (but only after initial fetch)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: filters is intentionally in the dependency array to trigger refetch on filter changes
+  React.useEffect(() => {
+    if (isAuthenticated && hasInitiallyFetched.current) {
+      fetchOrders();
+      fetchStats();
+    }
+  }, [filters, isAuthenticated, fetchOrders, fetchStats]);
 
   const handleFiltersChange = (newFilters: OrderFilters) => {
     setFilters(newFilters);
@@ -157,6 +199,24 @@ export default function OrdersPage() {
   const handlePageSizeChange = (pageSize: number) => {
     setFilters({ ...filters, page_size: pageSize, page: 1 });
   };
+
+  // Show loading state while checking session
+  if (isSessionLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
+  // Don't render content if not authenticated (redirect is happening)
+  if (!session?.user) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
 
   return (
     <>

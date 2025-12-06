@@ -94,7 +94,7 @@ export function StatsCardSkeleton({
   color = "gray",
 }: {
   className?: string;
-  color?: "blue" | "green" | "red" | "yellow" | "gray";
+  color?: "blue" | "green" | "red" | "yellow" | "purple" | "gray";
 }) {
   const colorClasses = {
     blue: "bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800",
@@ -103,6 +103,8 @@ export function StatsCardSkeleton({
     red: "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800",
     yellow:
       "bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800",
+    purple:
+      "bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800",
     gray: "neo-brutal neo-brutal-white",
   };
 

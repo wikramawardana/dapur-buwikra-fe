@@ -17,10 +17,10 @@ import {
 } from "@/components/ui/sidebar";
 import { useSession } from "@/lib/auth-client";
 
-// Home is accessible to all authenticated users
-const homeItem = {
-  title: "Home",
-  url: "/home",
+// Dashboard is accessible to all authenticated users
+const dashboardItem = {
+  title: "Dashboard",
+  url: "/dashboard",
   icon: Home,
 };
 
@@ -91,24 +91,24 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">
-              {/* Home - always visible */}
+              {/* Dashboard - always visible */}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
                   isActive={
-                    pathname === homeItem.url ||
-                    pathname.startsWith(`${homeItem.url}/`)
+                    pathname === dashboardItem.url ||
+                    pathname.startsWith(`${dashboardItem.url}/`)
                   }
                   className={
-                    pathname === homeItem.url ||
-                    pathname.startsWith(`${homeItem.url}/`)
+                    pathname === dashboardItem.url ||
+                    pathname.startsWith(`${dashboardItem.url}/`)
                       ? "border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]"
                       : "border-2 border-transparent hover:border-black dark:hover:border-white"
                   }
                 >
-                  <a href={homeItem.url}>
-                    <homeItem.icon className="size-4" />
-                    <span className="font-semibold">{homeItem.title}</span>
+                  <a href={dashboardItem.url}>
+                    <dashboardItem.icon className="size-4" />
+                    <span className="font-semibold">{dashboardItem.title}</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -1,6 +1,7 @@
 import { apiFetch, buildQueryString } from "@/lib/api.config";
 import type {
   CreateOrderPayload,
+  OrderCountByDayResponse,
   OrderCountResponse,
   OrderFilters,
   OrderSumResponse,
@@ -69,4 +70,16 @@ export async function getOrdersSum(
 ): Promise<OrderSumResponse> {
   const queryString = buildQueryString(filters);
   return apiFetch<OrderSumResponse>(`/orders/sum${queryString}`);
+}
+
+/**
+ * Get orders count by day
+ */
+export async function getOrdersCountByDay(
+  filters: OrderFilters = {},
+): Promise<OrderCountByDayResponse> {
+  const queryString = buildQueryString(filters);
+  return apiFetch<OrderCountByDayResponse>(
+    `/orders/count-by-day${queryString}`,
+  );
 }
