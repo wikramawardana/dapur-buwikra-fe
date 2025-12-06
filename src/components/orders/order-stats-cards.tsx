@@ -14,7 +14,7 @@ interface OrderStatsCardsProps {
 export function OrderStatsCards({ stats, isLoading }: OrderStatsCardsProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 grid-cols-2 sm:gap-4">
         <StatsCardSkeleton color="blue" />
         <StatsCardSkeleton color="green" />
       </div>
@@ -22,33 +22,33 @@ export function OrderStatsCards({ stats, isLoading }: OrderStatsCardsProps) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-3 grid-cols-2 sm:gap-4">
       <Card className="neo-brutal bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-blue-600">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 pt-3 sm:px-6 sm:pt-6">
+          <CardTitle className="text-xs font-medium text-blue-600 sm:text-sm">
             Total Orders
           </CardTitle>
-          <ShoppingCart className="h-5 w-5 text-blue-500" />
+          <ShoppingCart className="h-4 w-4 text-blue-500 sm:h-5 sm:w-5" />
         </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-blue-700">
+        <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
+          <div className="text-xl font-bold text-blue-700 sm:text-3xl">
             {stats?.total_count ?? 0}
           </div>
-          <p className="text-xs text-blue-500 mt-1">Orders in current filter</p>
+          <p className="text-[10px] text-blue-500 mt-1 sm:text-xs">Orders in current filter</p>
         </CardContent>
       </Card>
       <Card className="neo-brutal bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-green-600">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 pt-3 sm:px-6 sm:pt-6">
+          <CardTitle className="text-xs font-medium text-green-600 sm:text-sm">
             Total Revenue
           </CardTitle>
-          <DollarSign className="h-5 w-5 text-green-500" />
+          <DollarSign className="h-4 w-4 text-green-500 sm:h-5 sm:w-5" />
         </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold text-green-700">
+        <CardContent className="px-3 pb-3 sm:px-6 sm:pb-6">
+          <div className="text-xl font-bold text-green-700 sm:text-3xl">
             {formatCurrency(stats?.total_sum ?? 0)}
           </div>
-          <p className="text-xs text-green-500 mt-1">
+          <p className="text-[10px] text-green-500 mt-1 sm:text-xs">
             Revenue in current filter
           </p>
         </CardContent>

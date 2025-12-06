@@ -58,28 +58,28 @@ export default function HomePage() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 space-y-6 p-6">
+      <div className="flex-1 space-y-4 p-3 sm:space-y-6 sm:p-6">
         {/* Welcome Section - Show skeleton when loading */}
         {isPending ? (
           <WelcomeCardSkeleton />
         ) : (
           <Card className="border-4 border-black dark:border-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900 dark:to-orange-900">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-16 h-16 bg-yellow-400 border-4 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]">
-                  <ChefHat className="w-10 h-10 text-black" />
+            <CardHeader className="pb-2 px-4 sm:px-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-yellow-400 border-4 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]">
+                  <ChefHat className="w-7 h-7 sm:w-10 sm:h-10 text-black" />
                 </div>
                 <div>
-                  <CardTitle className="text-3xl font-black text-black dark:text-white">
+                  <CardTitle className="text-xl sm:text-3xl font-black text-black dark:text-white">
                     Welcome, {userName}!
                   </CardTitle>
-                  <CardDescription className="text-lg font-medium text-black/70 dark:text-white/70">
+                  <CardDescription className="text-sm sm:text-lg font-medium text-black/70 dark:text-white/70">
                     Dapur Bu Wikra - Catering Management System
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6">
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-sm font-medium text-black/60 dark:text-white/60">
                   Your role:
@@ -103,34 +103,34 @@ export default function HomePage() {
         {/* Role-based Content */}
         {isPending ? (
           /* Loading State - Using reusable ActionCardSkeleton */
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2">
             <ActionCardSkeleton />
             <ActionCardSkeleton />
           </div>
         ) : canAccessOrders ? (
           /* Admin/Chef View */
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2">
             <Card
               className="border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer bg-blue-100 dark:bg-blue-900"
               onClick={() => router.push("/orders")}
             >
-              <CardHeader>
+              <CardHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-12 h-12 bg-blue-400 border-2 border-black dark:border-white">
-                    <ShoppingCart className="w-6 h-6 text-black" />
+                  <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-blue-400 border-2 border-black dark:border-white">
+                    <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-bold text-black dark:text-white">
+                    <CardTitle className="text-lg sm:text-xl font-bold text-black dark:text-white">
                       Order Management
                     </CardTitle>
-                    <CardDescription className="text-black/60 dark:text-white/60">
+                    <CardDescription className="text-xs sm:text-sm text-black/60 dark:text-white/60">
                       Manage catering orders
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <Button className="w-full font-bold bg-blue-400 text-black border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px]">
+              <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
+                <Button className="w-full font-bold text-sm sm:text-base bg-blue-400 text-black border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px]">
                   Go to Orders →
                 </Button>
               </CardContent>
@@ -141,23 +141,23 @@ export default function HomePage() {
                 className="border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all cursor-pointer bg-yellow-100 dark:bg-yellow-900"
                 onClick={() => router.push("/admin/users")}
               >
-                <CardHeader>
+                <CardHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-12 h-12 bg-yellow-400 border-2 border-black dark:border-white">
-                      <Users className="w-6 h-6 text-black" />
+                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-yellow-400 border-2 border-black dark:border-white">
+                      <Users className="w-5 h-5 sm:w-6 sm:h-6 text-black" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl font-bold text-black dark:text-white">
+                      <CardTitle className="text-lg sm:text-xl font-bold text-black dark:text-white">
                         User Management
                       </CardTitle>
-                      <CardDescription className="text-black/60 dark:text-white/60">
+                      <CardDescription className="text-xs sm:text-sm text-black/60 dark:text-white/60">
                         Manage user roles
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <Button className="w-full font-bold bg-yellow-400 text-black border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px]">
+                <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
+                  <Button className="w-full font-bold text-sm sm:text-base bg-yellow-400 text-black border-2 border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px]">
                     Manage Users →
                   </Button>
                 </CardContent>

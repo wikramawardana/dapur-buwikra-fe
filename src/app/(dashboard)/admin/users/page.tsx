@@ -65,6 +65,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UserMenu } from "@/components/user-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { authClient, useSession } from "@/lib/auth-client";
 
 interface User {
@@ -93,6 +94,7 @@ const ROLES = [
 
 export default function AdminUsersPage() {
   const { data: session } = useSession();
+  const isMobile = useIsMobile();
   const [users, setUsers] = React.useState<User[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -242,63 +244,63 @@ export default function AdminUsersPage() {
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
         <Card className="neo-brutal neo-brutal-white border-2">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <div>
-              <CardTitle className="text-2xl font-bold">
+          <CardHeader className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-bold sm:text-2xl">
                 User Management
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 Manage user roles and permissions
               </CardDescription>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
             {/* Stats Cards */}
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 <StatsCardSkeleton color="blue" />
                 <StatsCardSkeleton color="red" />
                 <StatsCardSkeleton color="green" />
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 <Card className="neo-brutal bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-                  <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                    <CardDescription className="text-blue-600 font-medium">
+                  <CardHeader className="pb-1 sm:pb-2 flex flex-row items-center justify-between space-y-0 px-2 pt-2 sm:px-6 sm:pt-6">
+                    <CardDescription className="text-blue-600 font-medium text-xs sm:text-sm">
                       Total Users
                     </CardDescription>
-                    <Users className="h-5 w-5 text-blue-500" />
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-black text-blue-700">
+                  <CardContent className="px-2 pb-2 sm:px-6 sm:pb-6">
+                    <div className="text-xl sm:text-3xl font-black text-blue-700">
                       {users.length}
                     </div>
                   </CardContent>
                 </Card>
                 <Card className="neo-brutal bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800">
-                  <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                    <CardDescription className="text-red-600 font-medium">
+                  <CardHeader className="pb-1 sm:pb-2 flex flex-row items-center justify-between space-y-0 px-2 pt-2 sm:px-6 sm:pt-6">
+                    <CardDescription className="text-red-600 font-medium text-xs sm:text-sm">
                       Admins
                     </CardDescription>
-                    <Shield className="h-5 w-5 text-red-500" />
+                    <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-black text-red-700">
+                  <CardContent className="px-2 pb-2 sm:px-6 sm:pb-6">
+                    <div className="text-xl sm:text-3xl font-black text-red-700">
                       {users.filter((u) => u.role === "admin").length}
                     </div>
                   </CardContent>
                 </Card>
                 <Card className="neo-brutal bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
-                  <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                    <CardDescription className="text-green-600 font-medium">
+                  <CardHeader className="pb-1 sm:pb-2 flex flex-row items-center justify-between space-y-0 px-2 pt-2 sm:px-6 sm:pt-6">
+                    <CardDescription className="text-green-600 font-medium text-xs sm:text-sm">
                       Chefs
                     </CardDescription>
-                    <UserCog className="h-5 w-5 text-green-500" />
+                    <UserCog className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                   </CardHeader>
-                  <CardContent>
-                    <div className="text-3xl font-black text-green-700">
+                  <CardContent className="px-2 pb-2 sm:px-6 sm:pb-6">
+                    <div className="text-xl sm:text-3xl font-black text-green-700">
                       {users.filter((u) => u.role === "chef").length}
                     </div>
                   </CardContent>
@@ -308,18 +310,18 @@ export default function AdminUsersPage() {
 
             {/* Users Table Card */}
             <Card className="neo-brutal neo-brutal-white">
-              <CardHeader>
-                <div className="flex items-center justify-between">
+              <CardHeader className="px-3 sm:px-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <CardTitle className="text-xl font-bold text-black dark:text-white flex items-center gap-2">
-                      <Users className="w-5 h-5" />
+                    <CardTitle className="text-lg sm:text-xl font-bold text-black dark:text-white flex items-center gap-2">
+                      <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                       Users
                     </CardTitle>
-                    <CardDescription className="text-black/60 dark:text-white/60">
+                    <CardDescription className="text-xs sm:text-sm text-black/60 dark:text-white/60">
                       View and manage user access
                     </CardDescription>
                   </div>
-                  <div className="relative w-64">
+                  <div className="relative w-full sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40" />
                     <Input
                       placeholder="Search users..."
@@ -330,13 +332,106 @@ export default function AdminUsersPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-3 sm:px-6">
                 {isLoading ? (
-                  <TableSkeleton rows={5} columns={5} />
+                  <TableSkeleton rows={5} columns={isMobile ? 2 : 5} />
                 ) : (
                   <>
-                    <div className="border-2 border-black dark:border-white">
-                      <Table>
+                    {/* Mobile Card View */}
+                    {isMobile ? (
+                      <div className="space-y-3">
+                        {filteredUsers.map((user) => (
+                          <Card key={user.id} className="border-2 border-black dark:border-white">
+                            <CardContent className="p-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <Avatar className="border-2 border-black dark:border-white h-8 w-8 flex-shrink-0">
+                                    <AvatarImage src={user.image || undefined} />
+                                    <AvatarFallback className="bg-yellow-400 text-black font-bold text-xs">
+                                      {getInitials(user.name, user.email)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-black dark:text-white text-sm truncate">
+                                      {user.name || "No name"}
+                                    </p>
+                                    <p className="text-xs text-black/60 dark:text-white/60 truncate">
+                                      {user.email}
+                                    </p>
+                                  </div>
+                                </div>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="border-2 border-black dark:border-white h-8 w-8 flex-shrink-0"
+                                      disabled={user.id === session?.user?.id}
+                                    >
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    align="end"
+                                    className="border-2 border-black dark:border-white"
+                                  >
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setSelectedUser(user);
+                                        setSelectedRole(user.role || "user");
+                                        setIsRoleDialogOpen(true);
+                                      }}
+                                    >
+                                      <UserCog className="w-4 h-4 mr-2" />
+                                      Change Role
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleBanUser(user)}>
+                                      <Shield className="w-4 h-4 mr-2" />
+                                      {user.banned ? "Unban User" : "Ban User"}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-red-600"
+                                      onClick={() => {
+                                        setSelectedUser(user);
+                                        setIsDeleteDialogOpen(true);
+                                      }}
+                                    >
+                                      <Trash2 className="w-4 h-4 mr-2" />
+                                      Remove User
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                <Badge className={`${getRoleBadgeColor(user.role)} border-2 font-bold text-xs`}>
+                                  {user.role || "user"}
+                                </Badge>
+                                <Badge
+                                  className={`border-2 font-bold text-xs ${
+                                    user.banned
+                                      ? "bg-red-400 text-black border-black"
+                                      : "bg-green-400 text-black border-black"
+                                  }`}
+                                >
+                                  {user.banned ? "Banned" : "Active"}
+                                </Badge>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                        {filteredUsers.length === 0 && (
+                          <div className="text-center py-8 text-black/60 dark:text-white/60">
+                            No users found
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* Desktop Table View */
+                      <div className="border-2 border-black dark:border-white">
+                        <Table>
                         <TableHeader>
                           <TableRow className="border-b-2 border-black dark:border-white bg-gray-100 dark:bg-gray-800">
                             <TableHead className="font-bold text-black dark:text-white">
@@ -463,11 +558,12 @@ export default function AdminUsersPage() {
                         </TableBody>
                       </Table>
                     </div>
+                    )}
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                      <div className="flex items-center justify-between mt-4">
-                        <p className="text-sm text-black/60 dark:text-white/60">
+                      <div className="flex flex-col gap-2 mt-4 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-xs sm:text-sm text-black/60 dark:text-white/60">
                           Page {currentPage} of {totalPages}
                         </p>
                         <div className="flex gap-2">

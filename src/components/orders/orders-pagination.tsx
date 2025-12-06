@@ -32,17 +32,17 @@ export function OrdersPagination({
   const { page, page_size, total_items, total_pages } = pagination;
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
         <span>
           Showing {Math.min((page - 1) * page_size + 1, total_items)} to{" "}
           {Math.min(page * page_size, total_items)} of {total_items} results
         </span>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <div className="flex items-center gap-2">
-          <span className="whitespace-nowrap text-sm text-muted-foreground">
+          <span className="whitespace-nowrap text-xs sm:text-sm text-muted-foreground">
             Rows per page:
           </span>
           <Select
@@ -63,36 +63,37 @@ export function OrdersPagination({
         </div>
 
         <Pagination>
-          <PaginationContent>
+          <PaginationContent className="gap-1">
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => onPageChange(Math.max(1, page - 1))}
-                className={
+                className={`h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-4 ${
                   page === 1
                     ? "pointer-events-none opacity-50"
                     : "cursor-pointer"
-                }
+                }`}
               />
             </PaginationItem>
 
-            {Array.from({ length: Math.min(5, total_pages) }, (_, i) => {
+            {/* Show fewer page numbers on mobile */}
+            {Array.from({ length: Math.min(3, total_pages) }, (_, i) => {
               let pageNum: number;
-              if (total_pages <= 5) {
+              if (total_pages <= 3) {
                 pageNum = i + 1;
-              } else if (page <= 3) {
+              } else if (page <= 2) {
                 pageNum = i + 1;
-              } else if (page >= total_pages - 2) {
-                pageNum = total_pages - 4 + i;
+              } else if (page >= total_pages - 1) {
+                pageNum = total_pages - 2 + i;
               } else {
-                pageNum = page - 2 + i;
+                pageNum = page - 1 + i;
               }
 
               return (
-                <PaginationItem key={pageNum}>
+                <PaginationItem key={pageNum} className="hidden sm:block">
                   <PaginationLink
                     onClick={() => onPageChange(pageNum)}
                     isActive={pageNum === page}
-                    className="cursor-pointer"
+                    className="cursor-pointer h-8 w-8 sm:h-10 sm:w-10"
                   >
                     {pageNum}
                   </PaginationLink>
@@ -100,14 +101,21 @@ export function OrdersPagination({
               );
             })}
 
+            {/* Mobile: just show current page */}
+            <PaginationItem className="sm:hidden">
+              <span className="flex h-8 w-auto px-3 items-center justify-center text-sm">
+                {page} / {total_pages}
+              </span>
+            </PaginationItem>
+
             <PaginationItem>
               <PaginationNext
                 onClick={() => onPageChange(Math.min(total_pages, page + 1))}
-                className={
+                className={`h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-4 ${
                   page === total_pages
                     ? "pointer-events-none opacity-50"
                     : "cursor-pointer"
-                }
+                }`}
               />
             </PaginationItem>
           </PaginationContent>

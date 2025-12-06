@@ -175,14 +175,14 @@ export default function OrdersPage() {
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
         <Card className="neo-brutal neo-brutal-white border-2">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <div>
-              <CardTitle className="text-2xl font-bold">
+          <CardHeader className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-bold sm:text-2xl">
                 Orders Management
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 Manage and track all customer orders
               </CardDescription>
             </div>
@@ -193,7 +193,7 @@ export default function OrdersPage() {
               }}
             />
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
             <OrderStatsCards stats={stats} isLoading={isStatsLoading} />
             <OrdersFilters
               filters={filters}

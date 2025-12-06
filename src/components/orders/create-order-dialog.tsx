@@ -190,33 +190,34 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       <DialogTrigger asChild>
         <Button
           size="lg"
-          className="gap-2 h-11 px-6 text-base font-bold border-2 border-black dark:border-white bg-blue-400 text-black hover:bg-blue-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-150 rounded-none"
+          className="gap-2 h-9 px-3 text-sm sm:h-11 sm:px-6 sm:text-base font-bold border-2 border-black dark:border-white bg-blue-400 text-black hover:bg-blue-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-150 rounded-none"
         >
-          <Plus className="h-5 w-5" />
-          Create New Order
+          <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+          <span className="hidden sm:inline">Create New Order</span>
+          <span className="sm:hidden">New Order</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-6xl max-h-[95vh] overflow-y-auto custom-scrollbar border-2 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] rounded-none bg-white dark:bg-black">
-        <DialogHeader className="space-y-3 pb-4 border-b-2 border-black dark:border-white">
-          <DialogTitle className="text-2xl font-black uppercase tracking-tight">
+        <DialogHeader className="space-y-2 sm:space-y-3 pb-3 sm:pb-4 border-b-2 border-black dark:border-white">
+          <DialogTitle className="text-xl sm:text-2xl font-black uppercase tracking-tight">
             Create New Order
           </DialogTitle>
-          <DialogDescription className="text-base font-medium text-black/70 dark:text-white/70">
+          <DialogDescription className="text-sm sm:text-base font-medium text-black/70 dark:text-white/70">
             Fill in the order details below. All fields marked with * are
             required.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
             {/* Section 1: Schedule */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
-                <h3 className="text-lg font-bold uppercase tracking-wide">
+                <h3 className="text-base sm:text-lg font-bold uppercase tracking-wide">
                   Order Schedule
                 </h3>
               </div>
-              <div className="grid gap-6 md:grid-cols-2 items-start">
+              <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 items-start">
                 {/* Days */}
                 <FormField
                   control={form.control}

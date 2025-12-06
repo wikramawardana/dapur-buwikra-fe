@@ -45,6 +45,7 @@ export interface OrderFilters {
   page?: number;
   page_size?: number;
   status?: OrderStatus | "";
+  payment_status?: PaymentStatus | "";
   day?: string;
   name?: string;
   date_from?: string;
