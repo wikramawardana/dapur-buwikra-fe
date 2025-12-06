@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DAYS_OF_WEEK, PAYMENT_STATUSES, SORT_OPTIONS } from "@/lib/constants";
-import type { OrderFilters } from "@/types/order.types";
+import type { OrderFilters, PaymentStatus } from "@/types/order.types";
 
 /**
  * Get the current work week (Monday to Friday).
@@ -100,7 +100,8 @@ export function OrdersFilters({
       search,
       name,
       day: day === "all" ? "" : day,
-      payment_status: paymentStatus === "all" ? "" : paymentStatus,
+      payment_status:
+        paymentStatus === "all" ? "" : (paymentStatus as PaymentStatus),
       date_from: dateFrom ? format(dateFrom, "yyyy-MM-dd") : "",
       date_to: dateTo ? format(dateTo, "yyyy-MM-dd") : "",
       sort_by: sortBy,
