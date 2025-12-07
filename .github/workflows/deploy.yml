@@ -107,6 +107,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Ensure app directory exists
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            # Create app directory if not exists and ensure proper ownership
+            sudo mkdir -p ${{ secrets.APP_DIR || '/opt/dapur-buwikra-fe' }}
+            sudo chown ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} ${{ secrets.APP_DIR || '/opt/dapur-buwikra-fe' }}
+
       - name: Copy docker-compose to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -125,9 +137,6 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
-            # Create app directory if not exists
-            mkdir -p ${{ secrets.APP_DIR || '/opt/dapur-buwikra-fe' }}
-
             # Navigate to app directory
             cd ${{ secrets.APP_DIR || '/opt/dapur-buwikra-fe' }}
 
