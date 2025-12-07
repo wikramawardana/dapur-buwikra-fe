@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type React from "react";
 import type { MenuItem } from "@/types/landing-page";
 
@@ -80,10 +81,11 @@ export const MenuPreview: React.FC = () => {
               className="bg-white border-4 border-black flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all"
             >
               <div className="relative h-48 border-b-4 border-black overflow-hidden group">
-                <img
+                <Image
                   src={item.image}
                   alt={item.name}
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
+                  fill
+                  className="object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
                 />
                 <div className="absolute top-0 right-0 bg-blue-600 text-white px-3 py-1 font-bold border-l-4 border-b-4 border-black text-xs uppercase">
                   {item.category}

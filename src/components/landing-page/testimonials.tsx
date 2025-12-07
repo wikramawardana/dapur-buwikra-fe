@@ -1,4 +1,5 @@
 import { Quote } from "lucide-react";
+import Image from "next/image";
 import type React from "react";
 import type { Testimonial } from "@/types/landing-page";
 
@@ -61,10 +62,12 @@ export const Testimonials: React.FC = () => {
                 "{review.text}"
               </p>
               <div className="flex items-center gap-4">
-                <img
+                <Image
                   src={review.avatar}
                   alt={review.name}
-                  className="w-12 h-12 rounded-full border-2 border-orange-400 object-cover"
+                  width={48}
+                  height={48}
+                  className="rounded-full border-2 border-orange-400 object-cover"
                 />
                 <div>
                   <h4 className="font-bold text-white">{review.name}</h4>

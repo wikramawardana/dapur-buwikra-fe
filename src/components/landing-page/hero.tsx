@@ -1,4 +1,5 @@
 import { ArrowRight, Utensils } from "lucide-react";
+import Image from "next/image";
 import type React from "react";
 import { Button } from "./button";
 
@@ -61,10 +62,11 @@ export const Hero: React.FC = () => {
           {/* Right Image */}
           <div className="w-full md:w-1/2 relative">
             <div className="relative z-10 border-4 border-black bg-white p-2 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
-              <img
+              <Image
                 src="https://picsum.photos/800/600"
                 alt="Masakan Rumahan"
-                className="w-full h-full object-cover border-2 border-black filter grayscale hover:grayscale-0 transition-all duration-500"
+                fill
+                className="object-cover border-2 border-black filter grayscale hover:grayscale-0 transition-all duration-500"
               />
             </div>
             {/* Background Shape */}
