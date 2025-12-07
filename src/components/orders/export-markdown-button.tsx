@@ -4,43 +4,91 @@ import { Check, Copy } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { DAYS_OF_WEEK } from "@/lib/constants";
 import type { Order } from "@/types/order.types";
 
 interface ExportMarkdownButtonProps {
   orders: Order[];
   disabled?: boolean;
+  dayFilter?: string; // "all" or specific day like "Monday"
 }
 
-function ordersToMarkdown(orders: Order[]): string {
+function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
   if (orders.length === 0) {
     return "No orders to export.";
   }
 
   const lines: string[] = [];
 
+  // Determine which days to show based on filter
+  const daysToShow =
+    !dayFilter || dayFilter === "all" || dayFilter === ""
+      ? DAYS_OF_WEEK
+      : [dayFilter];
+
+  // Group orders by day
+  const ordersByDay: Record<
+    string,
+    { name: string; ordered: string; notes: string }[]
+  > = {};
+  for (const day of DAYS_OF_WEEK) {
+    ordersByDay[day] = [];
+  }
+
+  // Track unique orders for total count
+  const uniqueOrderIds = new Set<string>();
+  let totalOrderByDay = 0;
+
+  for (const order of orders) {
+    // Each order can have multiple days
+    for (const day of order.days) {
+      if (DAYS_OF_WEEK.includes(day as (typeof DAYS_OF_WEEK)[number])) {
+        ordersByDay[day].push({
+          name: order.name,
+          ordered: order.ordered,
+          notes: order.notes || "",
+        });
+        uniqueOrderIds.add(order.id);
+        totalOrderByDay++;
+      }
+    }
+  }
+
   // Header info
-  lines.push(`Total: ${orders.length} orders`);
+  lines.push(`Total User Order: ${uniqueOrderIds.size}`);
+  lines.push(`Total Order by Day: ${totalOrderByDay}`);
   lines.push("");
 
-  // Order list
-  orders.forEach((order, index) => {
-    const notesStr = order.notes ? ` — ${order.notes}` : "";
+  // Build output for each day
+  for (const day of daysToShow) {
+    const dayOrders = ordersByDay[day];
+    lines.push(`${day} (${dayOrders.length}) :`);
+    if (dayOrders.length === 0) {
+      lines.push("-");
+    } else {
+      dayOrders.forEach((orderInfo, index) => {
+        const notesStr = orderInfo.notes ? ` — ${orderInfo.notes}` : "";
+        lines.push(
+          `${index + 1}. ${orderInfo.name} (${orderInfo.ordered})${notesStr}`
+        );
+      });
+    }
+    lines.push("");
+  }
 
-    lines.push(`${index + 1}. **${order.name}** (${order.ordered})${notesStr}`);
-  });
-
-  return lines.join("\n");
+  return lines.join("\n").trim();
 }
 
 export function ExportMarkdownButton({
   orders,
   disabled = false,
+  dayFilter,
 }: ExportMarkdownButtonProps) {
   const [copied, setCopied] = React.useState(false);
 
   const handleExport = async () => {
     try {
-      const markdown = ordersToMarkdown(orders);
+      const markdown = ordersToMarkdown(orders, dayFilter);
       await navigator.clipboard.writeText(markdown);
       setCopied(true);
       toast.success("Orders copied to clipboard as Markdown!");

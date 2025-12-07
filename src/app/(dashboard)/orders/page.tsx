@@ -81,6 +81,9 @@ export default function OrdersPage() {
   const { data: session, isPending: isSessionLoading } = useSession();
 
   const [orders, setOrders] = React.useState<Order[]>([]);
+  const [allOrdersForExport, setAllOrdersForExport] = React.useState<Order[]>(
+    []
+  );
   const [stats, setStats] = React.useState<OrderStats | null>(null);
   const [pagination, setPagination] = React.useState<PaginationInfo>({
     page: 1,
@@ -88,6 +91,7 @@ export default function OrdersPage() {
     total_items: 0,
     total_pages: 0,
   });
+  const [isExportLoading, setIsExportLoading] = React.useState(false);
 
   // Get current work week for default date filter
   const defaultWorkWeek = React.useMemo(() => getCurrentWorkWeek(), []);
@@ -126,11 +130,27 @@ export default function OrdersPage() {
         return;
       }
       toast.error(
-        error instanceof Error ? error.message : "Failed to fetch orders",
+        error instanceof Error ? error.message : "Failed to fetch orders"
       );
       setOrders([]);
     } finally {
       setIsLoading(false);
+    }
+  }, [filters]);
+
+  const fetchAllOrdersForExport = React.useCallback(async () => {
+    setIsExportLoading(true);
+    try {
+      // Fetch all orders with page_size 100 for export
+      const exportFilters = { ...filters, page: 1, page_size: 100 };
+      const response = await getOrders(exportFilters);
+      setAllOrdersForExport(response.data.data);
+    } catch (error) {
+      // Silently fail for export - user can retry
+      console.error("Failed to fetch orders for export:", error);
+      setAllOrdersForExport([]);
+    } finally {
+      setIsExportLoading(false);
     }
   }, [filters]);
 
@@ -162,7 +182,7 @@ export default function OrdersPage() {
         return;
       }
       toast.error(
-        error instanceof Error ? error.message : "Failed to fetch statistics",
+        error instanceof Error ? error.message : "Failed to fetch statistics"
       );
       setStats(null);
     } finally {
@@ -176,8 +196,9 @@ export default function OrdersPage() {
       hasInitiallyFetched.current = true;
       fetchOrders();
       fetchStats();
+      fetchAllOrdersForExport();
     }
-  }, [isAuthenticated, fetchOrders, fetchStats]);
+  }, [isAuthenticated, fetchOrders, fetchStats, fetchAllOrdersForExport]);
 
   // Re-fetch when filters change (but only after initial fetch)
   // biome-ignore lint/correctness/useExhaustiveDependencies: filters is intentionally in the dependency array to trigger refetch on filter changes
@@ -185,8 +206,15 @@ export default function OrdersPage() {
     if (isAuthenticated && hasInitiallyFetched.current) {
       fetchOrders();
       fetchStats();
+      fetchAllOrdersForExport();
     }
-  }, [filters, isAuthenticated, fetchOrders, fetchStats]);
+  }, [
+    filters,
+    isAuthenticated,
+    fetchOrders,
+    fetchStats,
+    fetchAllOrdersForExport,
+  ]);
 
   const handleFiltersChange = (newFilters: OrderFilters) => {
     setFilters(newFilters);
@@ -260,7 +288,11 @@ export default function OrdersPage() {
               onFiltersChange={handleFiltersChange}
             />
             <div className="flex justify-end">
-              <ExportMarkdownButton orders={orders} disabled={isLoading} />
+              <ExportMarkdownButton
+                orders={allOrdersForExport}
+                disabled={isLoading || isExportLoading}
+                dayFilter={filters.day}
+              />
             </div>
             <OrdersTable
               orders={orders}
