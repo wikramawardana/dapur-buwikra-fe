@@ -115,9 +115,9 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
-            # Create app directory if not exists and ensure proper ownership
-            sudo mkdir -p ${{ secrets.APP_DIR || '/opt/dapur-buwikra-fe' }}
-            sudo chown ${{ secrets.SERVER_USER }}:${{ secrets.SERVER_USER }} ${{ secrets.APP_DIR || '/opt/dapur-buwikra-fe' }}
+            # Create app directory if not exists (requires manual setup on first deploy)
+            # For fresh VPS: run "sudo mkdir -p /opt/dapur-buwikra-fe && sudo chown wikra:wikra /opt/dapur-buwikra-fe" manually
+            mkdir -p ${{ secrets.APP_DIR || '/opt/dapur-buwikra-fe' }} || true
 
       - name: Copy docker-compose to server
         uses: appleboy/scp-action@v0.1.7
