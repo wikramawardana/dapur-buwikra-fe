@@ -1,9 +1,22 @@
+// New structure: items within each day order
+export interface OrderMenuItem {
+  name: string;
+  qty: number;
+  unit_price: number;
+}
+
+// Day order with specific date and items for that day
+export interface DayOrder {
+  day: string;
+  date: string;
+  items: OrderMenuItem[];
+}
+
 export interface Order {
   id: string;
-  days: string[];
-  dates: string[];
   name: string;
-  ordered: string;
+  email?: string;
+  day_orders: DayOrder[];
   total_price: number;
   notes: string;
   payment_status: PaymentStatus;
@@ -30,13 +43,21 @@ export interface OrdersResponse {
   };
 }
 
+export interface SingleOrderResponse {
+  status: string;
+  message: string;
+  data: Order;
+}
+
 export interface CreateOrderPayload {
-  days: string[];
-  dates: string[];
   name: string;
-  ordered: string;
-  total_price: number;
-  payment_status: PaymentStatus;
+  email?: string;
+  day_orders: DayOrder[];
+  notes?: string;
+}
+
+export interface UpdateOrderPayload {
+  payment_status?: PaymentStatus;
   notes?: string;
 }
 

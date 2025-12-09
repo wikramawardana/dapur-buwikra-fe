@@ -69,17 +69,17 @@ export function OrdersFilters({
   const [name, setName] = React.useState(filters.name || "");
   const [day, setDay] = React.useState(filters.day || "all");
   const [paymentStatus, setPaymentStatus] = React.useState(
-    filters.payment_status || "all",
+    filters.payment_status || "all"
   );
   const [dateFrom, setDateFrom] = React.useState<Date | undefined>(
-    filters.date_from ? new Date(filters.date_from) : undefined,
+    filters.date_from ? new Date(filters.date_from) : undefined
   );
   const [dateTo, setDateTo] = React.useState<Date | undefined>(
-    filters.date_to ? new Date(filters.date_to) : undefined,
+    filters.date_to ? new Date(filters.date_to) : undefined
   );
   const [sortBy, setSortBy] = React.useState(filters.sort_by || "date");
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">(
-    filters.sort_order || "desc",
+    filters.sort_order || "desc"
   );
 
   // Sync local state with external filter changes (e.g., from clear or pagination)
@@ -118,13 +118,13 @@ export function OrdersFilters({
     setPaymentStatus("all");
     setDateFrom(workWeek.dateFrom);
     setDateTo(workWeek.dateTo);
-    setSortBy("date");
-    setSortOrder("desc");
+    setSortBy("name");
+    setSortOrder("asc");
     onFiltersChange({
       page: 1,
-      page_size: filters.page_size,
-      sort_by: "created_at",
-      sort_order: "desc",
+      page_size: 20,
+      sort_by: "name",
+      sort_order: "asc",
       date_from: format(workWeek.dateFrom, "yyyy-MM-dd"),
       date_to: format(workWeek.dateTo, "yyyy-MM-dd"),
     });

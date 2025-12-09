@@ -6,6 +6,8 @@ import type {
   OrderFilters,
   OrderSumResponse,
   OrdersResponse,
+  SingleOrderResponse,
+  UpdateOrderPayload,
 } from "@/types/order.types";
 
 /**
@@ -19,12 +21,19 @@ export async function getOrders(
 }
 
 /**
+ * Fetch a single order by ID
+ */
+export async function getOrderById(id: string): Promise<SingleOrderResponse> {
+  return apiFetch<SingleOrderResponse>(`/orders/${id}`);
+}
+
+/**
  * Create a new order
  */
 export async function createOrder(
   payload: CreateOrderPayload,
-): Promise<OrdersResponse> {
-  return apiFetch<OrdersResponse>("/orders", {
+): Promise<SingleOrderResponse> {
+  return apiFetch<SingleOrderResponse>("/orders", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -35,13 +44,14 @@ export async function createOrder(
  */
 export async function updateOrder(
   id: string,
-  payload: Partial<CreateOrderPayload>,
-): Promise<OrdersResponse> {
-  return apiFetch<OrdersResponse>(`/orders/${id}`, {
+  payload: UpdateOrderPayload,
+): Promise<SingleOrderResponse> {
+  return apiFetch<SingleOrderResponse>(`/orders/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
+
 
 /**
  * Delete an order

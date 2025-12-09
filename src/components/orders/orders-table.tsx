@@ -23,6 +23,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { Order } from "@/types/order.types";
@@ -35,6 +40,39 @@ interface OrdersTableProps {
   onOrderUpdated?: () => void;
   onOrderDeleted?: () => void;
 }
+
+// Helper to calculate total from day_orders
+const calculateTotal = (order: Order): number => {
+  return (
+    order.day_orders?.reduce((total, dayOrder) => {
+      return (
+        total +
+        dayOrder.items.reduce((dayTotal, item) => {
+          return dayTotal + item.qty * item.unit_price;
+        }, 0)
+      );
+    }, 0) ||
+    order.total_price ||
+    0
+  );
+};
+
+// Helper to get summary of items ordered
+const getOrderedSummary = (order: Order): string => {
+  if (!order.day_orders || order.day_orders.length === 0) return "-";
+
+  // Collect unique items with total quantities
+  const itemCounts: Record<string, number> = {};
+  order.day_orders.forEach((dayOrder) => {
+    dayOrder.items.forEach((item) => {
+      itemCounts[item.name] = (itemCounts[item.name] || 0) + item.qty;
+    });
+  });
+
+  return Object.entries(itemCounts)
+    .map(([name, qty]) => `${name}${qty > 1 ? ` ×${qty}` : ""}`)
+    .join(", ");
+};
 
 export function OrdersTable({
   orders,
@@ -56,29 +94,41 @@ export function OrdersTable({
         ),
       },
       {
-        accessorKey: "dates",
-        header: () => <div className="text-left font-semibold">Date & Day</div>,
+        id: "dates",
+        header: () => <div className="text-left font-semibold">Days</div>,
         cell: ({ row }) => {
-          const dates = row.getValue("dates") as string[];
-          const days = (row.original as Order).days;
+          const order = row.original;
+          if (!order.day_orders || order.day_orders.length === 0) {
+            return <div className="text-muted-foreground">-</div>;
+          }
+          const dayCount = order.day_orders.length;
           return (
-            <div className="font-medium text-left text-blue-600">
-              {dates.map((date, idx) => (
-                <div key={idx}>
-                  <span className="font-semibold">{days[idx]}</span> -{" "}
-                  {formatDate(date)}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="font-medium text-left text-blue-600 cursor-pointer hover:underline">
+                  {dayCount} {dayCount === 1 ? "day" : "days"}
                 </div>
-              ))}
-            </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <div className="space-y-1">
+                  {order.day_orders.map((dayOrder, idx) => (
+                    <div key={idx} className="text-sm">
+                      <span className="font-semibold">{dayOrder.day}</span> -{" "}
+                      {formatDate(dayOrder.date)}
+                    </div>
+                  ))}
+                </div>
+              </TooltipContent>
+            </Tooltip>
           );
         },
       },
       {
-        accessorKey: "ordered",
+        id: "ordered",
         header: () => <div className="text-left font-semibold">Ordered</div>,
         cell: ({ row }) => (
-          <div className="text-left text-gray-700">
-            {row.getValue("ordered")}
+          <div className="text-left text-gray-700 max-w-[200px] truncate">
+            {getOrderedSummary(row.original)}
           </div>
         ),
       },
@@ -86,19 +136,19 @@ export function OrdersTable({
         accessorKey: "notes",
         header: () => <div className="text-left font-semibold">Notes</div>,
         cell: ({ row }) => (
-          <div className="text-left text-gray-500">
+          <div className="text-left text-gray-500 max-w-[150px] truncate">
             {row.getValue("notes") || "-"}
           </div>
         ),
       },
       {
-        accessorKey: "total_price",
+        id: "total_price",
         header: () => (
           <div className="text-left font-semibold">Total Price</div>
         ),
         cell: ({ row }) => (
           <div className="text-left font-bold text-green-600">
-            {formatCurrency(row.getValue("total_price"))}
+            {formatCurrency(calculateTotal(row.original))}
           </div>
         ),
       },
@@ -128,7 +178,7 @@ export function OrdersTable({
         ),
       },
     ],
-    [onOrderUpdated, onOrderDeleted],
+    [onOrderUpdated, onOrderDeleted]
   );
 
   const table = useReactTable({
@@ -169,14 +219,26 @@ export function OrdersTable({
                   <h3 className="font-bold text-black truncate">
                     {order.name}
                   </h3>
-                  <div className="mt-1 text-sm text-blue-600">
-                    {order.dates.map((date, idx) => (
-                      <div key={idx} className="truncate">
-                        <span className="font-semibold">{order.days[idx]}</span>{" "}
-                        - {formatDate(date)}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="mt-1 text-sm text-blue-600 cursor-pointer hover:underline inline-block">
+                        {order.day_orders?.length || 0}{" "}
+                        {(order.day_orders?.length || 0) === 1 ? "day" : "days"}
                       </div>
-                    ))}
-                  </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <div className="space-y-1">
+                        {order.day_orders?.map((dayOrder, idx) => (
+                          <div key={idx} className="text-sm">
+                            <span className="font-semibold">
+                              {dayOrder.day}
+                            </span>{" "}
+                            - {formatDate(dayOrder.date)}
+                          </div>
+                        ))}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 <OrderActionDialog
                   order={order}
@@ -189,7 +251,7 @@ export function OrdersTable({
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500">Ordered:</span>
                   <span className="text-gray-700 text-right max-w-[60%] truncate">
-                    {order.ordered}
+                    {getOrderedSummary(order)}
                   </span>
                 </div>
                 {order.notes && (
@@ -202,7 +264,7 @@ export function OrdersTable({
                 )}
                 <div className="flex items-center justify-between pt-2 border-t">
                   <span className="font-bold text-green-600">
-                    {formatCurrency(order.total_price)}
+                    {formatCurrency(calculateTotal(order))}
                   </span>
                   <StatusBadge status={order.payment_status} type="payment" />
                 </div>
@@ -227,7 +289,7 @@ export function OrdersTable({
                     ? null
                     : flexRender(
                         header.column.columnDef.header,
-                        header.getContext(),
+                        header.getContext()
                       )}
                 </TableHead>
               ))}

@@ -7,8 +7,8 @@ const publicRoutes = ["/", "/login", "/api/auth"];
 // Routes that require admin role
 const adminRoutes = ["/admin"];
 
-// Routes that require admin or chef role (orders management)
-const staffRoutes = ["/orders"];
+// Note: /orders is now accessible to all authenticated users
+// Backend filters orders by user email for regular users
 
 // Get the base URL for internal API calls
 function getBaseUrl(request: NextRequest): string {
@@ -69,12 +69,8 @@ export async function middleware(request: NextRequest) {
 
     const userRole = session.user.role;
 
-    // Check if trying to access staff routes (orders) - requires admin or chef
-    if (staffRoutes.some((route) => pathname.startsWith(route))) {
-      if (userRole !== "admin" && userRole !== "chef") {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
-    }
+    // Orders route is now accessible to all authenticated users
+    // Backend handles filtering by user email for regular users
 
     // Check admin routes - requires admin only
     if (adminRoutes.some((route) => pathname.startsWith(route))) {

@@ -1,6 +1,14 @@
 "use client";
 
-import { ChefHat, Home, Shield, ShoppingCart } from "lucide-react";
+import {
+  ChefHat,
+  DollarSign,
+  Home,
+  ListOrdered,
+  Shield,
+  ShoppingCart,
+  UtensilsCrossed,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -24,17 +32,29 @@ const dashboardItem = {
   icon: Home,
 };
 
-// Orders only accessible to admin and chef
+// Orders accessible to all authenticated users (backend filters by email for users)
 const menuItems = [
   {
     title: "Orders",
     url: "/orders",
     icon: ShoppingCart,
-    roles: ["admin", "chef"],
+    roles: ["admin", "chef", "user"],
   },
 ];
 
 const adminMenuItems = [
+  {
+    title: "Menus",
+    url: "/admin/menus",
+    icon: UtensilsCrossed,
+    roles: ["admin", "chef"],
+  },
+  {
+    title: "Price List",
+    url: "/admin/pricelist",
+    icon: DollarSign,
+    roles: ["admin"],
+  },
   {
     title: "User Management",
     url: "/admin/users",
@@ -49,11 +69,11 @@ export function AppSidebar() {
   const userRole = session?.user?.role;
 
   const filteredMenuItems = menuItems.filter((item) =>
-    item.roles.includes(userRole || ""),
+    item.roles.includes(userRole || "")
   );
 
   const filteredAdminMenuItems = adminMenuItems.filter((item) =>
-    item.roles.includes(userRole || ""),
+    item.roles.includes(userRole || "")
   );
 
   return (

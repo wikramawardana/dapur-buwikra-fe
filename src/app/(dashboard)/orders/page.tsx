@@ -82,7 +82,7 @@ export default function OrdersPage() {
 
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [allOrdersForExport, setAllOrdersForExport] = React.useState<Order[]>(
-    [],
+    []
   );
   const [stats, setStats] = React.useState<OrderStats | null>(null);
   const [pagination, setPagination] = React.useState<PaginationInfo>({
@@ -98,9 +98,9 @@ export default function OrdersPage() {
 
   const [filters, setFilters] = React.useState<OrderFilters>({
     page: 1,
-    page_size: DEFAULT_PAGE_SIZE,
-    sort_by: "created_at",
-    sort_order: "desc",
+    page_size: 20,
+    sort_by: "name",
+    sort_order: "asc",
     date_from: defaultWorkWeek.dateFrom,
     date_to: defaultWorkWeek.dateTo,
   });
@@ -109,7 +109,6 @@ export default function OrdersPage() {
 
   // Track if user is authenticated (stable boolean instead of object reference)
   const isAuthenticated = !!session?.user;
-  const hasInitiallyFetched = React.useRef(false);
 
   // Check authentication and redirect if not logged in
   React.useEffect(() => {
@@ -130,7 +129,7 @@ export default function OrdersPage() {
         return;
       }
       toast.error(
-        error instanceof Error ? error.message : "Failed to fetch orders",
+        error instanceof Error ? error.message : "Failed to fetch orders"
       );
       setOrders([]);
     } finally {
@@ -182,7 +181,7 @@ export default function OrdersPage() {
         return;
       }
       toast.error(
-        error instanceof Error ? error.message : "Failed to fetch statistics",
+        error instanceof Error ? error.message : "Failed to fetch statistics"
       );
       setStats(null);
     } finally {
@@ -190,31 +189,15 @@ export default function OrdersPage() {
     }
   }, [filters]);
 
-  // Initial fetch when authenticated
+  // Fetch data when authenticated and when filters change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Only react to filters changes, not callback identity changes
   React.useEffect(() => {
-    if (isAuthenticated && !hasInitiallyFetched.current) {
-      hasInitiallyFetched.current = true;
-      fetchOrders();
-      fetchStats();
-      fetchAllOrdersForExport();
-    }
-  }, [isAuthenticated, fetchOrders, fetchStats, fetchAllOrdersForExport]);
+    if (!isAuthenticated) return;
 
-  // Re-fetch when filters change (but only after initial fetch)
-  // biome-ignore lint/correctness/useExhaustiveDependencies: filters is intentionally in the dependency array to trigger refetch on filter changes
-  React.useEffect(() => {
-    if (isAuthenticated && hasInitiallyFetched.current) {
-      fetchOrders();
-      fetchStats();
-      fetchAllOrdersForExport();
-    }
-  }, [
-    filters,
-    isAuthenticated,
-    fetchOrders,
-    fetchStats,
-    fetchAllOrdersForExport,
-  ]);
+    fetchOrders();
+    fetchStats();
+    fetchAllOrdersForExport();
+  }, [isAuthenticated, filters]);
 
   const handleFiltersChange = (newFilters: OrderFilters) => {
     setFilters(newFilters);
@@ -282,7 +265,9 @@ export default function OrdersPage() {
             />
           </CardHeader>
           <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
-            <OrderStatsCards stats={stats} isLoading={isStatsLoading} />
+            {session?.user?.role !== "user" && (
+              <OrderStatsCards stats={stats} isLoading={isStatsLoading} />
+            )}
             <OrdersFilters
               filters={filters}
               onFiltersChange={handleFiltersChange}

@@ -1,8 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react";
+import { format, getDay } from "date-fns";
+import {
+  CalendarIcon,
+  Check,
+  ChevronsUpDown,
+  Loader2,
+  Minus,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -46,79 +54,62 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { DAYS_OF_WEEK, MENU_ITEMS, PAYMENT_STATUSES } from "@/lib/constants";
+import { DAYS_OF_WEEK, PAYMENT_STATUSES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { createOrder } from "@/services/orders.service";
-import type { CreateOrderPayload } from "@/types/order.types";
+import { getActivePriceList } from "@/services/pricelist.service";
+import type {
+  CreateOrderPayload,
+  DayOrder,
+  OrderMenuItem,
+} from "@/types/order.types";
+import type { PriceListItem } from "@/types/pricelist.types";
 
+// Day name mapping
+const DAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
+// Schema for the new order structure
 const orderFormSchema = z.object({
-  days: z.array(z.string()).min(1, "At least one day is required"),
-  dates: z.array(z.string()).min(1, "At least one date is required"),
   name: z.string().min(1, "Name is required"),
-  ordered: z.array(z.string()).min(1, "At least one item is required"),
-  total_price: z.number().min(0, "Total price must be positive"),
-  payment_status: z.enum(["paid", "unpaid"]),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  selectedDates: z.array(z.date()).min(1, "At least one date is required"),
+  dayOrders: z.record(
+    z.string(),
+    z.array(
+      z.object({
+        name: z.string(),
+        qty: z.number().min(1),
+        unit_price: z.number().min(0),
+      })
+    )
+  ),
   notes: z.string().optional(),
 });
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
 
-// Helper function to calculate total price with different logic for perDay items
+// Calculate total price from all day orders
 const calculateTotalPrice = (
-  orderedItems: string[],
-  datesCount: number,
+  dayOrders: Record<string, OrderMenuItem[]>
 ): number => {
-  let perDayTotal = 0;
-  let oneTimeTotal = 0;
-
-  for (const itemValue of orderedItems) {
-    const menuItem = MENU_ITEMS.find((item) => item.value === itemValue);
-    if (menuItem) {
-      if (menuItem.perDay) {
-        perDayTotal += menuItem.price;
-      } else {
-        oneTimeTotal += menuItem.price;
-      }
-    }
-  }
-
-  return perDayTotal * datesCount + oneTimeTotal;
-};
-
-// Helper to get breakdown details
-const getPriceBreakdown = (orderedItems: string[], datesCount: number) => {
-  const perDayItems: { label: string; price: number }[] = [];
-  const oneTimeItems: { label: string; price: number }[] = [];
-
-  for (const itemValue of orderedItems) {
-    const menuItem = MENU_ITEMS.find((item) => item.value === itemValue);
-    if (menuItem) {
-      if (menuItem.perDay) {
-        perDayItems.push({ label: menuItem.label, price: menuItem.price });
-      } else {
-        oneTimeItems.push({ label: menuItem.label, price: menuItem.price });
-      }
-    }
-  }
-
-  const perDaySubtotal = perDayItems.reduce((sum, item) => sum + item.price, 0);
-  const oneTimeSubtotal = oneTimeItems.reduce(
-    (sum, item) => sum + item.price,
-    0,
-  );
-  const perDayTotal = perDaySubtotal * datesCount;
-  const grandTotal = perDayTotal + oneTimeSubtotal;
-
-  return {
-    perDayItems,
-    oneTimeItems,
-    perDaySubtotal,
-    oneTimeSubtotal,
-    perDayTotal,
-    grandTotal,
-    datesCount,
-  };
+  return Object.values(dayOrders).reduce((total, items) => {
+    return (
+      total +
+      items.reduce((dayTotal, item) => dayTotal + item.qty * item.unit_price, 0)
+    );
+  }, 0);
 };
 
 interface CreateOrderDialogProps {
@@ -128,32 +119,104 @@ interface CreateOrderDialogProps {
 export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [priceListItems, setPriceListItems] = React.useState<PriceListItem[]>(
+    []
+  );
+  const [isLoadingPriceList, setIsLoadingPriceList] = React.useState(false);
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderFormSchema),
     defaultValues: {
-      days: [],
-      dates: [],
       name: "",
-      ordered: [],
-      total_price: 0,
-      payment_status: "unpaid",
+      email: "",
+      selectedDates: [],
+      dayOrders: {},
       notes: "",
     },
   });
 
-  const orderedItems = form.watch("ordered");
-  const selectedDates = form.watch("dates");
-  const totalPrice = form.watch("total_price");
+  const selectedDates = form.watch("selectedDates");
+  const dayOrders = form.watch("dayOrders");
+  const totalPrice = calculateTotalPrice(dayOrders || {});
 
-  // Auto-calculate total price when ordered items or dates change
+  // Fetch price list when dialog opens
   React.useEffect(() => {
-    const calculatedPrice = calculateTotalPrice(
-      orderedItems || [],
-      selectedDates?.length || 0,
-    );
-    form.setValue("total_price", calculatedPrice);
-  }, [orderedItems, selectedDates, form]);
+    if (open && priceListItems.length === 0) {
+      setIsLoadingPriceList(true);
+      getActivePriceList()
+        .then((response) => {
+          setPriceListItems(response.data);
+        })
+        .catch((error) => {
+          toast.error("Failed to load price list");
+          console.error(error);
+        })
+        .finally(() => {
+          setIsLoadingPriceList(false);
+        });
+    }
+  }, [open, priceListItems.length]);
+
+  // Get day name from date
+  const getDayName = (date: Date): string => {
+    return DAY_NAMES[getDay(date)];
+  };
+
+  // Format date key for dayOrders record
+  const getDateKey = (date: Date): string => {
+    return format(date, "yyyy-MM-dd");
+  };
+
+  // Add item to a specific day
+  const addItemToDay = (dateKey: string, item: PriceListItem) => {
+    const currentDayOrders = form.getValues("dayOrders") || {};
+    const dayItems = currentDayOrders[dateKey] || [];
+
+    // Check if item already exists
+    const existingIndex = dayItems.findIndex((i) => i.name === item.name);
+    if (existingIndex >= 0) {
+      // Increase quantity
+      dayItems[existingIndex].qty += 1;
+    } else {
+      // Add new item
+      dayItems.push({
+        name: item.name,
+        qty: 1,
+        unit_price: item.price,
+      });
+    }
+
+    form.setValue("dayOrders", {
+      ...currentDayOrders,
+      [dateKey]: [...dayItems],
+    });
+  };
+
+  // Update item quantity
+  const updateItemQty = (dateKey: string, itemIndex: number, delta: number) => {
+    const currentDayOrders = form.getValues("dayOrders") || {};
+    const dayItems = [...(currentDayOrders[dateKey] || [])];
+
+    if (dayItems[itemIndex]) {
+      dayItems[itemIndex].qty = Math.max(1, dayItems[itemIndex].qty + delta);
+      form.setValue("dayOrders", {
+        ...currentDayOrders,
+        [dateKey]: dayItems,
+      });
+    }
+  };
+
+  // Remove item from day
+  const removeItemFromDay = (dateKey: string, itemIndex: number) => {
+    const currentDayOrders = form.getValues("dayOrders") || {};
+    const dayItems = [...(currentDayOrders[dateKey] || [])];
+    dayItems.splice(itemIndex, 1);
+
+    form.setValue("dayOrders", {
+      ...currentDayOrders,
+      [dateKey]: dayItems,
+    });
+  };
 
   const handleOpenChange = (open: boolean) => {
     setOpen(open);
@@ -165,25 +228,49 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   const onSubmit = async (data: OrderFormValues) => {
     setIsSubmitting(true);
     try {
-      // Convert ordered array to comma-separated string for API
+      // Convert form data to API payload
+      const dayOrdersPayload: DayOrder[] = data.selectedDates
+        .sort((a, b) => a.getTime() - b.getTime())
+        .map((date) => {
+          const dateKey = getDateKey(date);
+          const items = data.dayOrders[dateKey] || [];
+          return {
+            day: getDayName(date),
+            date: dateKey,
+            items: items,
+          };
+        })
+        .filter((dayOrder) => dayOrder.items.length > 0);
+
+      if (dayOrdersPayload.length === 0) {
+        toast.error("Please add at least one item to your order");
+        setIsSubmitting(false);
+        return;
+      }
+
       const payload: CreateOrderPayload = {
-        ...data,
-        ordered: data.ordered
-          .map((v) => MENU_ITEMS.find((item) => item.value === v)?.label || v)
-          .join(", "),
+        name: data.name,
+        email: data.email || undefined,
+        day_orders: dayOrdersPayload,
+        notes: data.notes || "",
       };
+
       await createOrder(payload);
       toast.success("Order created successfully!");
       handleOpenChange(false);
       onOrderCreated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create order",
+        error instanceof Error ? error.message : "Failed to create order"
       );
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Group price list items by category
+  const mainItems = priceListItems.filter((item) => item.category === "main");
+  const addonItems = priceListItems.filter((item) => item.category === "addon");
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -203,8 +290,8 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
             Create New Order
           </DialogTitle>
           <DialogDescription className="text-sm sm:text-base font-medium text-black/70 dark:text-white/70">
-            Fill in the order details below. All fields marked with * are
-            required.
+            Select dates and add items for each day. Different items can be
+            ordered for different days.
           </DialogDescription>
         </DialogHeader>
 
@@ -213,173 +300,27 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-6 sm:space-y-8"
           >
-            {/* Section 1: Schedule */}
+            {/* Section 1: Customer Info */}
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
                 <h3 className="text-base sm:text-lg font-bold uppercase tracking-wide">
-                  Order Schedule
+                  Customer Info
                 </h3>
               </div>
               <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 items-start">
-                {/* Days */}
-                <FormField
-                  control={form.control}
-                  name="days"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <div>
-                        <FormLabel className="text-base font-bold uppercase tracking-wide">
-                          Days of Week *
-                        </FormLabel>
-                        <p className="text-sm font-medium text-black/60 dark:text-white/60 mt-1">
-                          Select which days this order applies to
-                        </p>
-                      </div>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className={cn(
-                                "w-full justify-between h-12 text-base font-medium border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black",
-                                (!field.value || field.value.length === 0) &&
-                                  "text-black/50 dark:text-white/50",
-                              )}
-                            >
-                              {field.value && field.value.length > 0
-                                ? `${field.value.length} day(s) selected`
-                                : "Select days"}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-70" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent
-                          className="w-[--radix-popover-trigger-width] p-0"
-                          align="start"
-                        >
-                          <Command>
-                            <CommandList>
-                              <CommandGroup>
-                                {DAYS_OF_WEEK.map((day) => (
-                                  <CommandItem
-                                    key={day}
-                                    value={day}
-                                    onSelect={() => {
-                                      const current = field.value || [];
-                                      const isSelected = current.includes(day);
-                                      if (isSelected) {
-                                        field.onChange(
-                                          current.filter((d) => d !== day),
-                                        );
-                                      } else {
-                                        field.onChange([...current, day]);
-                                      }
-                                    }}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        "mr-2 h-4 w-4",
-                                        field.value?.includes(day)
-                                          ? "opacity-100"
-                                          : "opacity-0",
-                                      )}
-                                    />
-                                    {day}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      <div className="text-sm text-muted-foreground min-h-[20px]">
-                        {field.value && field.value.length > 0
-                          ? `Selected: ${field.value.join(", ")}`
-                          : "\u00A0"}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Dates */}
-                <FormField
-                  control={form.control}
-                  name="dates"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <div>
-                        <FormLabel className="text-base font-bold uppercase tracking-wide">
-                          Specific Dates *
-                        </FormLabel>
-                        <p className="text-sm font-medium text-black/60 dark:text-white/60 mt-1">
-                          Pick the exact dates for this order
-                        </p>
-                      </div>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className="w-full h-12 justify-start text-left font-medium text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black"
-                            >
-                              {field.value && field.value.length > 0
-                                ? `${field.value.length} date(s) selected`
-                                : "Click to pick dates"}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="multiple"
-                            selected={
-                              field.value?.map((d) => new Date(d)) || []
-                            }
-                            onSelect={(dates) => {
-                              const formattedDates =
-                                dates?.map((date) =>
-                                  format(date, "yyyy-MM-dd"),
-                                ) || [];
-                              field.onChange(formattedDates);
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <div className="text-sm text-muted-foreground min-h-[20px]">
-                        {field.value && field.value.length > 0
-                          ? `Selected: ${field.value.sort().join(", ")}`
-                          : "\u00A0"}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Section 2: Customer & Order Details */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
-                <h3 className="text-lg font-bold uppercase tracking-wide">
-                  Customer & Order Details
-                </h3>
-              </div>
-              <div className="grid gap-6 md:grid-cols-2 items-start">
                 {/* Name */}
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
-                    <FormItem className="space-y-3">
+                    <FormItem>
                       <FormLabel className="text-base font-bold uppercase tracking-wide">
                         Customer Name *
                       </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter customer name"
-                          className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:focus:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] focus:translate-x-[-1px] focus:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black font-medium"
+                          className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium"
                           {...field}
                         />
                       </FormControl>
@@ -387,119 +328,274 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                     </FormItem>
                   )}
                 />
-
-                {/* Ordered */}
+                {/* Email */}
                 <FormField
                   control={form.control}
-                  name="ordered"
+                  name="email"
                   render={({ field }) => (
-                    <FormItem className="space-y-3">
+                    <FormItem>
                       <FormLabel className="text-base font-bold uppercase tracking-wide">
-                        Ordered Items *
+                        Email *
                       </FormLabel>
                       <FormControl>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                className={cn(
-                                  "w-full justify-between h-12 text-base font-medium border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black",
-                                  (!field.value || field.value.length === 0) &&
-                                    "text-black/50 dark:text-white/50",
-                                )}
-                              >
-                                {field.value && field.value.length > 0
-                                  ? `${field.value.length} item(s) selected`
-                                  : "Select items"}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-70" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            className="w-[--radix-popover-trigger-width] p-0"
-                            align="start"
-                          >
-                            <Command>
-                              <CommandList>
-                                <CommandGroup>
-                                  {MENU_ITEMS.map((item) => (
-                                    <CommandItem
-                                      key={item.value}
-                                      value={item.value}
-                                      onSelect={() => {
-                                        const current = field.value || [];
-                                        const isSelected = current.includes(
-                                          item.value,
-                                        );
-                                        if (isSelected) {
-                                          field.onChange(
-                                            current.filter(
-                                              (v) => v !== item.value,
-                                            ),
-                                          );
-                                        } else {
-                                          field.onChange([
-                                            ...current,
-                                            item.value,
-                                          ]);
-                                        }
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          field.value?.includes(item.value)
-                                            ? "opacity-100"
-                                            : "opacity-0",
-                                        )}
-                                      />
-                                      <span className="flex-1">
-                                        {item.label}
-                                      </span>
-                                      <span className="text-sm text-muted-foreground">
-                                        {formatCurrency(item.price)}
-                                      </span>
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                        <Input
+                          type="email"
+                          placeholder="customer@email.com"
+                          className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium"
+                          {...field}
+                        />
                       </FormControl>
-                      {field.value && field.value.length > 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          Selected:{" "}
-                          {field.value
-                            .map(
-                              (v) =>
-                                MENU_ITEMS.find((item) => item.value === v)
-                                  ?.label,
-                            )
-                            .join(", ")}
-                        </p>
-                      )}
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+            </div>
 
-              {/* Notes - Full Width */}
+            {/* Section 2: Date Selection */}
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
+                <h3 className="text-base sm:text-lg font-bold uppercase tracking-wide">
+                  Select Dates
+                </h3>
+              </div>
+              <FormField
+                control={form.control}
+                name="selectedDates"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-bold uppercase tracking-wide">
+                      Order Dates *
+                    </FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className="w-full h-12 justify-start text-left font-medium text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value && field.value.length > 0
+                              ? `${field.value.length} date(s) selected`
+                              : "Click to pick dates"}
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="multiple"
+                          selected={field.value}
+                          onSelect={(dates) => {
+                            field.onChange(dates || []);
+                          }}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {field.value && field.value.length > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        Selected:{" "}
+                        {field.value
+                          .sort((a, b) => a.getTime() - b.getTime())
+                          .map((d) => format(d, "EEE, MMM d"))
+                          .join(" • ")}
+                      </p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Section 3: Day-by-Day Item Selection */}
+            {selectedDates && selectedDates.length > 0 && (
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
+                  <h3 className="text-base sm:text-lg font-bold uppercase tracking-wide">
+                    Items Per Day
+                  </h3>
+                </div>
+
+                {isLoadingPriceList ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <span className="ml-2">Loading menu items...</span>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {selectedDates
+                      .sort((a, b) => a.getTime() - b.getTime())
+                      .map((date) => {
+                        const dateKey = getDateKey(date);
+                        const dayName = getDayName(date);
+                        const dayItems = dayOrders?.[dateKey] || [];
+                        const dayTotal = dayItems.reduce(
+                          (sum, item) => sum + item.qty * item.unit_price,
+                          0
+                        );
+
+                        return (
+                          <div
+                            key={dateKey}
+                            className="border-2 border-black dark:border-white p-4 bg-gray-50 dark:bg-gray-900"
+                          >
+                            {/* Day Header */}
+                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-black/20 dark:border-white/20">
+                              <div>
+                                <p className="font-bold text-lg">{dayName}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {format(date, "MMM d, yyyy")}
+                                </p>
+                              </div>
+                              <p className="font-bold text-lg">
+                                {formatCurrency(dayTotal)}
+                              </p>
+                            </div>
+
+                            {/* Selected Items */}
+                            {dayItems.length > 0 && (
+                              <div className="space-y-2 mb-3">
+                                {dayItems.map((item, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="flex items-center justify-between bg-white dark:bg-black p-2 border border-black/20 dark:border-white/20"
+                                  >
+                                    <div className="flex-1">
+                                      <p className="font-medium text-sm">
+                                        {item.name}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {formatCurrency(item.unit_price)} each
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-7 w-7 rounded-none border-black dark:border-white"
+                                        onClick={() =>
+                                          updateItemQty(dateKey, idx, -1)
+                                        }
+                                      >
+                                        <Minus className="h-3 w-3" />
+                                      </Button>
+                                      <span className="w-8 text-center font-bold">
+                                        {item.qty}
+                                      </span>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-7 w-7 rounded-none border-black dark:border-white"
+                                        onClick={() =>
+                                          updateItemQty(dateKey, idx, 1)
+                                        }
+                                      >
+                                        <Plus className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="icon"
+                                        className="h-7 w-7 rounded-none"
+                                        onClick={() =>
+                                          removeItemFromDay(dateKey, idx)
+                                        }
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Add Item Dropdown */}
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full justify-between h-10 text-sm border-2 border-dashed border-black/50 dark:border-white/50 rounded-none bg-transparent hover:bg-black/5 dark:hover:bg-white/5"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <Plus className="h-4 w-4" />
+                                    Add Item
+                                  </span>
+                                  <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                className="w-[300px] p-0"
+                                align="start"
+                              >
+                                <Command>
+                                  <CommandList>
+                                    {mainItems.length > 0 && (
+                                      <CommandGroup heading="Main Items">
+                                        {mainItems.map((item) => (
+                                          <CommandItem
+                                            key={item.id}
+                                            onSelect={() =>
+                                              addItemToDay(dateKey, item)
+                                            }
+                                          >
+                                            <span className="flex-1">
+                                              {item.name}
+                                            </span>
+                                            <span className="text-sm text-muted-foreground">
+                                              {formatCurrency(item.price)}
+                                            </span>
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    )}
+                                    {addonItems.length > 0 && (
+                                      <CommandGroup heading="Add-ons">
+                                        {addonItems.map((item) => (
+                                          <CommandItem
+                                            key={item.id}
+                                            onSelect={() =>
+                                              addItemToDay(dateKey, item)
+                                            }
+                                          >
+                                            <span className="flex-1">
+                                              {item.name}
+                                            </span>
+                                            <span className="text-sm text-muted-foreground">
+                                              {formatCurrency(item.price)}
+                                            </span>
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    )}
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Section 4: Notes */}
+            <div className="space-y-3 sm:space-y-4">
               <FormField
                 control={form.control}
                 name="notes"
                 render={({ field }) => (
-                  <FormItem className="space-y-3">
+                  <FormItem>
                     <FormLabel className="text-base font-bold uppercase tracking-wide">
-                      Notes
+                      Notes (Optional)
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Add any special instructions or notes for this order..."
-                        className="min-h-24 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:focus:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] focus:translate-x-[-1px] focus:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black font-medium resize-none"
+                        placeholder="Add any special instructions..."
+                        className="min-h-20 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium resize-none"
                         {...field}
                       />
                     </FormControl>
@@ -509,135 +605,15 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
               />
             </div>
 
-            {/* Section 3: Pricing */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
-                <h3 className="text-lg font-bold uppercase tracking-wide">
-                  Pricing & Payment
-                </h3>
-              </div>
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* Price Breakdown */}
-                <div className="space-y-3">
-                  <p className="text-base font-bold uppercase tracking-wide">
-                    Price Breakdown
-                  </p>
-                  <div className="border-2 border-black dark:border-white p-4 bg-gray-50 dark:bg-gray-900 space-y-2">
-                    {orderedItems && orderedItems.length > 0 ? (
-                      (() => {
-                        const breakdown = getPriceBreakdown(
-                          orderedItems,
-                          selectedDates?.length || 0,
-                        );
-                        return (
-                          <>
-                            {/* Per Day Items */}
-                            {breakdown.perDayItems.length > 0 && (
-                              <>
-                                <p className="text-xs font-semibold text-muted-foreground uppercase">
-                                  Per Day Items
-                                </p>
-                                {breakdown.perDayItems.map((item, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex justify-between text-sm"
-                                  >
-                                    <span>{item.label}</span>
-                                    <span>{formatCurrency(item.price)}</span>
-                                  </div>
-                                ))}
-                                <div className="flex justify-between text-sm font-medium border-t border-dashed border-black/30 dark:border-white/30 pt-1">
-                                  <span>
-                                    Subtotal × {breakdown.datesCount} day(s)
-                                  </span>
-                                  <span>
-                                    {formatCurrency(breakdown.perDayTotal)}
-                                  </span>
-                                </div>
-                              </>
-                            )}
-
-                            {/* One Time Items */}
-                            {breakdown.oneTimeItems.length > 0 && (
-                              <>
-                                <p className="text-xs font-semibold text-muted-foreground uppercase mt-3">
-                                  One Time Add-ons
-                                </p>
-                                {breakdown.oneTimeItems.map((item, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex justify-between text-sm"
-                                  >
-                                    <span>{item.label}</span>
-                                    <span>{formatCurrency(item.price)}</span>
-                                  </div>
-                                ))}
-                              </>
-                            )}
-
-                            {/* Grand Total */}
-                            <div className="border-t-2 border-black dark:border-white pt-2 mt-2">
-                              <div className="flex justify-between text-sm font-bold">
-                                <span>Total</span>
-                                <span>
-                                  {formatCurrency(breakdown.grandTotal)}
-                                </span>
-                              </div>
-                            </div>
-                          </>
-                        );
-                      })()
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        No items selected
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Payment Status */}
-                <FormField
-                  control={form.control}
-                  name="payment_status"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel className="text-base font-bold uppercase tracking-wide">
-                        Payment Status *
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black font-medium">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {PAYMENT_STATUSES.map((status) => (
-                            <SelectItem
-                              key={status.value}
-                              value={status.value}
-                              className="text-base"
-                            >
-                              {status.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
             {/* Total Price Display */}
             <div className="border-2 border-black dark:border-white bg-green-200 dark:bg-green-900 p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold uppercase tracking-wide text-black dark:text-white mb-1">
                     Total Price
+                  </p>
+                  <p className="text-xs text-black/70 dark:text-white/70">
+                    {selectedDates?.length || 0} day(s) selected
                   </p>
                 </div>
                 <div className="text-right">
@@ -654,14 +630,14 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                 variant="outline"
                 onClick={() => handleOpenChange(false)}
                 disabled={isSubmitting}
-                className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black"
+                className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150 bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90"
+                className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90"
               >
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

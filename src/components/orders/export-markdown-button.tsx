@@ -26,10 +26,10 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
       ? DAYS_OF_WEEK
       : [dayFilter];
 
-  // Group orders by day
+  // Group orders by day from day_orders structure
   const ordersByDay: Record<
     string,
-    { name: string; ordered: string; notes: string }[]
+    { name: string; items: string; notes: string }[]
   > = {};
   for (const day of DAYS_OF_WEEK) {
     ordersByDay[day] = [];
@@ -40,16 +40,24 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
   let totalOrderByDay = 0;
 
   for (const order of orders) {
-    // Each order can have multiple days
-    for (const day of order.days) {
-      if (DAYS_OF_WEEK.includes(day as (typeof DAYS_OF_WEEK)[number])) {
-        ordersByDay[day].push({
-          name: order.name,
-          ordered: order.ordered,
-          notes: order.notes || "",
-        });
-        uniqueOrderIds.add(order.id);
-        totalOrderByDay++;
+    // Each order now has day_orders with items per day
+    if (order.day_orders && order.day_orders.length > 0) {
+      for (const dayOrder of order.day_orders) {
+        const day = dayOrder.day;
+        if (DAYS_OF_WEEK.includes(day as (typeof DAYS_OF_WEEK)[number])) {
+          // Format items for this day
+          const itemsSummary = dayOrder.items
+            .map((item) => `${item.name}${item.qty > 1 ? ` ×${item.qty}` : ""}`)
+            .join(", ");
+
+          ordersByDay[day].push({
+            name: order.name,
+            items: itemsSummary,
+            notes: order.notes || "",
+          });
+          uniqueOrderIds.add(order.id);
+          totalOrderByDay++;
+        }
       }
     }
   }
@@ -69,7 +77,7 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
       dayOrders.forEach((orderInfo, index) => {
         const notesStr = orderInfo.notes ? ` — ${orderInfo.notes}` : "";
         lines.push(
-          `${index + 1}. ${orderInfo.name} (${orderInfo.ordered})${notesStr}`,
+          `${index + 1}. ${orderInfo.name} (${orderInfo.items})${notesStr}`
         );
       });
     }
