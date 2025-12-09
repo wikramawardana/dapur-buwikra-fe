@@ -82,7 +82,7 @@ export default function OrdersPage() {
 
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [allOrdersForExport, setAllOrdersForExport] = React.useState<Order[]>(
-    []
+    [],
   );
   const [stats, setStats] = React.useState<OrderStats | null>(null);
   const [pagination, setPagination] = React.useState<PaginationInfo>({
@@ -129,7 +129,7 @@ export default function OrdersPage() {
         return;
       }
       toast.error(
-        error instanceof Error ? error.message : "Failed to fetch orders"
+        error instanceof Error ? error.message : "Failed to fetch orders",
       );
       setOrders([]);
     } finally {
@@ -181,7 +181,7 @@ export default function OrdersPage() {
         return;
       }
       toast.error(
-        error instanceof Error ? error.message : "Failed to fetch statistics"
+        error instanceof Error ? error.message : "Failed to fetch statistics",
       );
       setStats(null);
     } finally {

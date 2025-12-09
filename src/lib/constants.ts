@@ -13,7 +13,6 @@ export const ORDER_STATUSES = [
   { value: "cancelled", label: "Cancelled" },
 ] as const;
 
-
 export const PAYMENT_STATUSES = [
   { value: "paid", label: "Paid" },
   { value: "unpaid", label: "Unpaid" },

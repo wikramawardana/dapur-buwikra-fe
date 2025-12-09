@@ -178,7 +178,7 @@ export function OrdersTable({
         ),
       },
     ],
-    [onOrderUpdated, onOrderDeleted]
+    [onOrderUpdated, onOrderDeleted],
   );
 
   const table = useReactTable({
@@ -289,7 +289,7 @@ export function OrdersTable({
                     ? null
                     : flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                 </TableHead>
               ))}

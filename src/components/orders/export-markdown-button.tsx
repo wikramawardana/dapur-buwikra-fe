@@ -77,7 +77,7 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
       dayOrders.forEach((orderInfo, index) => {
         const notesStr = orderInfo.notes ? ` — ${orderInfo.notes}` : "";
         lines.push(
-          `${index + 1}. ${orderInfo.name} (${orderInfo.items})${notesStr}`
+          `${index + 1}. ${orderInfo.name} (${orderInfo.items})${notesStr}`,
         );
       });
     }

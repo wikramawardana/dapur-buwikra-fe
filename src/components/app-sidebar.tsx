@@ -4,7 +4,6 @@ import {
   ChefHat,
   DollarSign,
   Home,
-  ListOrdered,
   Shield,
   ShoppingCart,
   UtensilsCrossed,
@@ -69,11 +68,11 @@ export function AppSidebar() {
   const userRole = session?.user?.role;
 
   const filteredMenuItems = menuItems.filter((item) =>
-    item.roles.includes(userRole || "")
+    item.roles.includes(userRole || ""),
   );
 
   const filteredAdminMenuItems = adminMenuItems.filter((item) =>
-    item.roles.includes(userRole || "")
+    item.roles.includes(userRole || ""),
   );
 
   return (

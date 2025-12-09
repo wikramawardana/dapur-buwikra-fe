@@ -10,6 +10,7 @@ import {
   Trash2,
   UtensilsCrossed,
 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -67,7 +68,6 @@ import {
   getMenus,
   updateMenu,
   uploadMenuImage,
-  deleteMenuImage,
 } from "@/services/menu.service";
 import type { Menu, MenuItem } from "@/types/menu.types";
 
@@ -81,7 +81,7 @@ export default function MenusPage() {
   const [editingMenu, setEditingMenu] = React.useState<Menu | null>(null);
   const [deletingMenu, setDeletingMenu] = React.useState<Menu | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
+  const [_isUploadingImage, setIsUploadingImage] = React.useState(false);
 
   // Form state
   const [formTitle, setFormTitle] = React.useState("");
@@ -99,7 +99,7 @@ export default function MenusPage() {
     if (!isSessionLoading && !canAccess) {
       router.replace("/unauthorized");
     }
-  }, [session, isSessionLoading, router, canAccess]);
+  }, [isSessionLoading, router, canAccess]);
 
   // Fetch data
   const fetchMenus = React.useCallback(async () => {
@@ -110,10 +110,10 @@ export default function MenusPage() {
       const menuData = Array.isArray(response.data)
         ? response.data
         : Array.isArray(response)
-        ? response
-        : [];
+          ? response
+          : [];
       setMenus(menuData);
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to load menus");
       setMenus([]);
     } finally {
@@ -147,7 +147,7 @@ export default function MenusPage() {
     setFormItems(
       menu.items.length > 0
         ? menu.items
-        : [{ name: "", description: "", price: 0 }]
+        : [{ name: "", description: "", price: 0 }],
     );
     setFormIsActive(menu.is_active);
     setIsDialogOpen(true);
@@ -165,7 +165,7 @@ export default function MenusPage() {
   const updateMenuItem = (
     index: number,
     field: keyof MenuItem,
-    value: string | number
+    value: string | number,
   ) => {
     const newItems = [...formItems];
     newItems[index] = { ...newItems[index], [field]: value };
@@ -213,9 +213,9 @@ export default function MenusPage() {
       }
       setIsDialogOpen(false);
       fetchMenus();
-    } catch (error) {
+    } catch (_error) {
       toast.error(
-        editingMenu ? "Failed to update menu" : "Failed to create menu"
+        editingMenu ? "Failed to update menu" : "Failed to create menu",
       );
     } finally {
       setIsSubmitting(false);
@@ -231,7 +231,7 @@ export default function MenusPage() {
       toast.success("Menu deleted successfully");
       setIsDeleteDialogOpen(false);
       fetchMenus();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to delete menu");
     } finally {
       setIsSubmitting(false);
@@ -244,7 +244,7 @@ export default function MenusPage() {
       await uploadMenuImage(menuId, file);
       toast.success("Image uploaded successfully");
       fetchMenus();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to upload image");
     } finally {
       setIsUploadingImage(false);
@@ -256,7 +256,7 @@ export default function MenusPage() {
       await updateMenu(menu.id, { is_active: !menu.is_active });
       toast.success(`Menu ${menu.is_active ? "deactivated" : "activated"}`);
       fetchMenus();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to update menu");
     }
   };
@@ -329,10 +329,11 @@ export default function MenusPage() {
                     {/* Menu Images */}
                     {menu.images && menu.images.length > 0 ? (
                       <div className="h-40 bg-gray-100 relative">
-                        <img
+                        <Image
                           src={menu.images[0]}
                           alt={menu.title}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                       </div>
                     ) : (
@@ -559,7 +560,7 @@ export default function MenusPage() {
                       updateMenuItem(
                         idx,
                         "price",
-                        parseFloat(e.target.value) || 0
+                        parseFloat(e.target.value) || 0,
                       )
                     }
                     className="w-28 border-2 border-black rounded-none"

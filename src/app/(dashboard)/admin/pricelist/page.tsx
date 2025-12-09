@@ -76,10 +76,10 @@ export default function PriceListPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [editingItem, setEditingItem] = React.useState<PriceListItem | null>(
-    null
+    null,
   );
   const [deletingItem, setDeletingItem] = React.useState<PriceListItem | null>(
-    null
+    null,
   );
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -108,10 +108,10 @@ export default function PriceListPage() {
       const itemData = Array.isArray(response.data)
         ? response.data
         : Array.isArray(response)
-        ? response
-        : [];
+          ? response
+          : [];
       setItems(itemData);
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to load price list");
       setItems([]);
     } finally {
@@ -171,9 +171,9 @@ export default function PriceListPage() {
       }
       setIsDialogOpen(false);
       fetchItems();
-    } catch (error) {
+    } catch (_error) {
       toast.error(
-        editingItem ? "Failed to update item" : "Failed to create item"
+        editingItem ? "Failed to update item" : "Failed to create item",
       );
     } finally {
       setIsSubmitting(false);
@@ -189,7 +189,7 @@ export default function PriceListPage() {
       toast.success("Item deleted successfully");
       setIsDeleteDialogOpen(false);
       fetchItems();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to delete item");
     } finally {
       setIsSubmitting(false);
@@ -201,7 +201,7 @@ export default function PriceListPage() {
       await updatePriceListItem(item.id, { is_active: !item.is_active });
       toast.success(`Item ${item.is_active ? "deactivated" : "activated"}`);
       fetchItems();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to update item");
     }
   };

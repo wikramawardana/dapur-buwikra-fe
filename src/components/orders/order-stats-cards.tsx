@@ -1,7 +1,7 @@
 "use client";
 
+import { Calendar, Eye, EyeOff, ShoppingCart } from "lucide-react";
 import { useState } from "react";
-import { Calendar, DollarSign, Eye, EyeOff, ShoppingCart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsCardSkeleton } from "@/components/ui/page-loading";
 import { formatCurrency } from "@/lib/format";
@@ -65,6 +65,7 @@ export function OrderStatsCards({ stats, isLoading }: OrderStatsCardsProps) {
             Total Revenue
           </CardTitle>
           <button
+            type="button"
             onClick={() => setShowRevenue(!showRevenue)}
             className="p-0.5 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
             aria-label={showRevenue ? "Hide revenue" : "Show revenue"}

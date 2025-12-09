@@ -52,7 +52,6 @@ export async function updateOrder(
   });
 }
 
-
 /**
  * Delete an order
  */

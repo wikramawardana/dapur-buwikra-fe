@@ -1,856 +1,737 @@
 {
-	"info": {
-		"_postman_id": "92851594-ba66-41c8-aa81-9fd368f90a5d",
-		"name": "dapur-buwikra",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "46902894",
-		"_collection_link": "https://wikramawardana-6792211.postman.co/workspace/Wikrama-Wardana's-Workspace~ab95bf6d-2267-481f-839e-f3323be551b6/collection/46902894-92851594-ba66-41c8-aa81-9fd368f90a5d?action=share&source=collection_link&creator=46902894"
-	},
-	"item": [
-		{
-			"name": "orders",
-			"item": [
-				{
-					"name": "create orders",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Aldo\",\n  \"email\": \"rivaldo.haryanto@shopee.com\",\n  \"day_orders\": [\n    {\n      \"day\": \"Monday\",\n      \"date\": \"2025-12-08\",\n      \"items\": [\n        { \"name\": \"Nasi\", \"qty\": 1, \"unit_price\": 17500 }\n      ]\n    },\n    {\n      \"day\": \"Tuesday\", \n      \"date\": \"2025-12-09\",\n      \"items\": [\n        { \"name\": \"Nasi\", \"qty\": 1, \"unit_price\": 17500 }\n      ]\n    },\n    {\n      \"day\": \"Wednesday\", \n      \"date\": \"2025-12-10\",\n      \"items\": [\n        { \"name\": \"Nasi\", \"qty\": 1, \"unit_price\": 17500 },\n        { \"name\": \"Kulit Kecil\", \"qty\": 1, \"unit_price\": 7500 }\n      ]\n    },\n    {\n      \"day\": \"Friday\", \n      \"date\": \"2025-12-12\",\n      \"items\": [\n        { \"name\": \"Nasi\", \"qty\": 1, \"unit_price\": 17500 }\n      ]\n    }\n  ],\n  \"notes\": \"\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{dapur-buwikra}}/orders",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"orders"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get orders",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/orders?search=&page=1&page_size=10&sort_by=created_at&sort_order=desc",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"orders"
-							],
-							"query": [
-								{
-									"key": "search",
-									"value": ""
-								},
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "page_size",
-									"value": "10"
-								},
-								{
-									"key": "payment_status",
-									"value": "unpaid",
-									"disabled": true
-								},
-								{
-									"key": "day",
-									"value": "Monday",
-									"disabled": true
-								},
-								{
-									"key": "name",
-									"value": "",
-									"disabled": true
-								},
-								{
-									"key": "date_from",
-									"value": "2025-11-02",
-									"disabled": true
-								},
-								{
-									"key": "date_to",
-									"value": "2025-11-06",
-									"disabled": true
-								},
-								{
-									"key": "sort_by",
-									"value": "created_at"
-								},
-								{
-									"key": "sort_order",
-									"value": "desc"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get orders by id",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/orders/:id",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"orders",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": "aa4da9f1-5a88-4599-a58d-bc1b429ddde9"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "update orders by id",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"qty\": 3,\n    \"status\": \"processing\",\n    \"notes\": \"Extra sambal and krupuk\"\n  }",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{dapur-buwikra}}/orders/:id",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"orders",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "delete orders",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{dapur-buwikra}}/orders/:id",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"orders",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "total amount orders",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{dapur-buwikra}}/orders/sum?date_from=&date_to=",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"orders",
-								"sum"
-							],
-							"query": [
-								{
-									"key": "date_from",
-									"value": ""
-								},
-								{
-									"key": "date_to",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "total count orders",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{dapur-buwikra}}/orders/count?date_from=&date_to=&day=",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"orders",
-								"count"
-							],
-							"query": [
-								{
-									"key": "date_from",
-									"value": ""
-								},
-								{
-									"key": "date_to",
-									"value": ""
-								},
-								{
-									"key": "day",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get summary bill ordered",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{dapur-buwikra}}/orders/bill-summary?date_from=&date_to=&names=",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"orders",
-								"bill-summary"
-							],
-							"query": [
-								{
-									"key": "date_from",
-									"value": ""
-								},
-								{
-									"key": "date_to",
-									"value": ""
-								},
-								{
-									"key": "names",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "total orders per day",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/orders/count-by-day?date_from=2025-12-08&date_to=2025-12-12",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"orders",
-								"count-by-day"
-							],
-							"query": [
-								{
-									"key": "date_from",
-									"value": "2025-12-08"
-								},
-								{
-									"key": "date_to",
-									"value": "2025-12-12"
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "menus",
-			"item": [
-				{
-					"name": "get menus",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/menus",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"menus"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "crete menus",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"start_date\": \"2024-12-09\",\n    \"end_date\": \"2024-12-13\",\n    \"title\": \"Menu Minggu 9-13 Desember\",\n    \"description\": \"Menu masakan rumahan minggu ini\",\n    \"items\": [\n        {\n            \"name\": \"Nasi Liwet (Senin)\",\n            \"description\": \"Ayam Suwir Balado, Bihun Goreng, Sambal Bawang\",\n            \"price\": 15000\n        },\n        {\n            \"name\": \"Nasi Putih Bawang Goreng (Selasa)\",\n            \"description\": \"Udang Saus Asam Manis, Kailan Crispy\",\n            \"price\": 18000\n        },\n        {\n            \"name\": \"Nasi Goreng Jawa (Rabu)\",\n            \"description\": \"Kulit Ayam Goreng, Saus Sambal\",\n            \"price\": 15000\n        },\n        {\n            \"name\": \"Nasi Putih Bawang Goreng (Jumat)\",\n            \"description\": \"Tongseng Ayam, Sambal Rawit\",\n            \"price\": 17000\n        }\n    ],\n    \"is_active\": true\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{dapur-buwikra}}/menus",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"menus"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "upload image",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "image",
-									"type": "file",
-									"src": "/Users/wikra/Downloads/WhatsApp Image 2025-12-05 at 10.45.35.jpeg"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{dapur-buwikra}}/menus/:id/images",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"menus",
-								":id",
-								"images"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": "fbdf48fb-84dc-4bb8-ad13-22ea64055326"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "update menu",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"title\": \"Menu Senin 9 Desember (Updated)\",\n    \"is_active\": true,\n    \"items\": [\n      {\n        \"name\": \"Nasi Goreng Special\",\n        \"price\": 17000\n      }\n    ]\n  }",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{dapur-buwikra}}/menus/id",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"menus",
-								"id"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get menu by id",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/menus/:id",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"menus",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": "fbdf48fb-84dc-4bb8-ad13-22ea64055326"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get menus by date",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/menus/by-date/:date",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"menus",
-								"by-date",
-								":date"
-							],
-							"variable": [
-								{
-									"key": "date",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "delete image",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/menus/:id/images?image_url=/uploads/menus/filename.jpg",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"menus",
-								":id",
-								"images"
-							],
-							"query": [
-								{
-									"key": "image_url",
-									"value": "/uploads/menus/filename.jpg"
-								}
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "delete menu",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/menus/:id",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"menus",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "delete images all",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/menus/:id/images/all",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"menus",
-								":id",
-								"images",
-								"all"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "pricelist",
-			"item": [
-				{
-					"name": "get pricelist",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/price-list",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"price-list"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "create price list",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Add On Kulit Goreng Besar\",\n    \"price\": 15000,\n    \"category\": \"addon\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{dapur-buwikra}}/price-list",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"price-list"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get pricelist active",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/price-list/active",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"price-list",
-								"active"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get pricelist by id",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/price-list/:id",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"price-list",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": "44f1cb6a-0743-4dd5-b0b2-034681a6ccc3"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "delete pricelist",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{dapur-buwikra}}/price-list/:id",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"price-list",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "update pricelist",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"is_active\": false\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{dapur-buwikra}}/price-list/:id",
-							"host": [
-								"{{dapur-buwikra}}"
-							],
-							"path": [
-								"price-list",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": "44f1cb6a-0743-4dd5-b0b2-034681a6ccc3"
-								}
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		}
-	]
+  "info": {
+    "_postman_id": "92851594-ba66-41c8-aa81-9fd368f90a5d",
+    "name": "dapur-buwikra",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "46902894",
+    "_collection_link": "https://wikramawardana-6792211.postman.co/workspace/Wikrama-Wardana's-Workspace~ab95bf6d-2267-481f-839e-f3323be551b6/collection/46902894-92851594-ba66-41c8-aa81-9fd368f90a5d?action=share&source=collection_link&creator=46902894"
+  },
+  "item": [
+    {
+      "name": "orders",
+      "item": [
+        {
+          "name": "create orders",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Aldo\",\n  \"email\": \"rivaldo.haryanto@shopee.com\",\n  \"day_orders\": [\n    {\n      \"day\": \"Monday\",\n      \"date\": \"2025-12-08\",\n      \"items\": [\n        { \"name\": \"Nasi\", \"qty\": 1, \"unit_price\": 17500 }\n      ]\n    },\n    {\n      \"day\": \"Tuesday\", \n      \"date\": \"2025-12-09\",\n      \"items\": [\n        { \"name\": \"Nasi\", \"qty\": 1, \"unit_price\": 17500 }\n      ]\n    },\n    {\n      \"day\": \"Wednesday\", \n      \"date\": \"2025-12-10\",\n      \"items\": [\n        { \"name\": \"Nasi\", \"qty\": 1, \"unit_price\": 17500 },\n        { \"name\": \"Kulit Kecil\", \"qty\": 1, \"unit_price\": 7500 }\n      ]\n    },\n    {\n      \"day\": \"Friday\", \n      \"date\": \"2025-12-12\",\n      \"items\": [\n        { \"name\": \"Nasi\", \"qty\": 1, \"unit_price\": 17500 }\n      ]\n    }\n  ],\n  \"notes\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{dapur-buwikra}}/orders",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["orders"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/orders?search=&page=1&page_size=10&sort_by=created_at&sort_order=desc",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["orders"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "10"
+                },
+                {
+                  "key": "payment_status",
+                  "value": "unpaid",
+                  "disabled": true
+                },
+                {
+                  "key": "day",
+                  "value": "Monday",
+                  "disabled": true
+                },
+                {
+                  "key": "name",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "date_from",
+                  "value": "2025-11-02",
+                  "disabled": true
+                },
+                {
+                  "key": "date_to",
+                  "value": "2025-11-06",
+                  "disabled": true
+                },
+                {
+                  "key": "sort_by",
+                  "value": "created_at"
+                },
+                {
+                  "key": "sort_order",
+                  "value": "desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get orders by id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/orders/:id",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "aa4da9f1-5a88-4599-a58d-bc1b429ddde9"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update orders by id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"qty\": 3,\n    \"status\": \"processing\",\n    \"notes\": \"Extra sambal and krupuk\"\n  }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{dapur-buwikra}}/orders/:id",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete orders",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{dapur-buwikra}}/orders/:id",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "total amount orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{dapur-buwikra}}/orders/sum?date_from=&date_to=",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["orders", "sum"],
+              "query": [
+                {
+                  "key": "date_from",
+                  "value": ""
+                },
+                {
+                  "key": "date_to",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "total count orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{dapur-buwikra}}/orders/count?date_from=&date_to=&day=",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["orders", "count"],
+              "query": [
+                {
+                  "key": "date_from",
+                  "value": ""
+                },
+                {
+                  "key": "date_to",
+                  "value": ""
+                },
+                {
+                  "key": "day",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get summary bill ordered",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{dapur-buwikra}}/orders/bill-summary?date_from=&date_to=&names=",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["orders", "bill-summary"],
+              "query": [
+                {
+                  "key": "date_from",
+                  "value": ""
+                },
+                {
+                  "key": "date_to",
+                  "value": ""
+                },
+                {
+                  "key": "names",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "total orders per day",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/orders/count-by-day?date_from=2025-12-08&date_to=2025-12-12",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["orders", "count-by-day"],
+              "query": [
+                {
+                  "key": "date_from",
+                  "value": "2025-12-08"
+                },
+                {
+                  "key": "date_to",
+                  "value": "2025-12-12"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "menus",
+      "item": [
+        {
+          "name": "get menus",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/menus",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["menus"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "crete menus",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"start_date\": \"2024-12-09\",\n    \"end_date\": \"2024-12-13\",\n    \"title\": \"Menu Minggu 9-13 Desember\",\n    \"description\": \"Menu masakan rumahan minggu ini\",\n    \"items\": [\n        {\n            \"name\": \"Nasi Liwet (Senin)\",\n            \"description\": \"Ayam Suwir Balado, Bihun Goreng, Sambal Bawang\",\n            \"price\": 15000\n        },\n        {\n            \"name\": \"Nasi Putih Bawang Goreng (Selasa)\",\n            \"description\": \"Udang Saus Asam Manis, Kailan Crispy\",\n            \"price\": 18000\n        },\n        {\n            \"name\": \"Nasi Goreng Jawa (Rabu)\",\n            \"description\": \"Kulit Ayam Goreng, Saus Sambal\",\n            \"price\": 15000\n        },\n        {\n            \"name\": \"Nasi Putih Bawang Goreng (Jumat)\",\n            \"description\": \"Tongseng Ayam, Sambal Rawit\",\n            \"price\": 17000\n        }\n    ],\n    \"is_active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{dapur-buwikra}}/menus",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["menus"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "upload image",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "/Users/wikra/Downloads/WhatsApp Image 2025-12-05 at 10.45.35.jpeg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{dapur-buwikra}}/menus/:id/images",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["menus", ":id", "images"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "fbdf48fb-84dc-4bb8-ad13-22ea64055326"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update menu",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Menu Senin 9 Desember (Updated)\",\n    \"is_active\": true,\n    \"items\": [\n      {\n        \"name\": \"Nasi Goreng Special\",\n        \"price\": 17000\n      }\n    ]\n  }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{dapur-buwikra}}/menus/id",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["menus", "id"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get menu by id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/menus/:id",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["menus", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "fbdf48fb-84dc-4bb8-ad13-22ea64055326"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get menus by date",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/menus/by-date/:date",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["menus", "by-date", ":date"],
+              "variable": [
+                {
+                  "key": "date",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete image",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/menus/:id/images?image_url=/uploads/menus/filename.jpg",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["menus", ":id", "images"],
+              "query": [
+                {
+                  "key": "image_url",
+                  "value": "/uploads/menus/filename.jpg"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete menu",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/menus/:id",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["menus", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete images all",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/menus/:id/images/all",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["menus", ":id", "images", "all"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "pricelist",
+      "item": [
+        {
+          "name": "get pricelist",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/price-list",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["price-list"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create price list",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Add On Kulit Goreng Besar\",\n    \"price\": 15000,\n    \"category\": \"addon\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{dapur-buwikra}}/price-list",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["price-list"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get pricelist active",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/price-list/active",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["price-list", "active"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get pricelist by id",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/price-list/:id",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["price-list", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "44f1cb6a-0743-4dd5-b0b2-034681a6ccc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete pricelist",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{dapur-buwikra}}/price-list/:id",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["price-list", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update pricelist",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"is_active\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{dapur-buwikra}}/price-list/:id",
+              "host": ["{{dapur-buwikra}}"],
+              "path": ["price-list", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "44f1cb6a-0743-4dd5-b0b2-034681a6ccc3"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
 }
