@@ -57,6 +57,9 @@ export interface CreateOrderPayload {
 }
 
 export interface UpdateOrderPayload {
+  name?: string;
+  email?: string;
+  day_orders?: DayOrder[];
   payment_status?: PaymentStatus;
   notes?: string;
 }

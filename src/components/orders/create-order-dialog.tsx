@@ -46,6 +46,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { useSession } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
 import { createOrder } from "@/services/orders.service";
 import { getActivePriceList } from "@/services/pricelist.service";
@@ -82,8 +83,8 @@ const orderFormSchema = z.object({
         name: z.string(),
         qty: z.number().min(1),
         unit_price: z.number().min(0),
-      }),
-    ),
+      })
+    )
   ),
   notes: z.string().optional(),
 });
@@ -92,7 +93,7 @@ type OrderFormValues = z.infer<typeof orderFormSchema>;
 
 // Calculate total price from all day orders
 const calculateTotalPrice = (
-  dayOrders: Record<string, OrderMenuItem[]>,
+  dayOrders: Record<string, OrderMenuItem[]>
 ): number => {
   return Object.values(dayOrders).reduce((total, items) => {
     return (
@@ -110,9 +111,15 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [priceListItems, setPriceListItems] = React.useState<PriceListItem[]>(
-    [],
+    []
   );
   const [isLoadingPriceList, setIsLoadingPriceList] = React.useState(false);
+
+  // Get session for email prefill
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
+  const sessionEmail = session?.user?.email || "";
+  const sessionName = session?.user?.name || "";
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderFormSchema),
@@ -124,6 +131,17 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       notes: "",
     },
   });
+
+  // Prefill form with session data when dialog opens
+  React.useEffect(() => {
+    if (open && session?.user) {
+      // For non-admin, prefill both name and email from session
+      if (!isAdmin) {
+        form.setValue("email", sessionEmail);
+        form.setValue("name", sessionName);
+      }
+    }
+  }, [open, session, isAdmin, sessionEmail, sessionName, form]);
 
   const selectedDates = form.watch("selectedDates");
   const dayOrders = form.watch("dayOrders");
@@ -251,7 +269,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       onOrderCreated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create order",
+        error instanceof Error ? error.message : "Failed to create order"
       );
     } finally {
       setIsSubmitting(false);
@@ -325,16 +343,24 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-base font-bold uppercase tracking-wide">
-                        Email *
+                        Email *{!isAdmin && " (from your account)"}
                       </FormLabel>
                       <FormControl>
                         <Input
                           type="email"
                           placeholder="customer@email.com"
-                          className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium"
+                          disabled={!isAdmin}
+                          className={`h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium ${
+                            !isAdmin ? "opacity-70 cursor-not-allowed" : ""
+                          }`}
                           {...field}
                         />
                       </FormControl>
+                      {!isAdmin && (
+                        <p className="text-xs text-muted-foreground">
+                          Email is auto-filled from your account
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -421,7 +447,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                         const dayItems = dayOrders?.[dateKey] || [];
                         const dayTotal = dayItems.reduce(
                           (sum, item) => sum + item.qty * item.unit_price,
-                          0,
+                          0
                         );
 
                         return (
