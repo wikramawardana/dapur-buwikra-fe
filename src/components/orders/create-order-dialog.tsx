@@ -83,8 +83,8 @@ const orderFormSchema = z.object({
         name: z.string(),
         qty: z.number().min(1),
         unit_price: z.number().min(0),
-      })
-    )
+      }),
+    ),
   ),
   notes: z.string().optional(),
 });
@@ -93,7 +93,7 @@ type OrderFormValues = z.infer<typeof orderFormSchema>;
 
 // Calculate total price from all day orders
 const calculateTotalPrice = (
-  dayOrders: Record<string, OrderMenuItem[]>
+  dayOrders: Record<string, OrderMenuItem[]>,
 ): number => {
   return Object.values(dayOrders).reduce((total, items) => {
     return (
@@ -111,7 +111,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [priceListItems, setPriceListItems] = React.useState<PriceListItem[]>(
-    []
+    [],
   );
   const [isLoadingPriceList, setIsLoadingPriceList] = React.useState(false);
 
@@ -269,7 +269,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       onOrderCreated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create order"
+        error instanceof Error ? error.message : "Failed to create order",
       );
     } finally {
       setIsSubmitting(false);
@@ -447,7 +447,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                         const dayItems = dayOrders?.[dateKey] || [];
                         const dayTotal = dayItems.reduce(
                           (sum, item) => sum + item.qty * item.unit_price,
-                          0
+                          0,
                         );
 
                         return (

@@ -122,7 +122,7 @@ export function OrderActionDialog({
   const [editName, setEditName] = React.useState(order.name);
   const [editEmail, setEditEmail] = React.useState(order.email || "");
   const [editDayOrders, setEditDayOrders] = React.useState<DayOrder[]>(
-    order.day_orders || []
+    order.day_orders || [],
   );
   const [editPaymentStatus, setEditPaymentStatus] =
     React.useState<PaymentStatus>(order.payment_status);
@@ -130,7 +130,7 @@ export function OrderActionDialog({
 
   // Price list for adding items
   const [priceListItems, setPriceListItems] = React.useState<PriceListItem[]>(
-    []
+    [],
   );
   const [isLoadingPriceList, setIsLoadingPriceList] = React.useState(false);
 
@@ -139,7 +139,7 @@ export function OrderActionDialog({
 
   const isViewMode = actionMode === "view";
   const totalPrice = calculateTotalFromDayOrders(
-    isViewMode ? order.day_orders || [] : editDayOrders
+    isViewMode ? order.day_orders || [] : editDayOrders,
   );
 
   // Fetch price list when entering edit mode
@@ -196,7 +196,7 @@ export function OrderActionDialog({
   const updateItemQty = (
     dayIndex: number,
     itemIndex: number,
-    delta: number
+    delta: number,
   ) => {
     const updated = [...editDayOrders];
     const item = updated[dayIndex].items[itemIndex];
@@ -238,7 +238,7 @@ export function OrderActionDialog({
 
     if (newDayOrders.length > 0) {
       const combined = [...editDayOrders, ...newDayOrders].sort((a, b) =>
-        a.date.localeCompare(b.date)
+        a.date.localeCompare(b.date),
       );
       setEditDayOrders(combined);
     }
@@ -276,7 +276,7 @@ export function OrderActionDialog({
       onOrderUpdated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update order"
+        error instanceof Error ? error.message : "Failed to update order",
       );
     } finally {
       setIsSubmitting(false);
@@ -292,7 +292,7 @@ export function OrderActionDialog({
       onOrderDeleted?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete order"
+        error instanceof Error ? error.message : "Failed to delete order",
       );
     } finally {
       setIsDeleting(false);
@@ -308,7 +308,7 @@ export function OrderActionDialog({
       displayDayOrders.forEach((dayOrder) => {
         const dayTotal = dayOrder.items.reduce(
           (sum, item) => sum + item.qty * item.unit_price,
-          0
+          0,
         );
         orderItemsHtml += `<div style="margin-bottom: 16px;">`;
         orderItemsHtml += `<p style="font-size: 14px; font-weight: 700; color: #000000; margin: 0 0 8px 0; border-bottom: 1px solid #000000; padding-bottom: 4px;">${dayOrder.day} - ${dayOrder.date}</p>`;
@@ -317,7 +317,7 @@ export function OrderActionDialog({
           orderItemsHtml += `<div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; padding: 0 4px;">
             <span style="color: #000000;">${item.name} × ${item.qty}</span>
             <span style="color: #000000; font-weight: 600;">${formatCurrency(
-              item.qty * item.unit_price
+              item.qty * item.unit_price,
             )}</span>
           </div>`;
         });
@@ -366,7 +366,7 @@ export function OrderActionDialog({
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-size: 16px; font-weight: 700; text-transform: uppercase; color: #ffffff; letter-spacing: 2px;">Total</span>
                         <span style="font-size: 28px; font-weight: 900; color: #ffffff;">${formatCurrency(
-                          calculateTotalFromDayOrders(displayDayOrders)
+                          calculateTotalFromDayOrders(displayDayOrders),
                         )}</span>
                     </div>
                 </div>
@@ -375,8 +375,8 @@ export function OrderActionDialog({
                     <span style="display: inline-block; padding: 12px 32px; font-size: 14px; font-weight: 900; text-transform: uppercase; background-color: ${
                       order.payment_status === "paid" ? "#000000" : "#ffffff"
                     }; color: ${
-        order.payment_status === "paid" ? "#ffffff" : "#000000"
-      }; border: 3px solid #000000; letter-spacing: 2px;">
+                      order.payment_status === "paid" ? "#ffffff" : "#000000"
+                    }; border: 3px solid #000000; letter-spacing: 2px;">
                         ${
                           order.payment_status === "paid"
                             ? "✓ LUNAS"
@@ -605,7 +605,7 @@ export function OrderActionDialog({
                   {displayDayOrders.map((dayOrder, dayIdx) => {
                     const dayTotal = dayOrder.items.reduce(
                       (sum, item) => sum + item.qty * item.unit_price,
-                      0
+                      0,
                     );
                     return (
                       <div
