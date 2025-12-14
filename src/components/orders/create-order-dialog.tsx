@@ -153,7 +153,9 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       setIsLoadingPriceList(true);
       getActivePriceList()
         .then((response) => {
-          setPriceListItems(response.data);
+          // Handle both paginated and non-paginated responses
+          const items = response.data?.data || response.data || [];
+          setPriceListItems(Array.isArray(items) ? items : []);
         })
         .catch((error) => {
           toast.error("Failed to load price list");
@@ -276,9 +278,13 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
     }
   };
 
-  // Group price list items by category
-  const mainItems = priceListItems.filter((item) => item.category === "main");
-  const addonItems = priceListItems.filter((item) => item.category === "addon");
+  // Group price list items by category (with defensive check)
+  const mainItems = (priceListItems || []).filter(
+    (item) => item.category === "main",
+  );
+  const addonItems = (priceListItems || []).filter(
+    (item) => item.category === "addon",
+  );
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

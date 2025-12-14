@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api.config";
+import { apiFetch, buildQueryString } from "@/lib/api.config";
 import type {
   CreateMenuPayload,
   MenusResponse,
@@ -6,11 +6,19 @@ import type {
   UpdateMenuPayload,
 } from "@/types/menu.types";
 
+export interface GetMenusParams {
+  page?: number;
+  page_size?: number;
+}
+
 /**
- * Fetch all menus
+ * Fetch all menus with pagination
  */
-export async function getMenus(): Promise<MenusResponse> {
-  return apiFetch<MenusResponse>("/menus");
+export async function getMenus(
+  params?: GetMenusParams,
+): Promise<MenusResponse> {
+  const query = buildQueryString(params || {});
+  return apiFetch<MenusResponse>(`/menus${query}`);
 }
 
 /**
@@ -64,10 +72,8 @@ export async function uploadMenuImage(
 
   return apiFetch<SingleMenuResponse>(`/menus/${id}/images`, {
     method: "POST",
-    headers: {
-      // Remove Content-Type to let browser set it with boundary for FormData
-    },
     body: formData,
+    skipContentType: true, // Let browser set Content-Type with boundary for FormData
   });
 }
 

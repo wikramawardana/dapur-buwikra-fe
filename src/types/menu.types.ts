@@ -11,7 +11,7 @@ export interface Menu {
   title: string;
   description?: string;
   items: MenuItem[];
-  images: string[];
+  image_urls: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -33,10 +33,20 @@ export interface UpdateMenuPayload {
   is_active?: boolean;
 }
 
+export interface MenusPaginatedData {
+  data: Menu[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total_items: number;
+    total_pages: number;
+  };
+}
+
 export interface MenusResponse {
   status: string;
   message: string;
-  data: Menu[];
+  data: MenusPaginatedData;
 }
 
 export interface SingleMenuResponse {

@@ -38,9 +38,60 @@ export function OrderStatsCards({ stats, isLoading }: OrderStatsCardsProps) {
           <div className="text-xl font-bold text-blue-700 sm:text-3xl">
             {stats?.total_count ?? 0}
           </div>
-          <p className="text-[10px] text-blue-500 mt-1 sm:text-xs">
-            Orders in current filter
-          </p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[10px] text-blue-500 sm:text-xs">
+            {stats?.count_monday !== undefined && (
+              <>
+                <span>
+                  Mon:{" "}
+                  <span className="font-semibold text-blue-700">
+                    {stats.count_monday}
+                  </span>
+                </span>
+                <span className="text-blue-300">•</span>
+              </>
+            )}
+            {stats?.count_tuesday !== undefined && (
+              <>
+                <span>
+                  Tue:{" "}
+                  <span className="font-semibold text-blue-700">
+                    {stats.count_tuesday}
+                  </span>
+                </span>
+                <span className="text-blue-300">•</span>
+              </>
+            )}
+            {stats?.count_wednesday !== undefined && (
+              <>
+                <span>
+                  Wed:{" "}
+                  <span className="font-semibold text-blue-700">
+                    {stats.count_wednesday}
+                  </span>
+                </span>
+                <span className="text-blue-300">•</span>
+              </>
+            )}
+            {stats?.count_thursday !== undefined && (
+              <>
+                <span>
+                  Thu:{" "}
+                  <span className="font-semibold text-blue-700">
+                    {stats.count_thursday}
+                  </span>
+                </span>
+                <span className="text-blue-300">•</span>
+              </>
+            )}
+            {stats?.count_friday !== undefined && (
+              <span>
+                Fri:{" "}
+                <span className="font-semibold text-blue-700">
+                  {stats.count_friday}
+                </span>
+              </span>
+            )}
+          </div>
         </CardContent>
       </Card>
       <Card className="neo-brutal bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800">
@@ -54,9 +105,28 @@ export function OrderStatsCards({ stats, isLoading }: OrderStatsCardsProps) {
           <div className="text-xl font-bold text-purple-700 sm:text-3xl">
             {stats?.count_by_day ?? 0}
           </div>
-          <p className="text-[10px] text-purple-500 mt-1 sm:text-xs">
-            Daily orders in filter
-          </p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[10px] text-purple-500 sm:text-xs">
+            <span>
+              Nasi:{" "}
+              <span className="font-semibold text-purple-700">
+                {stats?.total_nasi ?? 0}
+              </span>
+            </span>
+            <span className="text-purple-300">•</span>
+            <span>
+              Kulit Kecil:{" "}
+              <span className="font-semibold text-purple-700">
+                {stats?.total_kulit_kecil ?? 0}
+              </span>
+            </span>
+            <span className="text-purple-300">•</span>
+            <span>
+              Kulit Besar:{" "}
+              <span className="font-semibold text-purple-700">
+                {stats?.total_kulit_besar ?? 0}
+              </span>
+            </span>
+          </div>
         </CardContent>
       </Card>
       <Card className="neo-brutal bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
@@ -81,9 +151,23 @@ export function OrderStatsCards({ stats, isLoading }: OrderStatsCardsProps) {
           <div className="text-xl font-bold text-green-700 sm:text-3xl">
             {showRevenue ? formatCurrency(stats?.total_sum ?? 0) : "Rp ••••••"}
           </div>
-          <p className="text-[10px] text-green-500 mt-1 sm:text-xs">
-            Revenue in current filter
-          </p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[10px] text-green-500 sm:text-xs">
+            <span>
+              Paid:{" "}
+              <span className="font-semibold text-green-700">
+                {showRevenue ? formatCurrency(stats?.paid_sum ?? 0) : "••••••"}
+              </span>
+            </span>
+            <span className="text-green-300">•</span>
+            <span>
+              Unpaid:{" "}
+              <span className="font-semibold text-red-600">
+                {showRevenue
+                  ? formatCurrency(stats?.unpaid_sum ?? 0)
+                  : "••••••"}
+              </span>
+            </span>
+          </div>
         </CardContent>
       </Card>
     </div>

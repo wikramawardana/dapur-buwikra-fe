@@ -10,12 +10,7 @@ import { OrderStatsCards } from "@/components/orders/order-stats-cards";
 import { OrdersFilters } from "@/components/orders/orders-filters";
 import { OrdersPagination } from "@/components/orders/orders-pagination";
 import { OrdersTable } from "@/components/orders/orders-table";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb";
+import { PageHeader } from "@/components/page-header";
 import {
   Card,
   CardContent,
@@ -23,10 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
-import { UserMenu } from "@/components/user-menu";
 import { useSession } from "@/lib/auth-client";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import {
@@ -81,9 +73,6 @@ export default function OrdersPage() {
   const { data: session, isPending: isSessionLoading } = useSession();
 
   const [orders, setOrders] = React.useState<Order[]>([]);
-  const [allOrdersForExport, setAllOrdersForExport] = React.useState<Order[]>(
-    [],
-  );
   const [stats, setStats] = React.useState<OrderStats | null>(null);
   const [pagination, setPagination] = React.useState<PaginationInfo>({
     page: 1,
@@ -91,8 +80,6 @@ export default function OrdersPage() {
     total_items: 0,
     total_pages: 0,
   });
-  const [isExportLoading, setIsExportLoading] = React.useState(false);
-
   // Get current work week for default date filter
   const defaultWorkWeek = React.useMemo(() => getCurrentWorkWeek(), []);
 
@@ -137,22 +124,6 @@ export default function OrdersPage() {
     }
   }, [filters]);
 
-  const fetchAllOrdersForExport = React.useCallback(async () => {
-    setIsExportLoading(true);
-    try {
-      // Fetch all orders with page_size 100 for export
-      const exportFilters = { ...filters, page: 1, page_size: 100 };
-      const response = await getOrders(exportFilters);
-      setAllOrdersForExport(response.data.data);
-    } catch (error) {
-      // Silently fail for export - user can retry
-      console.error("Failed to fetch orders for export:", error);
-      setAllOrdersForExport([]);
-    } finally {
-      setIsExportLoading(false);
-    }
-  }, [filters]);
-
   const fetchStats = React.useCallback(async () => {
     setIsStatsLoading(true);
     try {
@@ -171,9 +142,19 @@ export default function OrdersPage() {
 
       // Combine the results
       setStats({
-        total_count: countResponse.data.count,
+        total_count: countResponse.data.total_count,
+        count_monday: countResponse.data.monday,
+        count_tuesday: countResponse.data.tuesday,
+        count_wednesday: countResponse.data.wednesday,
+        count_thursday: countResponse.data.thursday,
+        count_friday: countResponse.data.friday,
         total_sum: sumResponse.data.total_amount,
+        paid_sum: sumResponse.data.paid_amount,
+        unpaid_sum: sumResponse.data.unpaid_amount,
         count_by_day: countByDayResponse.data.total,
+        total_nasi: countByDayResponse.data.total_nasi,
+        total_kulit_kecil: countByDayResponse.data.total_kulit_kecil,
+        total_kulit_besar: countByDayResponse.data.total_kulit_besar,
       });
     } catch (error) {
       // Don't show toast for auth errors - let the redirect handle it
@@ -196,7 +177,6 @@ export default function OrdersPage() {
 
     fetchOrders();
     fetchStats();
-    fetchAllOrdersForExport();
   }, [isAuthenticated, filters]);
 
   const handleFiltersChange = (newFilters: OrderFilters) => {
@@ -231,20 +211,7 @@ export default function OrdersPage() {
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbPage>Orders</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <div className="ml-auto">
-          <UserMenu />
-        </div>
-      </header>
+      <PageHeader breadcrumbs={[{ label: "Orders" }]} />
 
       <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
         <Card className="neo-brutal neo-brutal-white border-2">
@@ -273,11 +240,7 @@ export default function OrdersPage() {
               onFiltersChange={handleFiltersChange}
             />
             <div className="flex justify-end">
-              <ExportMarkdownButton
-                orders={allOrdersForExport}
-                disabled={isLoading || isExportLoading}
-                dayFilter={filters.day}
-              />
+              <ExportMarkdownButton filters={filters} disabled={isLoading} />
             </div>
             <OrdersTable
               orders={orders}

@@ -40,7 +40,11 @@
         "useFocusableInteractive": "off",
         "useSemanticElements": "off",
         "useKeyWithClickEvents": "off",
-        "useAriaPropsForRole": "off"
+        "useAriaPropsForRole": "off",
+        "noStaticElementInteractions": "off"
+      },
+      "performance": {
+        "noImgElement": "off"
       }
     },
     "domains": {

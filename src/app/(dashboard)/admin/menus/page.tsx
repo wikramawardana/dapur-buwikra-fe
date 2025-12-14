@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import {
   CalendarIcon,
+  Eye,
   ImagePlus,
   Loader2,
   Pencil,
@@ -10,10 +11,10 @@ import {
   Trash2,
   UtensilsCrossed,
 } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/page-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,12 +25,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -54,17 +49,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { UserMenu } from "@/components/user-menu";
+import { getUploadUrl } from "@/lib/api.config";
 import { useSession } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
 import {
   createMenu,
   deleteMenu,
+  deleteMenuImage,
   getMenus,
   updateMenu,
   uploadMenuImage,
@@ -76,8 +70,16 @@ export default function MenusPage() {
   const { data: session, isPending: isSessionLoading } = useSession();
   const [menus, setMenus] = React.useState<Menu[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [totalPages, setTotalPages] = React.useState(1);
+  const [totalItems, setTotalItems] = React.useState(0);
+  const PAGE_SIZE = 10;
+
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
+  const [previewMenu, setPreviewMenu] = React.useState<Menu | null>(null);
   const [editingMenu, setEditingMenu] = React.useState<Menu | null>(null);
   const [deletingMenu, setDeletingMenu] = React.useState<Menu | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -90,6 +92,10 @@ export default function MenusPage() {
   const [formEndDate, setFormEndDate] = React.useState<Date | undefined>();
   const [formItems, setFormItems] = React.useState<MenuItem[]>([]);
   const [formIsActive, setFormIsActive] = React.useState(true);
+  const [formImage, setFormImage] = React.useState<File | null>(null);
+  const [formImagePreview, setFormImagePreview] = React.useState<string | null>(
+    null,
+  );
 
   const userRole = session?.user?.role;
   const canAccess = userRole === "admin" || userRole === "chef";
@@ -102,28 +108,50 @@ export default function MenusPage() {
   }, [isSessionLoading, router, canAccess]);
 
   // Fetch data
-  const fetchMenus = React.useCallback(async () => {
-    setIsLoading(true);
+  const fetchMenus = React.useCallback(async (page = 1, append = false) => {
+    if (page === 1) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
+    }
     try {
-      const response = await getMenus();
-      // Handle both { data: [...] } and direct array responses
-      const menuData = Array.isArray(response.data)
-        ? response.data
-        : Array.isArray(response)
-          ? response
-          : [];
-      setMenus(menuData);
+      const response = await getMenus({ page, page_size: PAGE_SIZE });
+      const { data, pagination } = response.data;
+
+      if (append) {
+        setMenus((prev) => [...prev, ...(data || [])]);
+      } else {
+        setMenus(data || []);
+      }
+      setCurrentPage(pagination.page);
+      setTotalPages(pagination.total_pages);
+      setTotalItems(pagination.total_items);
     } catch (_error) {
       toast.error("Failed to load menus");
-      setMenus([]);
+      if (!append) {
+        setMenus([]);
+      }
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   }, []);
 
+  const loadMore = () => {
+    if (currentPage < totalPages && !isLoadingMore) {
+      fetchMenus(currentPage + 1, true);
+    }
+  };
+
+  // Refresh from page 1
+  const refreshMenus = React.useCallback(() => {
+    setCurrentPage(1);
+    fetchMenus(1, false);
+  }, [fetchMenus]);
+
   React.useEffect(() => {
     if (canAccess) {
-      fetchMenus();
+      fetchMenus(1, false);
     }
   }, [canAccess, fetchMenus]);
 
@@ -135,6 +163,8 @@ export default function MenusPage() {
     setFormEndDate(undefined);
     setFormItems([{ name: "", description: "", price: 0 }]);
     setFormIsActive(true);
+    setFormImage(null);
+    setFormImagePreview(null);
     setIsDialogOpen(true);
   };
 
@@ -150,12 +180,21 @@ export default function MenusPage() {
         : [{ name: "", description: "", price: 0 }],
     );
     setFormIsActive(menu.is_active);
+    setFormImage(null);
+    setFormImagePreview(
+      menu.image_urls?.[0] ? getUploadUrl(menu.image_urls[0]) : null,
+    );
     setIsDialogOpen(true);
   };
 
   const openDeleteDialog = (menu: Menu) => {
     setDeletingMenu(menu);
     setIsDeleteDialogOpen(true);
+  };
+
+  const openPreviewDialog = (menu: Menu) => {
+    setPreviewMenu(menu);
+    setIsPreviewOpen(true);
   };
 
   const addMenuItem = () => {
@@ -176,6 +215,27 @@ export default function MenusPage() {
     if (formItems.length > 1) {
       setFormItems(formItems.filter((_, i) => i !== index));
     }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearSelectedImage = () => {
+    setFormImage(null);
+    setFormImagePreview(
+      editingMenu?.image_urls?.[0]
+        ? getUploadUrl(editingMenu.image_urls[0])
+        : null,
+    );
   };
 
   const handleSubmit = async () => {
@@ -199,9 +259,14 @@ export default function MenusPage() {
           items: validItems,
           is_active: formIsActive,
         });
+        // Upload new image if selected
+        if (formImage) {
+          await uploadMenuImage(editingMenu.id, formImage);
+        }
         toast.success("Menu updated successfully");
       } else {
-        await createMenu({
+        // Create menu first
+        const response = await createMenu({
           title: formTitle,
           description: formDescription,
           start_date: format(formStartDate, "yyyy-MM-dd"),
@@ -209,10 +274,14 @@ export default function MenusPage() {
           items: validItems,
           is_active: formIsActive,
         });
+        // Upload image if selected
+        if (formImage && response.data?.id) {
+          await uploadMenuImage(response.data.id, formImage);
+        }
         toast.success("Menu created successfully");
       }
       setIsDialogOpen(false);
-      fetchMenus();
+      refreshMenus();
     } catch (_error) {
       toast.error(
         editingMenu ? "Failed to update menu" : "Failed to create menu",
@@ -227,10 +296,22 @@ export default function MenusPage() {
 
     setIsSubmitting(true);
     try {
+      // Delete all images first
+      if (deletingMenu.image_urls && deletingMenu.image_urls.length > 0) {
+        for (const imageUrl of deletingMenu.image_urls) {
+          try {
+            await deleteMenuImage(deletingMenu.id, imageUrl);
+          } catch {
+            // Continue even if image deletion fails
+            console.warn(`Failed to delete image: ${imageUrl}`);
+          }
+        }
+      }
+      // Then delete the menu
       await deleteMenu(deletingMenu.id);
       toast.success("Menu deleted successfully");
       setIsDeleteDialogOpen(false);
-      fetchMenus();
+      refreshMenus();
     } catch (_error) {
       toast.error("Failed to delete menu");
     } finally {
@@ -238,12 +319,12 @@ export default function MenusPage() {
     }
   };
 
-  const handleImageUpload = async (menuId: string, file: File) => {
+  const _handleImageUpload = async (menuId: string, file: File) => {
     setIsUploadingImage(true);
     try {
       await uploadMenuImage(menuId, file);
       toast.success("Image uploaded successfully");
-      fetchMenus();
+      refreshMenus();
     } catch (_error) {
       toast.error("Failed to upload image");
     } finally {
@@ -255,7 +336,7 @@ export default function MenusPage() {
     try {
       await updateMenu(menu.id, { is_active: !menu.is_active });
       toast.success(`Menu ${menu.is_active ? "deactivated" : "activated"}`);
-      fetchMenus();
+      refreshMenus();
     } catch (_error) {
       toast.error("Failed to update menu");
     }
@@ -275,20 +356,7 @@ export default function MenusPage() {
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbPage>Menus</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <div className="ml-auto">
-          <UserMenu />
-        </div>
-      </header>
+      <PageHeader breadcrumbs={[{ label: "Menus" }]} />
 
       <div className="flex flex-1 flex-col gap-4 p-4">
         <Card className="neo-brutal neo-brutal-white border-2">
@@ -320,107 +388,251 @@ export default function MenusPage() {
                 No menus yet. Click "Create Menu" to add one.
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-4">
                 {menus.map((menu) => (
                   <Card
                     key={menu.id}
-                    className="border-2 border-black overflow-hidden"
+                    className="border-2 border-black overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-shadow cursor-pointer"
+                    onClick={() => openPreviewDialog(menu)}
                   >
-                    {/* Menu Images */}
-                    {menu.images && menu.images.length > 0 ? (
-                      <div className="h-40 bg-gray-100 relative">
-                        <Image
-                          src={menu.images[0]}
-                          alt={menu.title}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-40 bg-gray-100 flex items-center justify-center">
-                        <label className="cursor-pointer flex flex-col items-center text-gray-400 hover:text-gray-600">
-                          <ImagePlus className="h-8 w-8 mb-2" />
-                          <span className="text-sm">Upload Image</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleImageUpload(menu.id, file);
-                            }}
+                    <div className="flex flex-col md:flex-row">
+                      {/* Menu Image */}
+                      <div className="w-full md:w-48 h-32 md:h-auto bg-gray-100 flex-shrink-0">
+                        {menu.image_urls && menu.image_urls.length > 0 ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={getUploadUrl(menu.image_urls[0])}
+                            alt={menu.title}
+                            className="w-full h-full object-cover"
                           />
-                        </label>
-                      </div>
-                    )}
-
-                    <div className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="font-bold text-lg">{menu.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {menu.start_date} → {menu.end_date}
-                          </p>
-                        </div>
-                        <Switch
-                          checked={menu.is_active}
-                          onCheckedChange={() => handleToggleActive(menu)}
-                        />
-                      </div>
-
-                      {menu.description && (
-                        <p className="text-sm text-gray-600 mb-3">
-                          {menu.description}
-                        </p>
-                      )}
-
-                      {/* Menu Items */}
-                      <div className="space-y-1 mb-3">
-                        {menu.items.slice(0, 3).map((item, idx) => (
-                          <div
-                            key={idx}
-                            className="flex justify-between text-sm"
-                          >
-                            <span>{item.name}</span>
-                            <span className="font-medium text-green-600">
-                              {formatCurrency(item.price)}
-                            </span>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <ImagePlus className="h-8 w-8" />
                           </div>
-                        ))}
-                        {menu.items.length > 3 && (
-                          <p className="text-xs text-muted-foreground">
-                            +{menu.items.length - 3} more items
-                          </p>
                         )}
                       </div>
 
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(menu)}
-                          className="flex-1 border-2 border-black rounded-none"
+                      {/* Menu Info */}
+                      <div className="flex-1 p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h3 className="font-bold text-lg">{menu.title}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              📅 {menu.start_date} → {menu.end_date}
+                            </p>
+                          </div>
+                          <div
+                            className="flex items-center gap-2"
+                            role="presentation"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <span
+                              className={`px-2 py-1 text-xs font-bold uppercase border-2 border-black ${menu.is_active ? "bg-green-200" : "bg-gray-200"}`}
+                            >
+                              {menu.is_active ? "Active" : "Inactive"}
+                            </span>
+                            <Switch
+                              checked={menu.is_active}
+                              onCheckedChange={() => handleToggleActive(menu)}
+                            />
+                          </div>
+                        </div>
+
+                        {menu.description && (
+                          <p className="text-sm text-gray-600 mb-2 line-clamp-1">
+                            {menu.description}
+                          </p>
+                        )}
+
+                        {/* Menu Items Preview */}
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {menu.items.slice(0, 4).map((item, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-0.5 text-xs bg-amber-100 border border-amber-300 rounded"
+                            >
+                              {item.name}
+                            </span>
+                          ))}
+                          {menu.items.length > 4 && (
+                            <span className="px-2 py-0.5 text-xs bg-gray-100 border border-gray-300 rounded">
+                              +{menu.items.length - 4} more
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Actions */}
+                        <div
+                          className="flex gap-2"
+                          role="presentation"
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <Pencil className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => openDeleteDialog(menu)}
-                          className="border-2 border-black rounded-none"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openPreviewDialog(menu)}
+                            className="border-2 border-black rounded-none"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Preview
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditDialog(menu)}
+                            className="border-2 border-black rounded-none"
+                          >
+                            <Pencil className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => openDeleteDialog(menu)}
+                            className="border-2 border-black rounded-none"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </Card>
                 ))}
+
+                {/* Load More / Pagination Info */}
+                {menus.length > 0 && (
+                  <div className="flex flex-col items-center gap-3 pt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {menus.length} of {totalItems} menus
+                    </p>
+                    {currentPage < totalPages && (
+                      <Button
+                        onClick={loadMore}
+                        disabled={isLoadingMore}
+                        variant="outline"
+                        className="border-2 border-black rounded-none"
+                      >
+                        {isLoadingMore ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            Load More ({totalPages - currentPage} pages
+                            remaining)
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Preview Dialog */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white p-0">
+          {previewMenu && (
+            <>
+              {/* Large Image */}
+              {previewMenu.image_urls && previewMenu.image_urls.length > 0 ? (
+                <div className="w-full h-64 md:h-80 bg-gray-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={getUploadUrl(previewMenu.image_urls[0])}
+                    alt={previewMenu.title}
+                    className="w-full h-full object-contain bg-gray-50"
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-40 bg-gray-100 flex items-center justify-center">
+                  <ImagePlus className="h-12 w-12 text-gray-400" />
+                </div>
+              )}
+
+              {/* Menu Details */}
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">{previewMenu.title}</h2>
+                    <p className="text-muted-foreground">
+                      📅 {previewMenu.start_date} → {previewMenu.end_date}
+                    </p>
+                  </div>
+                  <span
+                    className={`px-3 py-1 text-sm font-bold uppercase border-2 border-black ${previewMenu.is_active ? "bg-green-200" : "bg-gray-200"}`}
+                  >
+                    {previewMenu.is_active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+
+                {previewMenu.description && (
+                  <p className="text-gray-600 mb-6">
+                    {previewMenu.description}
+                  </p>
+                )}
+
+                {/* Menu Items */}
+                <div className="mb-6">
+                  <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+                    <UtensilsCrossed className="h-5 w-5" />
+                    Menu Items
+                  </h3>
+                  <div className="space-y-2">
+                    {previewMenu.items.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex justify-between items-center p-3 bg-gray-50 border-2 border-gray-200"
+                      >
+                        <div>
+                          <span className="font-medium">{item.name}</span>
+                          {item.description && (
+                            <p className="text-sm text-gray-500">
+                              {item.description}
+                            </p>
+                          )}
+                        </div>
+                        <span className="font-bold text-green-600">
+                          {formatCurrency(item.price)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      setIsPreviewOpen(false);
+                      openEditDialog(previewMenu);
+                    }}
+                    className="flex-1 border-2 border-black bg-black text-white rounded-none"
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit Menu
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setIsPreviewOpen(false);
+                      openDeleteDialog(previewMenu);
+                    }}
+                    className="border-2 border-black rounded-none"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -506,6 +718,43 @@ export default function MenusPage() {
                 </div>
               </div>
             )}
+
+            {/* Image Upload */}
+            <div className="space-y-2">
+              <Label className="font-bold">Menu Image</Label>
+              {formImagePreview ? (
+                <div className="relative h-40 border-2 border-black rounded-none overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={formImagePreview}
+                    alt="Menu preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={clearSelectedImage}
+                    className="absolute top-2 right-2 border-2 border-black rounded-none"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-black rounded-none cursor-pointer hover:bg-gray-50">
+                  <ImagePlus className="h-8 w-8 mb-2 text-gray-400" />
+                  <span className="text-sm text-gray-500">
+                    Click to upload image
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageSelect}
+                  />
+                </label>
+              )}
+            </div>
 
             <div className="flex items-center gap-2">
               <Switch

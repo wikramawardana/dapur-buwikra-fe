@@ -12,15 +12,9 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/page-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -54,8 +48,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Table,
   TableBody,
@@ -64,7 +56,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserMenu } from "@/components/user-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { authClient, useSession } from "@/lib/auth-client";
 
@@ -225,24 +216,9 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbPage>Admin</BreadcrumbPage>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>User Management</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <div className="ml-auto">
-          <UserMenu />
-        </div>
-      </header>
+      <PageHeader
+        breadcrumbs={[{ label: "Admin" }, { label: "User Management" }]}
+      />
 
       <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
         <Card className="neo-brutal neo-brutal-white border-2">

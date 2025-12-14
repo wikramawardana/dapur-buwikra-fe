@@ -11,6 +11,23 @@ import { getSession } from "@/lib/auth-client";
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
 
+// Backend base URL (without /api/v1) for static files like images
+export const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
+/**
+ * Get full URL for uploaded files (images, etc.)
+ */
+export function getUploadUrl(path: string): string {
+  if (!path) return "";
+  // If already a full URL, return as is
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  // Prepend backend URL
+  return `${BACKEND_URL}${path}`;
+}
+
 // Cache for the session token promise to avoid multiple get-session calls
 let tokenPromise: Promise<string | null> | null = null;
 let tokenExpiry = 0;
@@ -84,7 +101,7 @@ export class ApiError extends Error {
  */
 export async function apiFetch<T>(
   endpoint: string,
-  options?: RequestInit,
+  options?: RequestInit & { skipContentType?: boolean },
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
@@ -100,14 +117,20 @@ export async function apiFetch<T>(
     throw new ApiError("No authentication token available", 401);
   }
 
+  // Build headers - skip Content-Type for FormData uploads
+  const headers: HeadersInit = {
+    Authorization: `Bearer ${token}`,
+    ...options?.headers,
+  };
+
+  if (!options?.skipContentType) {
+    (headers as Record<string, string>)["Content-Type"] = "application/json";
+  }
+
   try {
     const response = await fetch(url, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        ...options?.headers,
-      },
+      headers,
     });
 
     if (!response.ok) {

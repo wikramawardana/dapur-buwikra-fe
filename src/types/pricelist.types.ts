@@ -23,10 +23,20 @@ export interface UpdatePriceListPayload {
   is_active?: boolean;
 }
 
+export interface PriceListPaginatedData {
+  data: PriceListItem[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total_items: number;
+    total_pages: number;
+  };
+}
+
 export interface PriceListResponse {
   status: string;
   message: string;
-  data: PriceListItem[];
+  data: PriceListPaginatedData;
 }
 
 export interface SinglePriceListResponse {

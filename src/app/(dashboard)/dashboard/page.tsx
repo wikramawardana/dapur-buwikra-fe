@@ -3,12 +3,7 @@
 import { ChefHat, Clock, ShoppingCart, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,10 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
-import { UserMenu } from "@/components/user-menu";
 import { useSession } from "@/lib/auth-client";
 
 export default function DashboardPage() {
@@ -60,25 +52,7 @@ export default function DashboardPage() {
   return (
     <>
       {/* Header */}
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b-4 border-black dark:border-white bg-white dark:bg-black px-4">
-        <SidebarTrigger className="-ml-1 border-2 border-black dark:border-white hover:bg-yellow-200 dark:hover:bg-yellow-800" />
-        <Separator
-          orientation="vertical"
-          className="mr-2 h-6 w-[3px] bg-black dark:bg-white"
-        />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbPage className="font-bold text-black dark:text-white">
-                Dashboard
-              </BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <div className="ml-auto">
-          <UserMenu />
-        </div>
-      </header>
+      <PageHeader breadcrumbs={[{ label: "Dashboard" }]} />
 
       {/* Content */}
       <div className="flex-1 space-y-4 p-3 sm:space-y-6 sm:p-6">

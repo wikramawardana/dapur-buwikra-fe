@@ -148,7 +148,9 @@ export function OrderActionDialog({
       setIsLoadingPriceList(true);
       getActivePriceList()
         .then((response) => {
-          setPriceListItems(response.data);
+          // Handle both paginated and non-paginated responses
+          const items = response.data?.data || response.data || [];
+          setPriceListItems(Array.isArray(items) ? items : []);
         })
         .catch((error) => {
           toast.error("Failed to load price list");
@@ -302,35 +304,54 @@ export function OrderActionDialog({
   const handleCopyInvoice = async () => {
     setIsCopyingInvoice(true);
     try {
-      let orderItemsHtml = "";
       const displayDayOrders = order.day_orders || [];
+      const totalPrice = calculateTotalFromDayOrders(displayDayOrders);
 
+      // Generate invoice number and date
+      const invoiceNumber = `INV-${order.id.slice(0, 8).toUpperCase()}`;
+      const invoiceDate = format(new Date(order.created_at), "dd MMMM yyyy");
+
+      // Build order items HTML
+      let orderItemsHtml = "";
       displayDayOrders.forEach((dayOrder) => {
         const dayTotal = dayOrder.items.reduce(
           (sum, item) => sum + item.qty * item.unit_price,
           0,
         );
-        orderItemsHtml += `<div style="margin-bottom: 16px;">`;
-        orderItemsHtml += `<p style="font-size: 14px; font-weight: 700; color: #000000; margin: 0 0 8px 0; border-bottom: 1px solid #000000; padding-bottom: 4px;">${dayOrder.day} - ${dayOrder.date}</p>`;
 
+        // Day Header
+        orderItemsHtml += `<div style="background-color: #e5e5e5; padding: 8px 12px; border-top: 2px solid #000000;">
+          <p style="font-size: 14px; font-weight: 700; color: #000000; margin: 0;">${dayOrder.day} - ${format(new Date(dayOrder.date), "dd MMM yyyy")}</p>
+        </div>`;
+
+        // Items
         dayOrder.items.forEach((item) => {
-          orderItemsHtml += `<div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; padding: 0 4px;">
-            <span style="color: #000000;">${item.name} × ${item.qty}</span>
-            <span style="color: #000000; font-weight: 600;">${formatCurrency(
-              item.qty * item.unit_price,
-            )}</span>
+          orderItemsHtml += `<div style="display: grid; grid-template-columns: 1fr 60px 100px; font-size: 14px; padding: 8px 12px; border-top: 1px solid #d1d5db;">
+            <div>
+              <p style="font-weight: 500; color: #000000; margin: 0;">${item.name}</p>
+              <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">@ ${formatCurrency(item.unit_price)}</p>
+            </div>
+            <div style="text-align: center; font-weight: 500; color: #000000;">${item.qty}</div>
+            <div style="text-align: right; font-weight: 600; color: #000000;">${formatCurrency(item.qty * item.unit_price)}</div>
           </div>`;
         });
 
-        orderItemsHtml += `<div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-top: 4px; padding: 4px; background: #f0f0f0;">
-          <span>Subtotal</span>
-          <span>${formatCurrency(dayTotal)}</span>
+        // Day Subtotal
+        orderItemsHtml += `<div style="display: grid; grid-template-columns: 2fr 1fr; font-size: 14px; padding: 8px 12px; background-color: #f3f4f6; border-top: 1px solid #d1d5db;">
+          <div style="font-weight: 600; color: #374151;">Subtotal ${dayOrder.day}</div>
+          <div style="text-align: right; font-weight: 700; color: #000000;">${formatCurrency(dayTotal)}</div>
         </div>`;
-        orderItemsHtml += `</div>`;
       });
 
       const notesHtml = order.notes
-        ? `<div style="margin: 20px 0; padding: 12px 16px; border: 2px solid #000000; background-color: #ffffff;"><p style="font-size: 12px; color: #000000; text-transform: uppercase; font-weight: 700; margin: 0 0 6px 0; letter-spacing: 1px;">Catatan</p><p style="font-size: 14px; color: #000000; margin: 0; line-height: 1.5;">${order.notes}</p></div>`
+        ? `<div style="margin-bottom: 24px; padding: 16px; border: 2px solid #000000; background-color: #fefce8;">
+            <p style="font-size: 12px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Catatan</p>
+            <p style="font-size: 14px; color: #000000; margin: 0;">${order.notes}</p>
+          </div>`
+        : "";
+
+      const emailHtml = order.email
+        ? `<p style="font-size: 14px; color: #4b5563; margin: 4px 0 0 0;">${order.email}</p>`
         : "";
 
       const invoiceHtml = `
@@ -343,50 +364,70 @@ export function OrderActionDialog({
             </style>
         </head>
         <body>
-            <div style="width: 500px; background-color: #ffffff; padding: 32px; font-family: Arial, Helvetica, sans-serif; color: #000000; border: 3px solid #000000;">
-                <div style="text-align: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 3px solid #000000;">
-                    <h1 style="font-size: 28px; font-weight: 900; letter-spacing: 2px; color: #000000; margin: 0 0 8px 0;">DAPUR BUWIKRA</h1>
-                    <p style="font-size: 14px; color: #000000; font-weight: 600; margin: 0; letter-spacing: 3px; text-transform: uppercase;">Invoice</p>
+            <div style="width: 500px; background-color: #ffffff; padding: 32px; font-family: Arial, Helvetica, sans-serif; color: #000000;">
+                <!-- Header -->
+                <div style="text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 4px solid #000000;">
+                    <h1 style="font-size: 30px; font-weight: 900; letter-spacing: 3px; color: #000000; margin: 0 0 4px 0;">DAPUR BUWIKRA</h1>
+                    <p style="font-size: 14px; font-weight: 600; color: #000000; text-transform: uppercase; letter-spacing: 0.2em; margin: 0;">Invoice</p>
                 </div>
-                
-                <div style="margin-bottom: 24px;">
-                    <p style="font-size: 12px; color: #000000; text-transform: uppercase; font-weight: 700; margin: 0 0 6px 0; letter-spacing: 1px;">Pelanggan</p>
-                    <p style="font-size: 22px; font-weight: 900; color: #000000; margin: 0;">${
-                      order.name
-                    }</p>
-                </div>
-                
-                <div style="margin-bottom: 24px; padding: 16px; border: 2px solid #000000; background-color: #ffffff;">
-                    ${orderItemsHtml}
-                </div>
-                
-                ${notesHtml}
-                
-                <div style="background-color: #000000; padding: 20px; margin-top: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 16px; font-weight: 700; text-transform: uppercase; color: #ffffff; letter-spacing: 2px;">Total</span>
-                        <span style="font-size: 28px; font-weight: 900; color: #ffffff;">${formatCurrency(
-                          calculateTotalFromDayOrders(displayDayOrders),
-                        )}</span>
+
+                <!-- Invoice Info -->
+                <div style="display: flex; justify-content: space-between; margin-bottom: 24px; font-size: 14px;">
+                    <div>
+                        <p style="font-size: 12px; font-weight: 700; color: #4b5563; text-transform: uppercase; margin: 0 0 4px 0;">No. Invoice</p>
+                        <p style="font-weight: 700; color: #000000; margin: 0;">${invoiceNumber}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="font-size: 12px; font-weight: 700; color: #4b5563; text-transform: uppercase; margin: 0 0 4px 0;">Tanggal</p>
+                        <p style="font-weight: 700; color: #000000; margin: 0;">${invoiceDate}</p>
                     </div>
                 </div>
-                
-                <div style="margin-top: 20px; text-align: center;">
-                    <span style="display: inline-block; padding: 12px 32px; font-size: 14px; font-weight: 900; text-transform: uppercase; background-color: ${
-                      order.payment_status === "paid" ? "#000000" : "#ffffff"
+
+                <!-- Customer Info -->
+                <div style="margin-bottom: 24px; padding: 16px; border: 2px solid #000000; background-color: #f9fafb;">
+                    <p style="font-size: 12px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Pelanggan</p>
+                    <p style="font-size: 20px; font-weight: 900; color: #000000; margin: 0;">${order.name}</p>
+                    ${emailHtml}
+                </div>
+
+                <!-- Order Items -->
+                <div style="margin-bottom: 24px; border: 2px solid #000000;">
+                    <!-- Table Header -->
+                    <div style="display: grid; grid-template-columns: 1fr 60px 100px; background-color: #000000; color: #ffffff; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 8px 12px;">
+                        <div>Item</div>
+                        <div style="text-align: center;">Qty</div>
+                        <div style="text-align: right;">Subtotal</div>
+                    </div>
+                    ${orderItemsHtml}
+                </div>
+
+                ${notesHtml}
+
+                <!-- Total -->
+                <div style="background-color: #000000; color: #ffffff; padding: 16px; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Total</span>
+                        <span style="font-size: 24px; font-weight: 900;">${formatCurrency(totalPrice)}</span>
+                    </div>
+                </div>
+
+                <!-- Payment Status -->
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <span style="display: inline-block; padding: 12px 24px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; border: 4px solid ${
+                      order.payment_status === "paid" ? "#16a34a" : "#dc2626"
+                    }; background-color: ${
+                      order.payment_status === "paid" ? "#dcfce7" : "#fee2e2"
                     }; color: ${
-                      order.payment_status === "paid" ? "#ffffff" : "#000000"
-                    }; border: 3px solid #000000; letter-spacing: 2px;">
-                        ${
-                          order.payment_status === "paid"
-                            ? "✓ LUNAS"
-                            : "BELUM LUNAS"
-                        }
+                      order.payment_status === "paid" ? "#166534" : "#991b1b"
+                    };">
+                        ${order.payment_status === "paid" ? "✓ LUNAS" : "BELUM LUNAS"}
                     </span>
                 </div>
-                
-                <div style="margin-top: 24px; text-align: center;">
-                    <p style="font-size: 12px; color: #000000; margin: 0; font-weight: 500;">Terima kasih atas pesanan Anda!</p>
+
+                <!-- Footer -->
+                <div style="text-align: center; padding-top: 16px; border-top: 2px solid #d1d5db;">
+                    <p style="font-size: 12px; color: #6b7280; margin: 0 0 4px 0;">Terima kasih atas pesanan Anda!</p>
+                    <p style="font-size: 12px; color: #9ca3af; margin: 0;">Dapur Buwikra - Catering &amp; Homemade Food</p>
                 </div>
             </div>
         </body>

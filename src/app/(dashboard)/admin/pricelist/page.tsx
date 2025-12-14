@@ -4,6 +4,7 @@ import { DollarSign, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/page-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,12 +15,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -45,8 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -57,7 +50,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserMenu } from "@/components/user-menu";
 import { useSession } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
 import {
@@ -104,13 +96,7 @@ export default function PriceListPage() {
     setIsLoading(true);
     try {
       const response = await getPriceList();
-      // Handle both { data: [...] } and direct array responses
-      const itemData = Array.isArray(response.data)
-        ? response.data
-        : Array.isArray(response)
-          ? response
-          : [];
-      setItems(itemData);
+      setItems(response.data.data);
     } catch (_error) {
       toast.error("Failed to load price list");
       setItems([]);
@@ -220,20 +206,7 @@ export default function PriceListPage() {
 
   return (
     <>
-      <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbPage>Price List</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <div className="ml-auto">
-          <UserMenu />
-        </div>
-      </header>
+      <PageHeader breadcrumbs={[{ label: "Price List" }]} />
 
       <div className="flex flex-1 flex-col gap-4 p-4">
         <Card className="neo-brutal neo-brutal-white border-2">

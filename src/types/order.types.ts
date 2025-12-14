@@ -80,8 +80,18 @@ export interface OrderFilters {
 
 export interface OrderStats {
   total_count: number;
+  count_monday?: number;
+  count_tuesday?: number;
+  count_wednesday?: number;
+  count_thursday?: number;
+  count_friday?: number;
   total_sum: number;
+  paid_sum: number;
+  unpaid_sum: number;
   count_by_day: number;
+  total_nasi: number;
+  total_kulit_kecil: number;
+  total_kulit_besar: number;
 }
 
 export interface OrderStatsResponse {
@@ -94,7 +104,12 @@ export interface OrderCountResponse {
   status: string;
   message: string;
   data: {
-    count: number;
+    total_count: number;
+    monday?: number;
+    tuesday?: number;
+    wednesday?: number;
+    thursday?: number;
+    friday?: number;
   };
 }
 
@@ -103,12 +118,17 @@ export interface OrderSumResponse {
   message: string;
   data: {
     total_amount: number;
+    paid_amount: number;
+    unpaid_amount: number;
   };
 }
 
 export interface OrderCountByDayItem {
   day: string;
   count: number;
+  nasi_count: number;
+  kulit_kecil_count: number;
+  kulit_besar_count: number;
 }
 
 export interface OrderCountByDayResponse {
@@ -117,5 +137,8 @@ export interface OrderCountByDayResponse {
   data: {
     days: OrderCountByDayItem[];
     total: number;
+    total_nasi: number;
+    total_kulit_kecil: number;
+    total_kulit_besar: number;
   };
 }
