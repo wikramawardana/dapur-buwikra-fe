@@ -54,7 +54,6 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { getUploadUrl } from "@/lib/api.config";
 import { useSession } from "@/lib/auth-client";
-import { formatCurrency } from "@/lib/format";
 import {
   createMenu,
   deleteMenu,
@@ -535,74 +534,46 @@ export default function MenusPage() {
 
       {/* Preview Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white p-0">
+        <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white p-0">
           {previewMenu && (
             <>
               {/* Large Image */}
               {previewMenu.image_urls && previewMenu.image_urls.length > 0 ? (
-                <div className="w-full h-64 md:h-80 bg-gray-100">
+                <div className="w-full bg-gray-100">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={getUploadUrl(previewMenu.image_urls[0])}
                     alt={previewMenu.title}
-                    className="w-full h-full object-contain bg-gray-50"
+                    className="w-full h-auto object-contain bg-gray-50"
                   />
                 </div>
               ) : (
-                <div className="w-full h-40 bg-gray-100 flex items-center justify-center">
-                  <ImagePlus className="h-12 w-12 text-gray-400" />
+                <div className="w-full h-64 bg-gray-100 flex items-center justify-center">
+                  <ImagePlus className="h-16 w-16 text-gray-400" />
                 </div>
               )}
 
               {/* Menu Details */}
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
+              <div className="p-4 border-t-2 border-black">
+                <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h2 className="text-2xl font-bold">{previewMenu.title}</h2>
-                    <p className="text-muted-foreground">
+                    <h2 className="text-xl font-bold">{previewMenu.title}</h2>
+                    <p className="text-sm text-muted-foreground">
                       📅 {previewMenu.start_date} → {previewMenu.end_date}
                     </p>
                   </div>
                   <span
-                    className={`px-3 py-1 text-sm font-bold uppercase border-2 border-black ${previewMenu.is_active ? "bg-green-200" : "bg-gray-200"}`}
+                    className={`px-2 py-1 text-xs font-bold uppercase border-2 border-black ${previewMenu.is_active ? "bg-green-200" : "bg-gray-200"}`}
                   >
                     {previewMenu.is_active ? "Active" : "Inactive"}
                   </span>
                 </div>
 
                 {previewMenu.description && (
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-sm text-gray-600 mb-3">
                     {previewMenu.description}
                   </p>
                 )}
-
-                {/* Menu Items */}
-                <div className="mb-6">
-                  <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-                    <UtensilsCrossed className="h-5 w-5" />
-                    Menu Items
-                  </h3>
-                  <div className="space-y-2">
-                    {previewMenu.items.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="flex justify-between items-center p-3 bg-gray-50 border-2 border-gray-200"
-                      >
-                        <div>
-                          <span className="font-medium">{item.name}</span>
-                          {item.description && (
-                            <p className="text-sm text-gray-500">
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
-                        <span className="font-bold text-green-600">
-                          {formatCurrency(item.price)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
@@ -612,6 +583,7 @@ export default function MenusPage() {
                       openEditDialog(previewMenu);
                     }}
                     className="flex-1 border-2 border-black bg-black text-white rounded-none"
+                    size="sm"
                   >
                     <Pencil className="h-4 w-4 mr-2" />
                     Edit Menu
@@ -623,6 +595,7 @@ export default function MenusPage() {
                       openDeleteDialog(previewMenu);
                     }}
                     className="border-2 border-black rounded-none"
+                    size="sm"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete

@@ -1,97 +1,122 @@
-import { ArrowRight, Utensils } from "lucide-react";
-import Image from "next/image";
+"use client";
+
+import { Heart, MapPin, Rocket } from "lucide-react";
 import type React from "react";
-import { Button } from "./button";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { NeoButton, NeoCard } from "./neocard";
 
 export const Hero: React.FC = () => {
+  const [showComingSoon, setShowComingSoon] = useState(false);
   return (
-    <section
-      id="home"
-      className="relative min-h-[90vh] flex items-center pt-24 bg-blue-50"
-    >
-      {/* Decorative Grid Background */}
-      <div
-        className="absolute inset-0 z-0 opacity-10"
-        style={{
-          backgroundImage: "radial-gradient(#000 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }}
-      ></div>
-
-      <div className="container mx-auto px-4 md:px-8 relative z-10 py-12 md:py-0">
-        <div className="flex flex-col md:flex-row items-center gap-12">
-          {/* Left Content */}
-          <div className="w-full md:w-1/2">
-            <div className="inline-flex items-center gap-2 bg-white border-2 border-black px-4 py-2 font-bold text-sm mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <Utensils size={16} strokeWidth={3} />
-              <span className="uppercase">Solusi Makan Siang Kantor</span>
-            </div>
-
-            <h1 className="text-5xl md:text-7xl font-black text-black leading-none mb-6 tracking-tight">
-              DAPUR <br />
-              <span className="bg-blue-600 text-white px-2">BU WIKRA.</span>
-            </h1>
-
-            <p className="text-xl md:text-2xl text-black font-medium mb-8 leading-relaxed border-l-4 border-black pl-6">
-              Catering harian masakan rumahan. <br />
-              <b>Murah. Enak. Diantar ke meja Anda.</b>
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button
-                onClick={() =>
-                  document
-                    .getElementById("menu")
-                    ?.scrollIntoView({ behavior: "smooth" })
-                }
-              >
-                LIHAT MENU HARI INI{" "}
-                <ArrowRight size={20} strokeWidth={3} className="ml-2" />
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  window.open("https://wa.me/6281234567890", "_blank")
-                }
-              >
-                TANYA HARGA
-              </Button>
-            </div>
+    <section className="container mx-auto px-4 py-12 md:py-20 max-w-6xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        {/* Left Content: Text */}
+        <div className="space-y-8 order-2 md:order-1">
+          <div className="inline-block bg-black text-white px-4 py-2 font-bold border-2 border-black transform -rotate-2">
+            KHUSUS ANAK KANTOR
           </div>
 
-          {/* Right Image */}
-          <div className="w-full md:w-1/2 relative">
-            <div className="relative z-10 border-4 border-black bg-white p-2 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
-              <Image
-                src="https://picsum.photos/800/600"
-                alt="Masakan Rumahan"
-                fill
-                className="object-cover border-2 border-black filter grayscale hover:grayscale-0 transition-all duration-500"
-              />
-            </div>
-            {/* Background Shape */}
-            <div className="absolute -top-4 -right-4 w-full h-full bg-blue-600 border-4 border-black z-0"></div>
+          <h1 className="text-5xl md:text-7xl font-black leading-tight text-brut-black">
+            BUKAN CATERING{" "}
+            <span className="text-brut-blue underline decoration-4 decoration-black underline-offset-4">
+              BIASA
+            </span>
+            .
+          </h1>
+
+          <NeoCard className="bg-yellow-300 transform rotate-1">
+            <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+              <Heart className="fill-black" /> The Story:
+            </h3>
+            <p className="font-medium text-lg border-l-4 border-black pl-4">
+              "Simple aja sebenernya. Istri saya masak, terus pengen dinilai
+              sama temen-temen kantor. Eh, Alhamdulillah pada cocok &
+              ketagihan!"
+            </p>
+          </NeoCard>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <NeoButton
+              variant="primary"
+              onClick={() => setShowComingSoon(true)}
+            >
+              Lihat Menu Hari Ini
+            </NeoButton>
+            <NeoButton
+              variant="secondary"
+              className="flex items-center justify-center gap-2"
+              onClick={() => setShowComingSoon(true)}
+            >
+              <MapPin size={20} />
+              Area Kantor Only
+            </NeoButton>
           </div>
         </div>
 
-        {/* Stats Strip */}
-        <div className="mt-20 border-4 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 flex flex-wrap justify-between gap-8">
-          <div className="text-center flex-1 min-w-[150px]">
-            <p className="text-4xl font-black text-blue-600">Rp 15rb</p>
-            <p className="font-bold text-black uppercase">Mulai Dari</p>
-          </div>
-          <div className="w-1 h-16 bg-black hidden md:block"></div>
-          <div className="text-center flex-1 min-w-[150px]">
-            <p className="text-4xl font-black text-blue-600">500+</p>
-            <p className="font-bold text-black uppercase">Porsi/Hari</p>
-          </div>
-          <div className="w-1 h-16 bg-black hidden md:block"></div>
-          <div className="text-center flex-1 min-w-[150px]">
-            <p className="text-4xl font-black text-blue-600">GRATIS</p>
-            <p className="font-bold text-black uppercase">Ongkir Kantor</p>
+        {/* Right Content: Logo Visual */}
+        <div className="order-1 md:order-2 flex justify-center relative">
+          <div className="absolute inset-0 bg-brut-blue border-4 border-black transform translate-x-4 translate-y-4 z-0"></div>
+          <div className="relative z-10 bg-white border-4 border-black p-8 shadow-neo-lg w-full max-w-md flex flex-col items-center">
+            <img
+              src="/image/dapur-buwikra-logo.png"
+              alt="Logo Dapur Bu Wikra"
+              className="w-full h-auto object-cover border-b-4 border-black mb-6"
+            />
+            {/* Note: User provided a specific logo in prompt, but for code generation I am using a placeholder that resembles the description or the user provided URL if it was text-readable. 
+                   Since I cannot browse the internet for the exact URL provided in the prompt image, I am using the user's provided description: "Muslim woman chef". 
+                   Wait, I should check if I can extract the url from the prompt. The user provided an image attachment but usually I get text.
+                   I will use the placeholder image that matches the "Muslim woman chef" vibe or a generic cooking placeholder if the specific one fails, 
+                   BUT since the user gave an image, let's try to simulate the look with a placeholder that fits the style.
+                   
+                   Actually, I will use the URL from the prompt description if I could, but I can't see the image URL string in the text prompt provided in the system instruction. 
+                   I will use a high quality placeholder and instruct the user to replace it.
+                */}
+            {/* 
+                    Wait, looking at the user prompt again, they included an image attachment visual but the text contains the request.
+                    I will use a placeholder image for now and add a comment.
+                 */}
+            <div className="text-center">
+              <h2 className="text-3xl font-black uppercase tracking-tighter">
+                Katering Kantoran
+              </h2>
+              <p className="text-sm font-bold bg-black text-white inline-block px-2 mt-2">
+                EST. 2025
+              </p>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Coming Soon Dialog */}
+      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
+        <DialogContent className="border-4 border-black shadow-neo bg-white max-w-sm text-center">
+          <DialogHeader className="items-center">
+            <div className="bg-brut-blue p-4 rounded-full border-4 border-black mb-2">
+              <Rocket className="w-10 h-10 text-white" />
+            </div>
+            <DialogTitle className="text-2xl font-black uppercase">
+              Coming Soon!
+            </DialogTitle>
+            <DialogDescription className="text-base font-medium text-black">
+              Fitur ini masih dalam pengembangan. Tunggu update selanjutnya ya!
+            </DialogDescription>
+          </DialogHeader>
+          <NeoButton
+            variant="primary"
+            onClick={() => setShowComingSoon(false)}
+            className="w-full mt-2"
+          >
+            OK, Siap!
+          </NeoButton>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

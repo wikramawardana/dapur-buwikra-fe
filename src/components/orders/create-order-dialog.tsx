@@ -5,10 +5,12 @@ import { format, getDay } from "date-fns";
 import {
   CalendarIcon,
   ChevronsUpDown,
+  ImageIcon,
   Loader2,
   Minus,
   Plus,
   Trash2,
+  X,
 } from "lucide-react";
 import * as React from "react";
 import { useForm } from "react-hook-form";
@@ -46,10 +48,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { getUploadUrl } from "@/lib/api.config";
 import { useSession } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
+import { getMenuByDate } from "@/services/menu.service";
 import { createOrder } from "@/services/orders.service";
 import { getActivePriceList } from "@/services/pricelist.service";
+import type { Menu } from "@/types/menu.types";
 import type {
   CreateOrderPayload,
   DayOrder,
@@ -115,6 +120,16 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   );
   const [isLoadingPriceList, setIsLoadingPriceList] = React.useState(false);
 
+  // Menu preview state
+  const [menuCache, setMenuCache] = React.useState<Record<string, Menu | null>>(
+    {},
+  );
+  const [loadingMenus, setLoadingMenus] = React.useState<
+    Record<string, boolean>
+  >({});
+  const [previewMenu, setPreviewMenu] = React.useState<Menu | null>(null);
+  const [previewImageIndex, setPreviewImageIndex] = React.useState(0);
+
   // Get session for email prefill
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
@@ -175,6 +190,42 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   // Format date key for dayOrders record
   const getDateKey = (date: Date): string => {
     return format(date, "yyyy-MM-dd");
+  };
+
+  // Fetch menu for a specific date
+  const fetchMenuForDate = async (dateKey: string) => {
+    // Check cache first
+    if (menuCache[dateKey] !== undefined) {
+      if (menuCache[dateKey]) {
+        setPreviewMenu(menuCache[dateKey]);
+        setPreviewImageIndex(0);
+      }
+      return;
+    }
+
+    setLoadingMenus((prev) => ({ ...prev, [dateKey]: true }));
+    try {
+      const response = await getMenuByDate(dateKey);
+      const menu = response.data;
+      setMenuCache((prev) => ({ ...prev, [dateKey]: menu }));
+      if (menu?.image_urls && menu.image_urls.length > 0) {
+        setPreviewMenu(menu);
+        setPreviewImageIndex(0);
+      } else {
+        toast.info("No menu image available for this date");
+      }
+    } catch {
+      setMenuCache((prev) => ({ ...prev, [dateKey]: null }));
+      toast.info("No menu available for this date");
+    } finally {
+      setLoadingMenus((prev) => ({ ...prev, [dateKey]: false }));
+    }
+  };
+
+  // Close preview
+  const closePreview = () => {
+    setPreviewMenu(null);
+    setPreviewImageIndex(0);
   };
 
   // Add item to a specific day
@@ -463,11 +514,30 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                           >
                             {/* Day Header */}
                             <div className="flex items-center justify-between mb-3 pb-2 border-b border-black/20 dark:border-white/20">
-                              <div>
-                                <p className="font-bold text-lg">{dayName}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {format(date, "MMM d, yyyy")}
-                                </p>
+                              <div className="flex items-center gap-2">
+                                <div>
+                                  <p className="font-bold text-lg">{dayName}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {format(date, "MMM d, yyyy")}
+                                  </p>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2 text-xs rounded-none border-black/50 dark:border-white/50 hover:bg-blue-100 dark:hover:bg-blue-900"
+                                  onClick={() => fetchMenuForDate(dateKey)}
+                                  disabled={loadingMenus[dateKey]}
+                                >
+                                  {loadingMenus[dateKey] ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <ImageIcon className="h-3 w-3 mr-1" />
+                                      Menu
+                                    </>
+                                  )}
+                                </Button>
                               </div>
                               <p className="font-bold text-lg">
                                 {formatCurrency(dayTotal)}
@@ -669,6 +739,84 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
             </DialogFooter>
           </form>
         </Form>
+
+        {/* Menu Preview Modal */}
+        {previewMenu?.image_urls && previewMenu.image_urls.length > 0 && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+            onClick={closePreview}
+          >
+            <div
+              className="relative max-w-4xl max-h-[90vh] w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="absolute -top-12 right-0 h-10 w-10 rounded-none border-2 border-white bg-black/50 text-white hover:bg-black/70 z-10"
+                onClick={closePreview}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+
+              {/* Menu title */}
+              <div className="absolute -top-12 left-0 text-white">
+                <p className="font-bold text-lg">{previewMenu.title}</p>
+                <p className="text-sm text-white/70">
+                  {format(new Date(previewMenu.start_date), "MMM d")} -{" "}
+                  {format(new Date(previewMenu.end_date), "MMM d, yyyy")}
+                </p>
+              </div>
+
+              {/* Image */}
+              <div className="relative bg-white dark:bg-black border-4 border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,0.3)]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={getUploadUrl(previewMenu.image_urls[previewImageIndex])}
+                  alt={previewMenu.title}
+                  className="w-full h-auto max-h-[80vh] object-contain"
+                />
+              </div>
+
+              {/* Navigation for multiple images */}
+              {previewMenu.image_urls.length > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-none border-white text-white bg-black/50 hover:bg-black/70"
+                    onClick={() =>
+                      setPreviewImageIndex((prev) =>
+                        prev > 0 ? prev - 1 : previewMenu.image_urls.length - 1,
+                      )
+                    }
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-white text-sm">
+                    {previewImageIndex + 1} / {previewMenu.image_urls.length}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-none border-white text-white bg-black/50 hover:bg-black/70"
+                    onClick={() =>
+                      setPreviewImageIndex((prev) =>
+                        prev < previewMenu.image_urls.length - 1 ? prev + 1 : 0,
+                      )
+                    }
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
