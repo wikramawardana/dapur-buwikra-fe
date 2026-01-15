@@ -317,7 +317,15 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       };
 
       await createOrder(payload);
-      toast.success("Order created successfully!");
+      // Show different message based on user role
+      if (isAdmin) {
+        toast.success("Order created successfully!");
+      } else {
+        toast.success("Order submitted! Your order is pending approval.", {
+          description: "You will be notified once your order is accepted.",
+          duration: 5000,
+        });
+      }
       handleOpenChange(false);
       onOrderCreated?.();
     } catch (error) {

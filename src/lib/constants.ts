@@ -9,6 +9,9 @@ export const DAYS_OF_WEEK = [
 
 export const ORDER_STATUSES = [
   { value: "pending", label: "Pending" },
+  { value: "accepted", label: "Accepted" },
+  { value: "rejected", label: "Rejected" },
+  { value: "inprogress", label: "In Progress" },
   { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
 ] as const;

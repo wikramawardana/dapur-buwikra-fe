@@ -19,12 +19,20 @@ export interface Order {
   day_orders: DayOrder[];
   total_price: number;
   notes: string;
+  status: OrderStatus;
+  rejection_reason: string | null;
   payment_status: PaymentStatus;
   created_at: string;
   updated_at: string;
 }
 
-export type OrderStatus = "pending" | "completed" | "cancelled";
+export type OrderStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "inprogress"
+  | "completed"
+  | "cancelled";
 export type PaymentStatus = "paid" | "unpaid";
 
 export interface PaginationInfo {

@@ -92,3 +92,64 @@ export async function getOrdersCountByDay(
     `/orders/count-by-day${queryString}`,
   );
 }
+
+/**
+ * Accept a pending order (Admin/Chef only)
+ */
+export async function acceptOrder(
+  id: string,
+  notes?: string,
+): Promise<SingleOrderResponse> {
+  return apiFetch<SingleOrderResponse>(`/orders/${id}/accept`, {
+    method: "PATCH",
+    body: JSON.stringify({ notes }),
+  });
+}
+
+/**
+ * Reject a pending order (Admin/Chef only)
+ */
+export async function rejectOrder(
+  id: string,
+  reason: string,
+): Promise<SingleOrderResponse> {
+  return apiFetch<SingleOrderResponse>(`/orders/${id}/reject`, {
+    method: "PATCH",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+/**
+ * Start an accepted order (Admin/Chef only)
+ */
+export async function startOrder(id: string): Promise<SingleOrderResponse> {
+  return apiFetch<SingleOrderResponse>(`/orders/${id}/start`, {
+    method: "PATCH",
+  });
+}
+
+/**
+ * Complete an order (Admin/Chef only)
+ */
+export async function completeOrder(
+  id: string,
+  notes?: string,
+): Promise<SingleOrderResponse> {
+  return apiFetch<SingleOrderResponse>(`/orders/${id}/complete`, {
+    method: "PATCH",
+    body: JSON.stringify({ notes }),
+  });
+}
+
+/**
+ * Cancel an order (Admin/Chef only)
+ */
+export async function cancelOrder(
+  id: string,
+  reason?: string,
+): Promise<SingleOrderResponse> {
+  return apiFetch<SingleOrderResponse>(`/orders/${id}/cancel`, {
+    method: "PATCH",
+    body: JSON.stringify({ reason }),
+  });
+}

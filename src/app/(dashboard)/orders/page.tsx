@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -34,40 +33,6 @@ import type {
   PaginationInfo,
 } from "@/types/order.types";
 
-/**
- * Get the current work week (Monday to Friday).
- * If today is Saturday or Sunday, return next week's Monday to Friday.
- */
-function getCurrentWorkWeek(): { dateFrom: string; dateTo: string } {
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-
-  let monday: Date;
-
-  if (dayOfWeek === 0) {
-    // Sunday: get next week (Monday is tomorrow)
-    monday = new Date(today);
-    monday.setDate(today.getDate() + 1);
-  } else if (dayOfWeek === 6) {
-    // Saturday: get next week (Monday is in 2 days)
-    monday = new Date(today);
-    monday.setDate(today.getDate() + 2);
-  } else {
-    // Weekday: get current week's Monday
-    monday = new Date(today);
-    monday.setDate(today.getDate() - (dayOfWeek - 1));
-  }
-
-  // Friday is 4 days after Monday
-  const friday = new Date(monday);
-  friday.setDate(monday.getDate() + 4);
-
-  return {
-    dateFrom: format(monday, "yyyy-MM-dd"),
-    dateTo: format(friday, "yyyy-MM-dd"),
-  };
-}
-
 export default function OrdersPage() {
   const router = useRouter();
   const { data: session, isPending: isSessionLoading } = useSession();
@@ -80,16 +45,12 @@ export default function OrdersPage() {
     total_items: 0,
     total_pages: 0,
   });
-  // Get current work week for default date filter
-  const defaultWorkWeek = React.useMemo(() => getCurrentWorkWeek(), []);
-
+  // Default filters: sort by date descending, no date filters
   const [filters, setFilters] = React.useState<OrderFilters>({
     page: 1,
     page_size: 20,
-    sort_by: "name",
-    sort_order: "asc",
-    date_from: defaultWorkWeek.dateFrom,
-    date_to: defaultWorkWeek.dateTo,
+    sort_by: "date",
+    sort_order: "desc",
   });
   const [isLoading, setIsLoading] = React.useState(true);
   const [isStatsLoading, setIsStatsLoading] = React.useState(true);
@@ -233,7 +194,11 @@ export default function OrdersPage() {
           </CardHeader>
           <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
             {session?.user?.role !== "user" && (
-              <OrderStatsCards stats={stats} isLoading={isStatsLoading} />
+              <OrderStatsCards
+                stats={stats}
+                filters={filters}
+                isLoading={isStatsLoading}
+              />
             )}
             <OrdersFilters
               filters={filters}

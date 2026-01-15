@@ -67,10 +67,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/lib/auth-client";
 import { PAYMENT_STATUSES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
-import { deleteOrder, updateOrder } from "@/services/orders.service";
+import {
+  acceptOrder,
+  cancelOrder,
+  completeOrder,
+  deleteOrder,
+  rejectOrder,
+  startOrder,
+  updateOrder,
+} from "@/services/orders.service";
 import { getActivePriceList } from "@/services/pricelist.service";
 import type { DayOrder, Order, PaymentStatus } from "@/types/order.types";
 import type { PriceListItem } from "@/types/pricelist.types";
+import { StatusBadge } from "./status-badge";
 
 const DAY_NAMES = [
   "Sunday",
@@ -113,6 +122,13 @@ export function OrderActionDialog({
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isCopyingInvoice, setIsCopyingInvoice] = React.useState(false);
   const [invoiceCopied, setInvoiceCopied] = React.useState(false);
+
+  // Workflow action states
+  const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false);
+  const [rejectReason, setRejectReason] = React.useState("");
+  const [cancelReason, setCancelReason] = React.useState("");
+  const [isWorkflowProcessing, setIsWorkflowProcessing] = React.useState(false);
 
   // Check if user is admin
   const { data: session } = useSession();
@@ -301,6 +317,98 @@ export function OrderActionDialog({
     }
   };
 
+  // Workflow action handlers
+  const handleAccept = async () => {
+    setIsWorkflowProcessing(true);
+    try {
+      await acceptOrder(order.id);
+      toast.success("Order accepted successfully!");
+      handleCloseDialog();
+      onOrderUpdated?.();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to accept order",
+      );
+    } finally {
+      setIsWorkflowProcessing(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectReason.trim()) {
+      toast.error("Rejection reason is required");
+      return;
+    }
+    setIsWorkflowProcessing(true);
+    try {
+      await rejectOrder(order.id, rejectReason);
+      toast.success("Order rejected");
+      setRejectDialogOpen(false);
+      setRejectReason("");
+      handleCloseDialog();
+      onOrderUpdated?.();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to reject order",
+      );
+    } finally {
+      setIsWorkflowProcessing(false);
+    }
+  };
+
+  const handleStart = async () => {
+    setIsWorkflowProcessing(true);
+    try {
+      await startOrder(order.id);
+      toast.success("Order started!");
+      handleCloseDialog();
+      onOrderUpdated?.();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to start order",
+      );
+    } finally {
+      setIsWorkflowProcessing(false);
+    }
+  };
+
+  const handleComplete = async () => {
+    setIsWorkflowProcessing(true);
+    try {
+      await completeOrder(order.id);
+      toast.success("Order completed!");
+      handleCloseDialog();
+      onOrderUpdated?.();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to complete order",
+      );
+    } finally {
+      setIsWorkflowProcessing(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    setIsWorkflowProcessing(true);
+    try {
+      await cancelOrder(order.id, cancelReason || undefined);
+      toast.success("Order cancelled");
+      setCancelDialogOpen(false);
+      setCancelReason("");
+      handleCloseDialog();
+      onOrderUpdated?.();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to cancel order",
+      );
+    } finally {
+      setIsWorkflowProcessing(false);
+    }
+  };
+
+  // Check if order can be edited (only pending orders)
+  const canEditOrder = order.status === "pending";
+
   const handleCopyInvoice = async () => {
     setIsCopyingInvoice(true);
     try {
@@ -321,25 +429,39 @@ export function OrderActionDialog({
 
         // Day Header
         orderItemsHtml += `<div style="background-color: #e5e5e5; padding: 8px 12px; border-top: 2px solid #000000;">
-          <p style="font-size: 14px; font-weight: 700; color: #000000; margin: 0;">${dayOrder.day} - ${format(new Date(dayOrder.date), "dd MMM yyyy")}</p>
+          <p style="font-size: 14px; font-weight: 700; color: #000000; margin: 0;">${
+            dayOrder.day
+          } - ${format(new Date(dayOrder.date), "dd MMM yyyy")}</p>
         </div>`;
 
         // Items
         dayOrder.items.forEach((item) => {
           orderItemsHtml += `<div style="display: grid; grid-template-columns: 1fr 60px 100px; font-size: 14px; padding: 8px 12px; border-top: 1px solid #d1d5db;">
             <div>
-              <p style="font-weight: 500; color: #000000; margin: 0;">${item.name}</p>
-              <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">@ ${formatCurrency(item.unit_price)}</p>
+              <p style="font-weight: 500; color: #000000; margin: 0;">${
+                item.name
+              }</p>
+              <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">@ ${formatCurrency(
+                item.unit_price,
+              )}</p>
             </div>
-            <div style="text-align: center; font-weight: 500; color: #000000;">${item.qty}</div>
-            <div style="text-align: right; font-weight: 600; color: #000000;">${formatCurrency(item.qty * item.unit_price)}</div>
+            <div style="text-align: center; font-weight: 500; color: #000000;">${
+              item.qty
+            }</div>
+            <div style="text-align: right; font-weight: 600; color: #000000;">${formatCurrency(
+              item.qty * item.unit_price,
+            )}</div>
           </div>`;
         });
 
         // Day Subtotal
         orderItemsHtml += `<div style="display: grid; grid-template-columns: 2fr 1fr; font-size: 14px; padding: 8px 12px; background-color: #f3f4f6; border-top: 1px solid #d1d5db;">
-          <div style="font-weight: 600; color: #374151;">Subtotal ${dayOrder.day}</div>
-          <div style="text-align: right; font-weight: 700; color: #000000;">${formatCurrency(dayTotal)}</div>
+          <div style="font-weight: 600; color: #374151;">Subtotal ${
+            dayOrder.day
+          }</div>
+          <div style="text-align: right; font-weight: 700; color: #000000;">${formatCurrency(
+            dayTotal,
+          )}</div>
         </div>`;
       });
 
@@ -386,7 +508,9 @@ export function OrderActionDialog({
                 <!-- Customer Info -->
                 <div style="margin-bottom: 24px; padding: 16px; border: 2px solid #000000; background-color: #f9fafb;">
                     <p style="font-size: 12px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Pelanggan</p>
-                    <p style="font-size: 20px; font-weight: 900; color: #000000; margin: 0;">${order.name}</p>
+                    <p style="font-size: 20px; font-weight: 900; color: #000000; margin: 0;">${
+                      order.name
+                    }</p>
                     ${emailHtml}
                 </div>
 
@@ -407,7 +531,9 @@ export function OrderActionDialog({
                 <div style="background-color: #000000; color: #ffffff; padding: 16px; margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Total</span>
-                        <span style="font-size: 24px; font-weight: 900;">${formatCurrency(totalPrice)}</span>
+                        <span style="font-size: 24px; font-weight: 900;">${formatCurrency(
+                          totalPrice,
+                        )}</span>
                     </div>
                 </div>
 
@@ -417,10 +543,12 @@ export function OrderActionDialog({
                       order.payment_status === "paid" ? "#16a34a" : "#dc2626"
                     }; background-color: ${
                       order.payment_status === "paid" ? "#dcfce7" : "#fee2e2"
-                    }; color: ${
-                      order.payment_status === "paid" ? "#166534" : "#991b1b"
-                    };">
-                        ${order.payment_status === "paid" ? "✓ LUNAS" : "BELUM LUNAS"}
+                    }; color: ${order.payment_status === "paid" ? "#166534" : "#991b1b"};">
+                        ${
+                          order.payment_status === "paid"
+                            ? "✓ LUNAS"
+                            : "BELUM LUNAS"
+                        }
                     </span>
                 </div>
 
@@ -502,7 +630,7 @@ export function OrderActionDialog({
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="h-8 w-8 p-0 border-2 border-black dark:border-white rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black"
+            className="h-8 w-8 p-0 border-2 border-black dark:border-white rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-px hover:-translate-y-px transition-all duration-150 bg-white dark:bg-black"
           >
             <span className="sr-only">Open menu</span>
             <MoreHorizontal className="h-4 w-4" />
@@ -519,23 +647,23 @@ export function OrderActionDialog({
             <Eye className="mr-2 h-4 w-4" />
             View Detail
           </DropdownMenuItem>
+          {isAdmin && canEditOrder && (
+            <DropdownMenuItem
+              onClick={() => handleOpenDialog("edit")}
+              className="cursor-pointer font-medium"
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit Order
+            </DropdownMenuItem>
+          )}
           {isAdmin && (
-            <>
-              <DropdownMenuItem
-                onClick={() => handleOpenDialog("edit")}
-                className="cursor-pointer font-medium"
-              >
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit Order
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setDeleteDialogOpen(true)}
-                className="cursor-pointer font-medium text-red-600 focus:text-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Order
-              </DropdownMenuItem>
-            </>
+            <DropdownMenuItem
+              onClick={() => setDeleteDialogOpen(true)}
+              className="cursor-pointer font-medium text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Order
+            </DropdownMenuItem>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
@@ -593,6 +721,31 @@ export function OrderActionDialog({
               </div>
             </div>
 
+            {/* Order Status - Only in view mode */}
+            {isViewMode && (
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold uppercase tracking-wide border-b-2 border-black dark:border-white pb-2">
+                  Order Status
+                </h3>
+                <div className="flex items-center gap-4">
+                  <StatusBadge
+                    status={order.status}
+                    type="order"
+                    className="text-base px-4 py-2"
+                  />
+                  {order.rejection_reason && (
+                    <div className="flex-1 p-3 bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700">
+                      <p className="text-sm font-bold text-red-600 dark:text-red-400 uppercase">
+                        Reason:
+                      </p>
+                      <p className="text-red-800 dark:text-red-200">
+                        {order.rejection_reason}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             {/* Day Orders */}
             <div className="space-y-3">
               <div className="flex items-center justify-between border-b-2 border-black dark:border-white pb-2">
@@ -878,7 +1031,81 @@ export function OrderActionDialog({
             </div>
           </div>
 
-          <DialogFooter className="gap-3 pt-4 border-t-2 border-black dark:border-white">
+          <DialogFooter className="gap-3 pt-4 border-t-2 border-black dark:border-white flex-wrap">
+            {/* Workflow Action Buttons - View Mode Only, Admin Only */}
+            {isViewMode && isAdmin && (
+              <>
+                {order.status === "pending" && (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={handleAccept}
+                      disabled={isWorkflowProcessing}
+                      className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-blue-500 text-white hover:bg-blue-600"
+                    >
+                      {isWorkflowProcessing && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Accept
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setRejectDialogOpen(true)}
+                      disabled={isWorkflowProcessing}
+                      className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-red-500 text-white hover:bg-red-600"
+                    >
+                      Reject
+                    </Button>
+                  </>
+                )}
+                {order.status === "accepted" && (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={handleStart}
+                      disabled={isWorkflowProcessing}
+                      className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-purple-500 text-white hover:bg-purple-600"
+                    >
+                      {isWorkflowProcessing && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Start
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setCancelDialogOpen(true)}
+                      disabled={isWorkflowProcessing}
+                      className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-gray-500 text-white hover:bg-gray-600"
+                    >
+                      Cancel Order
+                    </Button>
+                  </>
+                )}
+                {order.status === "inprogress" && (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={handleComplete}
+                      disabled={isWorkflowProcessing}
+                      className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-green-500 text-white hover:bg-green-600"
+                    >
+                      {isWorkflowProcessing && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Complete
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setCancelDialogOpen(true)}
+                      disabled={isWorkflowProcessing}
+                      className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-gray-500 text-white hover:bg-gray-600"
+                    >
+                      Cancel Order
+                    </Button>
+                  </>
+                )}
+              </>
+            )}
             {isViewMode && (
               <Button
                 type="button"
@@ -901,7 +1128,7 @@ export function OrderActionDialog({
               type="button"
               variant="outline"
               onClick={handleCloseDialog}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isWorkflowProcessing}
               className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
             >
               {isViewMode ? "Close" : "Cancel"}
@@ -922,6 +1149,103 @@ export function OrderActionDialog({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Reject Order Dialog */}
+      <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <AlertDialogContent className="border-2 border-black dark:border-white rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black uppercase">
+              Reject Order
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              Please provide a reason for rejecting this order.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Label
+              className="text-sm font-bold uppercase"
+              htmlFor="reject-reason"
+            >
+              Reason (Required)
+            </Label>
+            <Textarea
+              id="reject-reason"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              className="mt-2 min-h-24 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
+            />
+          </div>
+          <AlertDialogFooter className="gap-3">
+            <AlertDialogCancel
+              disabled={isWorkflowProcessing}
+              onClick={() => setRejectReason("")}
+              className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              onClick={handleReject}
+              disabled={isWorkflowProcessing || !rejectReason.trim()}
+              className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-red-500 text-white hover:bg-red-600"
+            >
+              {isWorkflowProcessing && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Reject Order
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel Order Dialog */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent className="border-2 border-black dark:border-white rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black uppercase">
+              Cancel Order
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              Are you sure you want to cancel this order? You can optionally
+              provide a reason.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Label
+              className="text-sm font-bold uppercase"
+              htmlFor="cancel-reason"
+            >
+              Reason (Optional)
+            </Label>
+            <Textarea
+              id="cancel-reason"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Enter cancellation reason (optional)..."
+              className="mt-2 min-h-24 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
+            />
+          </div>
+          <AlertDialogFooter className="gap-3">
+            <AlertDialogCancel
+              disabled={isWorkflowProcessing}
+              onClick={() => setCancelReason("")}
+              className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
+            >
+              Go Back
+            </AlertDialogCancel>
+            <Button
+              onClick={handleCancel}
+              disabled={isWorkflowProcessing}
+              className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-gray-600 text-white hover:bg-gray-700"
+            >
+              {isWorkflowProcessing && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Cancel Order
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

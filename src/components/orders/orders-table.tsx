@@ -94,6 +94,15 @@ export function OrdersTable({
         ),
       },
       {
+        accessorKey: "created_at",
+        header: () => <div className="text-left font-semibold">Order Date</div>,
+        cell: ({ row }) => (
+          <div className="text-left text-gray-600">
+            {formatDate(row.getValue("created_at"))}
+          </div>
+        ),
+      },
+      {
         id: "dates",
         header: () => <div className="text-left font-semibold">Days</div>,
         cell: ({ row }) => {
@@ -153,6 +162,30 @@ export function OrdersTable({
         ),
       },
       {
+        accessorKey: "status",
+        header: () => <div className="text-left font-semibold">Status</div>,
+        cell: ({ row }) => {
+          const order = row.original;
+          return (
+            <div className="flex flex-col gap-1">
+              <StatusBadge status={order.status} type="order" />
+              {order.rejection_reason && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-xs text-red-500 cursor-help truncate max-w-[100px]">
+                      {order.rejection_reason}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">{order.rejection_reason}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: "payment_status",
         header: () => <div className="text-left font-semibold">Payment</div>,
         cell: ({ row }) => (
@@ -188,7 +221,7 @@ export function OrdersTable({
   });
 
   if (isLoading) {
-    return <TableSkeleton rows={5} columns={isMobile ? 3 : 7} />;
+    return <TableSkeleton rows={5} columns={isMobile ? 3 : 9} />;
   }
 
   if (orders.length === 0) {
@@ -266,7 +299,10 @@ export function OrdersTable({
                   <span className="font-bold text-green-600">
                     {formatCurrency(calculateTotal(order))}
                   </span>
-                  <StatusBadge status={order.payment_status} type="payment" />
+                  <div className="flex gap-2">
+                    <StatusBadge status={order.status} type="order" />
+                    <StatusBadge status={order.payment_status} type="payment" />
+                  </div>
                 </div>
               </div>
             </CardContent>

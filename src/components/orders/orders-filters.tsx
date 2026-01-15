@@ -1,8 +1,9 @@
 "use client";
 
 import { format } from "date-fns";
-import { Filter, Search, X } from "lucide-react";
+import { CalendarIcon, Filter, Search, X } from "lucide-react";
 import * as React from "react";
+import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -18,42 +19,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DAYS_OF_WEEK, PAYMENT_STATUSES, SORT_OPTIONS } from "@/lib/constants";
-import type { OrderFilters, PaymentStatus } from "@/types/order.types";
-
-/**
- * Get the current work week (Monday to Friday).
- * If today is Saturday or Sunday, return next week's Monday to Friday.
- */
-function getCurrentWorkWeek(): { dateFrom: Date; dateTo: Date } {
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-
-  let monday: Date;
-
-  if (dayOfWeek === 0) {
-    // Sunday: get next week (Monday is tomorrow)
-    monday = new Date(today);
-    monday.setDate(today.getDate() + 1);
-  } else if (dayOfWeek === 6) {
-    // Saturday: get next week (Monday is in 2 days)
-    monday = new Date(today);
-    monday.setDate(today.getDate() + 2);
-  } else {
-    // Weekday: get current week's Monday
-    monday = new Date(today);
-    monday.setDate(today.getDate() - (dayOfWeek - 1));
-  }
-
-  // Friday is 4 days after Monday
-  const friday = new Date(monday);
-  friday.setDate(monday.getDate() + 4);
-
-  return {
-    dateFrom: monday,
-    dateTo: friday,
-  };
-}
+import {
+  DAYS_OF_WEEK,
+  ORDER_STATUSES,
+  PAYMENT_STATUSES,
+  SORT_OPTIONS,
+} from "@/lib/constants";
+import { cn } from "@/lib/utils";
+import type {
+  OrderFilters,
+  OrderStatus,
+  PaymentStatus,
+} from "@/types/order.types";
 
 interface OrdersFiltersProps {
   filters: OrderFilters;
@@ -71,11 +48,14 @@ export function OrdersFilters({
   const [paymentStatus, setPaymentStatus] = React.useState(
     filters.payment_status || "all",
   );
-  const [dateFrom, setDateFrom] = React.useState<Date | undefined>(
-    filters.date_from ? new Date(filters.date_from) : undefined,
-  );
-  const [dateTo, setDateTo] = React.useState<Date | undefined>(
-    filters.date_to ? new Date(filters.date_to) : undefined,
+  const [orderStatus, setOrderStatus] = React.useState(filters.status || "all");
+  // Combined date range state
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
+    () => {
+      const from = filters.date_from ? new Date(filters.date_from) : undefined;
+      const to = filters.date_to ? new Date(filters.date_to) : undefined;
+      return from || to ? { from, to } : undefined;
+    },
   );
   const [sortBy, setSortBy] = React.useState(filters.sort_by || "date");
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">(
@@ -88,8 +68,10 @@ export function OrdersFilters({
     setName(filters.name || "");
     setDay(filters.day || "all");
     setPaymentStatus(filters.payment_status || "all");
-    setDateFrom(filters.date_from ? new Date(filters.date_from) : undefined);
-    setDateTo(filters.date_to ? new Date(filters.date_to) : undefined);
+    setOrderStatus(filters.status || "all");
+    const from = filters.date_from ? new Date(filters.date_from) : undefined;
+    const to = filters.date_to ? new Date(filters.date_to) : undefined;
+    setDateRange(from || to ? { from, to } : undefined);
     setSortBy(filters.sort_by || "date");
     setSortOrder(filters.sort_order || "desc");
   }, [filters]);
@@ -102,8 +84,9 @@ export function OrdersFilters({
       day: day === "all" ? "" : day,
       payment_status:
         paymentStatus === "all" ? "" : (paymentStatus as PaymentStatus),
-      date_from: dateFrom ? format(dateFrom, "yyyy-MM-dd") : "",
-      date_to: dateTo ? format(dateTo, "yyyy-MM-dd") : "",
+      status: orderStatus === "all" ? undefined : (orderStatus as OrderStatus),
+      date_from: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "",
+      date_to: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "",
       sort_by: sortBy,
       sort_order: sortOrder,
       page: 1,
@@ -111,41 +94,32 @@ export function OrdersFilters({
   };
 
   const handleClearFilters = () => {
-    const workWeek = getCurrentWorkWeek();
     setSearch("");
     setName("");
     setDay("all");
     setPaymentStatus("all");
-    setDateFrom(workWeek.dateFrom);
-    setDateTo(workWeek.dateTo);
-    setSortBy("name");
-    setSortOrder("asc");
+    setOrderStatus("all");
+    setDateRange(undefined);
+    setSortBy("date");
+    setSortOrder("desc");
     onFiltersChange({
       page: 1,
       page_size: 20,
-      sort_by: "name",
-      sort_order: "asc",
-      date_from: format(workWeek.dateFrom, "yyyy-MM-dd"),
-      date_to: format(workWeek.dateTo, "yyyy-MM-dd"),
+      sort_by: "date",
+      sort_order: "desc",
     });
   };
 
-  // Get current work week for comparison
-  const currentWorkWeek = React.useMemo(() => getCurrentWorkWeek(), []);
-  const isDefaultDateRange =
-    dateFrom &&
-    dateTo &&
-    format(dateFrom, "yyyy-MM-dd") ===
-      format(currentWorkWeek.dateFrom, "yyyy-MM-dd") &&
-    format(dateTo, "yyyy-MM-dd") ===
-      format(currentWorkWeek.dateTo, "yyyy-MM-dd");
-
+  // Check if any filters are active (different from defaults)
+  // Default is: no search, no name, all days, all payment status, no date range
   const hasActiveFilters =
     search ||
     name ||
     day !== "all" ||
     paymentStatus !== "all" ||
-    !isDefaultDateRange;
+    orderStatus !== "all" ||
+    dateRange?.from ||
+    dateRange?.to;
 
   // Check if local state differs from applied filters
   const hasUnappliedChanges =
@@ -153,16 +127,18 @@ export function OrdersFilters({
     name !== (filters.name || "") ||
     day !== (filters.day || "all") ||
     paymentStatus !== (filters.payment_status || "all") ||
-    (dateFrom ? format(dateFrom, "yyyy-MM-dd") : "") !==
+    orderStatus !== (filters.status || "all") ||
+    (dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "") !==
       (filters.date_from || "") ||
-    (dateTo ? format(dateTo, "yyyy-MM-dd") : "") !== (filters.date_to || "") ||
+    (dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "") !==
+      (filters.date_to || "") ||
     sortBy !== (filters.sort_by || "date") ||
     sortOrder !== (filters.sort_order || "desc");
 
   return (
     <div className="space-y-3 sm:space-y-4">
-      {/* Top Row: Search, Name, Day, Payment Status */}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-4 sm:gap-3">
+      {/* Top Row: Search, Name, Day, Payment Status, Order Status */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-5 sm:gap-3">
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -213,11 +189,26 @@ export function OrdersFilters({
             ))}
           </SelectContent>
         </Select>
+
+        {/* Order Status Filter */}
+        <Select value={orderStatus} onValueChange={setOrderStatus}>
+          <SelectTrigger className="neo-brutal neo-brutal-white w-full">
+            <SelectValue placeholder="All Order Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Order Status</SelectItem>
+            {ORDER_STATUSES.map((status) => (
+              <SelectItem key={status.value} value={status.value}>
+                {status.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Bottom Row: Date Range, Sort, Actions */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap sm:gap-3">
-        {/* Date Range */}
+        {/* Date Range Picker */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
             Date:
@@ -227,36 +218,32 @@ export function OrdersFilters({
               <Button
                 variant="outline"
                 size="sm"
-                className="justify-start text-left font-normal w-[140px] neo-brutal neo-brutal-white text-xs sm:text-sm"
+                className={cn(
+                  "justify-start text-left font-normal w-[240px] neo-brutal neo-brutal-white text-xs sm:text-sm",
+                  !dateRange && "text-muted-foreground",
+                )}
               >
-                {dateFrom ? format(dateFrom, "MMM dd, yyyy") : "From"}
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "MMM dd")} -{" "}
+                      {format(dateRange.to, "MMM dd, yyyy")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "MMM dd, yyyy")
+                  )
+                ) : (
+                  "Pick a date range"
+                )}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
-                mode="single"
-                selected={dateFrom}
-                onSelect={setDateFrom}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-          <span className="text-muted-foreground">→</span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="justify-start text-left font-normal w-[140px] neo-brutal neo-brutal-white text-xs sm:text-sm"
-              >
-                {dateTo ? format(dateTo, "MMM dd, yyyy") : "To"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={dateTo}
-                onSelect={setDateTo}
+                mode="range"
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
                 initialFocus
               />
             </PopoverContent>
