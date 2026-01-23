@@ -111,10 +111,18 @@ const calculateTotalFromDayOrders = (dayOrders: DayOrder[]): number => {
 };
 
 export function OrderActionDialog({
-  order,
+  order: initialOrder,
   onOrderUpdated,
   onOrderDeleted,
 }: OrderActionDialogProps) {
+  // Local order state for immediate UI updates
+  const [order, setOrder] = React.useState<Order>(initialOrder);
+
+  // Sync with prop changes (e.g., when parent refetches data)
+  React.useEffect(() => {
+    setOrder(initialOrder);
+  }, [initialOrder]);
+
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [actionMode, setActionMode] = React.useState<ActionMode>("view");
@@ -282,15 +290,16 @@ export function OrderActionDialog({
 
     setIsSubmitting(true);
     try {
-      await updateOrder(order.id, {
+      const response = await updateOrder(order.id, {
         name: editName,
         email: editEmail || undefined,
         day_orders: validDayOrders,
         payment_status: editPaymentStatus,
         notes: editNotes,
       });
+      setOrder(response.data);
       toast.success("Order updated successfully!");
-      handleCloseDialog();
+      setActionMode("view");
       onOrderUpdated?.();
     } catch (error) {
       toast.error(
@@ -321,9 +330,9 @@ export function OrderActionDialog({
   const handleAccept = async () => {
     setIsWorkflowProcessing(true);
     try {
-      await acceptOrder(order.id);
+      const response = await acceptOrder(order.id);
+      setOrder(response.data);
       toast.success("Order accepted successfully!");
-      handleCloseDialog();
       onOrderUpdated?.();
     } catch (error) {
       toast.error(
@@ -341,11 +350,11 @@ export function OrderActionDialog({
     }
     setIsWorkflowProcessing(true);
     try {
-      await rejectOrder(order.id, rejectReason);
+      const response = await rejectOrder(order.id, rejectReason);
+      setOrder(response.data);
       toast.success("Order rejected");
       setRejectDialogOpen(false);
       setRejectReason("");
-      handleCloseDialog();
       onOrderUpdated?.();
     } catch (error) {
       toast.error(
@@ -359,9 +368,9 @@ export function OrderActionDialog({
   const handleStart = async () => {
     setIsWorkflowProcessing(true);
     try {
-      await startOrder(order.id);
+      const response = await startOrder(order.id);
+      setOrder(response.data);
       toast.success("Order started!");
-      handleCloseDialog();
       onOrderUpdated?.();
     } catch (error) {
       toast.error(
@@ -375,9 +384,9 @@ export function OrderActionDialog({
   const handleComplete = async () => {
     setIsWorkflowProcessing(true);
     try {
-      await completeOrder(order.id);
+      const response = await completeOrder(order.id);
+      setOrder(response.data);
       toast.success("Order completed!");
-      handleCloseDialog();
       onOrderUpdated?.();
     } catch (error) {
       toast.error(
@@ -391,11 +400,11 @@ export function OrderActionDialog({
   const handleCancel = async () => {
     setIsWorkflowProcessing(true);
     try {
-      await cancelOrder(order.id, cancelReason || undefined);
+      const response = await cancelOrder(order.id, cancelReason || undefined);
+      setOrder(response.data);
       toast.success("Order cancelled");
       setCancelDialogOpen(false);
       setCancelReason("");
-      handleCloseDialog();
       onOrderUpdated?.();
     } catch (error) {
       toast.error(
@@ -405,9 +414,6 @@ export function OrderActionDialog({
       setIsWorkflowProcessing(false);
     }
   };
-
-  // Check if order can be edited (only pending orders)
-  const canEditOrder = order.status === "pending";
 
   const handleCopyInvoice = async () => {
     setIsCopyingInvoice(true);
@@ -647,7 +653,7 @@ export function OrderActionDialog({
             <Eye className="mr-2 h-4 w-4" />
             View Detail
           </DropdownMenuItem>
-          {isAdmin && canEditOrder && (
+          {isAdmin && (
             <DropdownMenuItem
               onClick={() => handleOpenDialog("edit")}
               className="cursor-pointer font-medium"
