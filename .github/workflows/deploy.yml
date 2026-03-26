@@ -5,20 +5,19 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # ================================
-  # Job 1: Lint and Type Check
-  # ================================
   lint:
     name: Lint & Type Check
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup pnpm
@@ -41,9 +40,6 @@ jobs:
       - name: Type check
         run: pnpm exec tsc --noEmit
 
-  # ================================
-  # Job 2: Build and Push Docker Image
-  # ================================
   build:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
@@ -53,24 +49,21 @@ jobs:
       contents: read
       packages: write
 
-    outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
-
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata for Docker
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -79,11 +72,10 @@ jobs:
             type=sha,prefix=
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -94,87 +86,28 @@ jobs:
             NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
             NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
 
-  # ================================
-  # Job 3: Deploy to Server
-  # ================================
   deploy:
-    name: Deploy to Server
+    name: Deploy to VPS
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Ensure app directory exists
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT || 22 }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
           script: |
-            # Create app directory if not exists (requires manual setup on first deploy)
-            # For fresh VPS: run "sudo mkdir -p /opt/dapur-buwikra-fe && sudo chown wikra:wikra /opt/dapur-buwikra-fe" manually
-            mkdir -p ${{ secrets.APP_DIR || '/opt/dapur-buwikra-fe' }} || true
-
-      - name: Copy docker-compose to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT || 22 }}
-          source: "docker-compose.prod.yml"
-          target: ${{ secrets.APP_DIR || '/opt/dapur-buwikra-fe' }}
-
-      - name: Deploy to server via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT || 22 }}
-          script: |
-            # Navigate to app directory
-            cd ${{ secrets.APP_DIR || '/opt/dapur-buwikra-fe' }}
-
-            # Login to GitHub Container Registry
+            cd /home/wikra/production-projects/dapur-buwikra
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose pull frontend
+            docker compose up -d frontend
+            docker image prune -f
 
-            # Pull the latest image
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-
-            # Update .env file with secrets
-            cat > .env << EOF
-            NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
-            NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
-            NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
-            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-            DOCKER_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-            DOCKER_TAG=latest
-            EOF
-
-            # Stop and remove old container
-            docker compose -f docker-compose.prod.yml down || true
-
-            # Start new container
-            docker compose -f docker-compose.prod.yml up -d
-
-            # Clean up old images
-            docker image prune -af --filter "until=24h"
-
-            # Show status
-            docker ps | grep dapur-buwikra
-
-  # ================================
-  # Job 4: Health Check
-  # ================================
   health-check:
     name: Health Check
     needs: deploy
@@ -182,9 +115,8 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - name: Wait for service to start
+      - name: Wait for startup
         run: sleep 30
 
       - name: Check app health
-        run: |
-          curl -f https://dapurbuwikra.wikra.cloud/api/auth/get-session || echo "Health check failed - please verify deployment"
+        run: curl -f https://dapurbuwikra.wikra.cloud || echo "Health check failed"
