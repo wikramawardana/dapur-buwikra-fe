@@ -148,7 +148,7 @@ function LoginForm() {
           <p className="text-center text-xs text-black/50 dark:text-white/50">
             By signing in, you agree to our terms and conditions.
             <br />
-            Only authorized users can access this systemmmmmm.
+            Only authorized users can access this system.
           </p>
         </CardContent>
       </Card>
