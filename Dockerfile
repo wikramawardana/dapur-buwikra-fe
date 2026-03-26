@@ -34,18 +34,15 @@ ARG NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 
-# Provide dummy values for server-side env vars during build
-# These will be overridden at runtime
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-ENV BETTER_AUTH_SECRET="build-time-dummy-secret-will-be-replaced-at-runtime"
-ENV GOOGLE_CLIENT_ID="dummy-client-id"
-ENV GOOGLE_CLIENT_SECRET="dummy-client-secret"
-
 # Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build the application
-RUN pnpm build
+# Build with dummy server-side env vars (real values provided at runtime)
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
+    BETTER_AUTH_SECRET="dummy" \
+    GOOGLE_CLIENT_ID="dummy" \
+    GOOGLE_CLIENT_SECRET="dummy" \
+    pnpm build
 
 # ================================
 # Stage 3: Runner (Production)
