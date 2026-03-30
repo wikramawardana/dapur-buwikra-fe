@@ -44,6 +44,11 @@ export async function middleware(request: NextRequest) {
     return redirectToLogin(request, pathname);
   }
 
+  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
+  if (!isAdminRoute) {
+    return NextResponse.next();
+  }
+
   try {
     const baseUrl = getBaseUrl(request);
     const sessionResponse = await fetch(`${baseUrl}/api/auth/get-session`, {
@@ -62,10 +67,8 @@ export async function middleware(request: NextRequest) {
       return redirectToLogin(request, pathname);
     }
 
-    if (adminRoutes.some((route) => pathname.startsWith(route))) {
-      if (session.user.role !== "admin") {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
+    if (session.user.role !== "admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
     return NextResponse.next();
