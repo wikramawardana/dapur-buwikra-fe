@@ -1,50 +1,49 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 
-// Routes that don't require authentication
-const publicRoutes = ["/", "/login", "/api/auth"];
-
-// Routes that require admin role
+const publicPrefixes = ["/login", "/api/auth"];
 const adminRoutes = ["/admin"];
 
-// Note: /orders is now accessible to all authenticated users
-// Backend filters orders by user email for regular users
+function isPublicRoute(pathname: string): boolean {
+  if (pathname === "/") return true;
+  return publicPrefixes.some((prefix) => pathname.startsWith(prefix));
+}
 
-// Get the base URL for internal API calls
 function getBaseUrl(request: NextRequest): string {
-  // In production, use the internal URL (localhost) to avoid DNS/network issues
-  // The app runs on port 3000 inside the container
   if (process.env.NODE_ENV === "production") {
     return "http://localhost:3000";
   }
-  // In development, use the request URL
   return request.nextUrl.origin;
+}
+
+function redirectToLogin(request: NextRequest, pathname: string) {
+  const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set("callbackUrl", pathname);
+  const response = NextResponse.redirect(loginUrl);
+  response.cookies.delete("dapur-buwikra.session_token");
+  response.cookies.delete("dapur-buwikra.session_data");
+  return response;
 }
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ✅ TAMBAHKAN INI: Skip middleware untuk backend API
   if (pathname.startsWith("/api/v1")) {
     return NextResponse.next();
   }
 
-  // Allow public routes
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
+  if (isPublicRoute(pathname)) {
     return NextResponse.next();
   }
 
-  // Check for session cookie
-  const sessionCookie = getSessionCookie(request);
+  const sessionCookie = getSessionCookie(request, {
+    cookiePrefix: "dapur-buwikra",
+  });
 
   if (!sessionCookie) {
-    // Redirect to login if no session
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+    return redirectToLogin(request, pathname);
   }
 
-  // For session validation and role checking, we need to call the auth API
   try {
     const baseUrl = getBaseUrl(request);
     const sessionResponse = await fetch(`${baseUrl}/api/auth/get-session`, {
@@ -54,50 +53,30 @@ export async function middleware(request: NextRequest) {
     });
 
     if (!sessionResponse.ok) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+      return redirectToLogin(request, pathname);
     }
 
     const session = await sessionResponse.json();
 
-    if (!session || !session.user) {
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+    if (!session?.user) {
+      return redirectToLogin(request, pathname);
     }
 
-    const userRole = session.user.role;
-
-    // Orders route is now accessible to all authenticated users
-    // Backend handles filtering by user email for regular users
-
-    // Check admin routes - requires admin only
     if (adminRoutes.some((route) => pathname.startsWith(route))) {
-      if (userRole !== "admin") {
+      if (session.user.role !== "admin") {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
     }
 
-    // All authenticated users can access dashboard and other general routes
     return NextResponse.next();
   } catch (error) {
     console.error("Middleware auth error:", error);
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+    return redirectToLogin(request, pathname);
   }
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api/v1 (backend API) ← TAMBAHKAN INI
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (public folder)
-     */
     "/((?!api/v1|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

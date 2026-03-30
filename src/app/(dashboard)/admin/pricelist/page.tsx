@@ -4,7 +4,6 @@ import { DollarSign, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/page-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -206,8 +205,6 @@ export default function PriceListPage() {
 
   return (
     <>
-      <PageHeader breadcrumbs={[{ label: "Price List" }]} />
-
       <div className="flex flex-1 flex-col gap-4 p-4">
         <Card className="neo-brutal neo-brutal-white border-2">
           <CardHeader className="flex flex-row items-center justify-between">

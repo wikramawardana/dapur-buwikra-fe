@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/page-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -216,10 +215,6 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      <PageHeader
-        breadcrumbs={[{ label: "Admin" }, { label: "User Management" }]}
-      />
-
       <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
         <Card className="neo-brutal neo-brutal-white border-2">
           <CardHeader className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import { CreateOrderDialog } from "@/components/orders/create-order-dialog";
@@ -9,7 +8,6 @@ import { OrderStatsCards } from "@/components/orders/order-stats-cards";
 import { OrdersFilters } from "@/components/orders/orders-filters";
 import { OrdersPagination } from "@/components/orders/orders-pagination";
 import { OrdersTable } from "@/components/orders/orders-table";
-import { PageHeader } from "@/components/page-header";
 import {
   Card,
   CardContent,
@@ -34,7 +32,6 @@ import type {
 } from "@/types/order.types";
 
 export default function OrdersPage() {
-  const router = useRouter();
   const { data: session, isPending: isSessionLoading } = useSession();
 
   const [orders, setOrders] = React.useState<Order[]>([]);
@@ -55,15 +52,7 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isStatsLoading, setIsStatsLoading] = React.useState(true);
 
-  // Track if user is authenticated (stable boolean instead of object reference)
   const isAuthenticated = !!session?.user;
-
-  // Check authentication and redirect if not logged in
-  React.useEffect(() => {
-    if (!isSessionLoading && !session?.user) {
-      router.replace(`/login?callbackUrl=${encodeURIComponent("/orders")}`);
-    }
-  }, [session, isSessionLoading, router]);
 
   const fetchOrders = React.useCallback(async () => {
     setIsLoading(true);
@@ -152,17 +141,7 @@ export default function OrdersPage() {
     setFilters({ ...filters, page_size: pageSize, page: 1 });
   };
 
-  // Show loading state while checking session
-  if (isSessionLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
-
-  // Don't render content if not authenticated (redirect is happening)
-  if (!session?.user) {
+  if (isSessionLoading || !session?.user) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Spinner className="h-8 w-8" />
@@ -171,64 +150,60 @@ export default function OrdersPage() {
   }
 
   return (
-    <>
-      <PageHeader breadcrumbs={[{ label: "Orders" }]} />
-
-      <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
-        <Card className="neo-brutal neo-brutal-white border-2">
-          <CardHeader className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-xl font-bold sm:text-2xl">
-                Orders Management
-              </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                Manage and track all customer orders
-              </CardDescription>
-            </div>
-            <CreateOrderDialog
-              onOrderCreated={() => {
-                fetchOrders();
-                fetchStats();
-              }}
-            />
-          </CardHeader>
-          <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
-            {session?.user?.role !== "user" && (
-              <OrderStatsCards
-                stats={stats}
-                filters={filters}
-                isLoading={isStatsLoading}
-              />
-            )}
-            <OrdersFilters
+    <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
+      <Card className="neo-brutal neo-brutal-white border-2">
+        <CardHeader className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-xl font-bold sm:text-2xl">
+              Orders Management
+            </CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              Manage and track all customer orders
+            </CardDescription>
+          </div>
+          <CreateOrderDialog
+            onOrderCreated={() => {
+              fetchOrders();
+              fetchStats();
+            }}
+          />
+        </CardHeader>
+        <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
+          {session?.user?.role !== "user" && (
+            <OrderStatsCards
+              stats={stats}
               filters={filters}
-              onFiltersChange={handleFiltersChange}
+              isLoading={isStatsLoading}
             />
-            <div className="flex justify-end">
-              <ExportMarkdownButton filters={filters} disabled={isLoading} />
-            </div>
-            <OrdersTable
-              orders={orders}
-              isLoading={isLoading}
-              onOrderUpdated={() => {
-                fetchOrders();
-                fetchStats();
-              }}
-              onOrderDeleted={() => {
-                fetchOrders();
-                fetchStats();
-              }}
+          )}
+          <OrdersFilters
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+          />
+          <div className="flex justify-end">
+            <ExportMarkdownButton filters={filters} disabled={isLoading} />
+          </div>
+          <OrdersTable
+            orders={orders}
+            isLoading={isLoading}
+            onOrderUpdated={() => {
+              fetchOrders();
+              fetchStats();
+            }}
+            onOrderDeleted={() => {
+              fetchOrders();
+              fetchStats();
+            }}
+          />
+          {!isLoading && orders.length > 0 && (
+            <OrdersPagination
+              pagination={pagination}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
             />
-            {!isLoading && orders.length > 0 && (
-              <OrdersPagination
-                pagination={pagination}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -1,43 +1,62 @@
 import dns from "node:dns";
 import { betterAuth } from "better-auth";
-import { admin } from "better-auth/plugins";
+import { admin, genericOAuth } from "better-auth/plugins";
 import { Pool } from "pg";
 
-// Force Node.js to prefer IPv4 addresses (fixes Docker IPv6 connectivity issues)
 dns.setDefaultResultOrder("ipv4first");
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const wikraAuthUrl = process.env.WIKRA_AUTH_URL || "http://localhost:3001";
 
 export const auth = betterAuth({
   baseURL: appUrl,
+  basePath: "/api/auth",
   secret: process.env.BETTER_AUTH_SECRET,
   database: new Pool({
     connectionString: process.env.DATABASE_URL,
   }),
+  advanced: {
+    cookiePrefix: "dapur-buwikra",
+  },
+  account: {
+    // The state cookie set at sign-in start is a cross-origin flow (3001 → 3000 → 3001).
+    // The cookie is not reliably sent back on the return trip, so we skip
+    // the cookie comparison and rely on the DB verification record instead.
+    skipStateCookieCheck: true,
+  },
   emailAndPassword: {
     enabled: false,
   },
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      redirectURI: `${appUrl}/api/auth/callback/google`,
-    },
-  },
   plugins: [
+    genericOAuth({
+      config: [
+        {
+          providerId: "wikra-auth",
+          clientId: process.env.WIKRA_AUTH_CLIENT_ID || "dapur-buwikra",
+          clientSecret: process.env.WIKRA_AUTH_CLIENT_SECRET!,
+          discoveryUrl: `${wikraAuthUrl}/api/auth/.well-known/openid-configuration`,
+          scopes: ["openid", "profile", "email"],
+        },
+      ],
+    }),
     admin({
       defaultRole: "user",
     }),
   ],
   session: {
-    expiresIn: 60 * 60 * 24, // 24 hours (1 day)
-    updateAge: 60 * 60, // 1 hour
+    expiresIn: 60 * 60 * 24,
+    updateAge: 60 * 60,
     cookieCache: {
       enabled: true,
-      maxAge: 60 * 5, // 5 minutes
+      maxAge: 60 * 5,
     },
   },
-  trustedOrigins: [appUrl],
+  trustedOrigins: [
+    appUrl,
+    wikraAuthUrl,
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+  ],
 });
 
 export type Session = typeof auth.$Infer.Session;

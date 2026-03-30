@@ -1,7 +1,6 @@
 "use client";
 
-import { ChefHat, Home } from "lucide-react";
-import Link from "next/link";
+import { ChefHat } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import { Suspense } from "react";
@@ -13,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { signIn, useSession } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -48,18 +47,24 @@ function LoginForm() {
   const [isLoading, setIsLoading] = React.useState(false);
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
-  // Redirect if already logged in
   React.useEffect(() => {
     if (!isPending && session) {
-      window.location.href = callbackUrl;
+      fetch("/api/auth/get-session")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.user) {
+            window.location.href = callbackUrl;
+          }
+        })
+        .catch(() => {});
     }
   }, [session, isPending, callbackUrl]);
 
-  const handleGoogleSignIn = async () => {
+  const handleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signIn.social({
-        provider: "google",
+      await authClient.signIn.oauth2({
+        providerId: "wikra-auth",
         callbackURL: callbackUrl,
       });
     } catch (error) {
@@ -69,84 +74,51 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-yellow-100 via-pink-100 to-cyan-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
-      {/* Decorative elements */}
-      <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-400 border-4 border-black dark:border-white rotate-12 hidden md:block" />
-      <div className="absolute top-32 right-20 w-16 h-16 bg-pink-400 border-4 border-black dark:border-white -rotate-12 hidden md:block" />
-      <div className="absolute bottom-20 left-20 w-24 h-24 bg-cyan-400 border-4 border-black dark:border-white rotate-45 hidden md:block" />
-      <div className="absolute bottom-32 right-32 w-12 h-12 bg-green-400 border-4 border-black dark:border-white -rotate-6 hidden md:block" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#f5f5f0] p-4">
+      <div className="absolute top-12 left-16 w-16 h-16 border-4 border-black rotate-12 hidden md:block" />
+      <div className="absolute top-28 right-24 w-10 h-10 bg-black rotate-45 hidden md:block" />
+      <div className="absolute bottom-24 left-24 w-20 h-5 bg-black hidden md:block" />
+      <div className="absolute bottom-16 right-16 w-8 h-8 border-4 border-black rounded-full hidden md:block" />
 
-      <Card className="w-full max-w-md neo-brutal neo-brutal-white relative">
-        <CardHeader className="text-center space-y-4 pb-2">
-          {/* Logo */}
-          <div className="mx-auto flex items-center justify-center w-20 h-20 bg-blue-400 border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
-            <ChefHat className="w-12 h-12 text-black" />
+      <Card className="w-full max-w-sm bg-white border-3 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative">
+        <CardHeader className="text-center space-y-5 pb-2 pt-8">
+          <div className="mx-auto flex items-center justify-center w-16 h-16 bg-black">
+            <ChefHat className="w-9 h-9 text-white" />
           </div>
 
-          <div className="space-y-2">
-            <CardTitle className="text-3xl font-black tracking-tight text-black dark:text-white">
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-black tracking-tight text-black uppercase">
               Dapur Bu Wikra
             </CardTitle>
-            <CardDescription className="text-base font-medium text-black/70 dark:text-white/70">
+            <CardDescription className="text-sm font-medium text-black/50">
               Catering Management System
             </CardDescription>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6">
-          {/* Welcome message */}
-          <div className="text-center">
-            <p className="text-sm text-black/60 dark:text-white/60">
-              Sign in to manage your orders and customers
-            </p>
-          </div>
+        <CardContent className="space-y-6 pb-8">
+          <div className="w-full h-[2px] bg-black/10" />
 
-          {/* Google Sign In Button */}
           <Button
-            onClick={handleGoogleSignIn}
+            onClick={handleSignIn}
             disabled={isLoading}
-            className="w-full h-14 text-lg font-bold bg-white dark:bg-black text-black dark:text-white border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all duration-150"
+            className="w-full h-12 text-base font-bold bg-white text-black border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all duration-150"
           >
             {isLoading ? (
               <div className="flex items-center gap-3">
-                <div className="w-6 h-6 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
-                <span>Signing in...</span>
+                <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin" />
+                <span>Redirecting...</span>
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <GoogleIcon className="w-6 h-6" />
+                <GoogleIcon className="w-5 h-5" />
                 <span>Continue with Google</span>
               </div>
             )}
           </Button>
 
-          {/* Back to Home Button */}
-          <Button
-            asChild
-            variant="outline"
-            className="w-full h-14 text-lg font-bold bg-yellow-400 dark:bg-yellow-500 text-black border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all duration-150"
-          >
-            <Link href="/">
-              <Home className="w-6 h-6 mr-3" />
-              Back to Home
-            </Link>
-          </Button>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t-2 border-black/20 dark:border-white/20" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white dark:bg-black px-2 text-black/50 dark:text-white/50 font-bold">
-                Secure Login
-              </span>
-            </div>
-          </div>
-
-          {/* Footer text */}
-          <p className="text-center text-xs text-black/50 dark:text-white/50">
-            By signing in, you agree to our terms and conditions.
+          <p className="text-center text-xs text-black/40 leading-relaxed">
+            Secured by Wikra Auth.
             <br />
             Only authorized users can access this system.
           </p>
@@ -158,17 +130,17 @@ function LoginForm() {
 
 function LoginLoading() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-yellow-100 via-pink-100 to-cyan-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
-      <Card className="w-full max-w-md neo-brutal neo-brutal-white relative">
-        <CardHeader className="text-center space-y-4 pb-2">
-          <div className="mx-auto flex items-center justify-center w-20 h-20 bg-blue-400 border-4 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
-            <ChefHat className="w-12 h-12 text-black" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#f5f5f0] p-4">
+      <Card className="w-full max-w-sm bg-white border-3 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative">
+        <CardHeader className="text-center space-y-5 pb-2 pt-8">
+          <div className="mx-auto flex items-center justify-center w-16 h-16 bg-black">
+            <ChefHat className="w-9 h-9 text-white" />
           </div>
-          <div className="space-y-2">
-            <CardTitle className="text-3xl font-black tracking-tight text-black dark:text-white">
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-black tracking-tight text-black uppercase">
               Dapur Bu Wikra
             </CardTitle>
-            <CardDescription className="text-base font-medium text-black/70 dark:text-white/70">
+            <CardDescription className="text-sm font-medium text-black/50">
               Loading...
             </CardDescription>
           </div>

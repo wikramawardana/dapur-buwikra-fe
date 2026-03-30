@@ -169,7 +169,7 @@ function Sidebar({
       <div
         data-slot="sidebar"
         className={cn(
-          "bg-white dark:bg-black text-black dark:text-white flex h-full w-(--sidebar-width) flex-col border-r-2 border-black dark:border-white",
+          "bg-white dark:bg-black text-black dark:text-white flex h-full w-(--sidebar-width) flex-col border-r-4 border-black dark:border-white",
           className,
         )}
         {...props}
@@ -186,7 +186,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-white dark:bg-black text-black dark:text-white w-(--sidebar-width) p-0 [&>button]:hidden border-r-2 border-black dark:border-white"
+          className="bg-white dark:bg-black text-black dark:text-white w-(--sidebar-width) p-0 [&>button]:hidden border-r-4 border-black dark:border-white"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -213,40 +213,18 @@ function Sidebar({
       data-side={side}
       data-slot="sidebar"
     >
-      {/* This is what handles the sidebar gap on desktop */}
       <div
-        data-slot="sidebar-gap"
+        data-sidebar="sidebar"
+        data-slot="sidebar-inner"
         className={cn(
-          "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
-          "group-data-[collapsible=offcanvas]:w-0",
-          "group-data-[side=right]:rotate-180",
-          variant === "floating" || variant === "inset"
-            ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
-        )}
-      />
-      <div
-        data-slot="sidebar-container"
-        className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
-          side === "left"
-            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-          // Adjust the padding for floating and inset variants.
-          variant === "floating" || variant === "inset"
-            ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
-            : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
+          "bg-white dark:bg-black relative flex h-svh w-(--sidebar-width) shrink-0 flex-col border-r-4 border-black dark:border-white transition-[width] duration-200 ease-linear overflow-hidden",
+          "group-data-[collapsible=offcanvas]:w-0 group-data-[collapsible=offcanvas]:border-r-0",
+          "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
           className,
         )}
         {...props}
       >
-        <div
-          data-sidebar="sidebar"
-          data-slot="sidebar-inner"
-          className="bg-white dark:bg-black flex h-full w-full flex-col border-r-2 border-black dark:border-white"
-        >
-          {children}
-        </div>
+        {children}
       </div>
     </div>
   );
@@ -266,7 +244,7 @@ function SidebarTrigger({
       variant="outline"
       size="icon"
       className={cn(
-        "size-8 border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all duration-150 bg-white dark:bg-black",
+        "size-8 border-2 border-black dark:border-white hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-all duration-150 bg-white dark:bg-black shadow-none",
         className,
       )}
       onClick={(event) => {

@@ -25,7 +25,7 @@ interface PageHeaderProps {
 export function PageHeader({ breadcrumbs, actions }: PageHeaderProps) {
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 border-b-4 border-black dark:border-white bg-white dark:bg-black px-4">
-      <SidebarTrigger className="-ml-1 border-2 border-black dark:border-white hover:bg-yellow-200 dark:hover:bg-yellow-800" />
+      <SidebarTrigger className="-ml-1" />
       <Separator
         orientation="vertical"
         className="mr-2 h-6 w-[3px] bg-black dark:bg-white"
