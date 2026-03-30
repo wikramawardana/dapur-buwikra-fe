@@ -126,6 +126,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 onClick={() => inSheet && setMobileOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 text-sm font-bold transition-all border-2",
@@ -169,6 +170,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={false}
                     onClick={() => inSheet && setMobileOpen(false)}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 text-sm font-bold transition-all border-2",
