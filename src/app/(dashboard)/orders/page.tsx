@@ -8,6 +8,7 @@ import { OrderStatsCards } from "@/components/orders/order-stats-cards";
 import { OrdersFilters } from "@/components/orders/orders-filters";
 import { OrdersPagination } from "@/components/orders/orders-pagination";
 import { OrdersTable } from "@/components/orders/orders-table";
+import { WeekSelector } from "@/components/orders/week-selector";
 import {
   Card,
   CardContent,
@@ -18,6 +19,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { useSession } from "@/lib/auth-client";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
+import { getDefaultWeek, getWeekValue } from "@/lib/week-utils";
 import {
   getOrders,
   getOrdersCount,
@@ -42,13 +44,15 @@ export default function OrdersPage() {
     total_items: 0,
     total_pages: 0,
   });
-  // Default filters: sort by date descending, no date filters
-  const [filters, setFilters] = React.useState<OrderFilters>({
+  const defaultWeek = React.useMemo(() => getDefaultWeek(), []);
+  const [filters, setFilters] = React.useState<OrderFilters>(() => ({
     page: 1,
     page_size: 20,
     sort_by: "date",
     sort_order: "desc",
-  });
+    date_from: defaultWeek.dateFrom,
+    date_to: defaultWeek.dateTo,
+  }));
   const [isLoading, setIsLoading] = React.useState(true);
   const [isStatsLoading, setIsStatsLoading] = React.useState(true);
 
@@ -129,6 +133,15 @@ export default function OrdersPage() {
     fetchStats();
   }, [isAuthenticated, filters]);
 
+  const handleWeekChange = (dateFrom: string, dateTo: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      date_from: dateFrom,
+      date_to: dateTo,
+      page: 1,
+    }));
+  };
+
   const handleFiltersChange = (newFilters: OrderFilters) => {
     setFilters(newFilters);
   };
@@ -152,20 +165,26 @@ export default function OrdersPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
       <Card className="neo-brutal neo-brutal-white border-2">
-        <CardHeader className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-xl font-bold sm:text-2xl">
-              Orders Management
-            </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              Manage and track all customer orders
-            </CardDescription>
+        <CardHeader className="flex flex-col gap-4 pb-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-bold sm:text-2xl">
+                Orders Management
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Manage and track all customer orders
+              </CardDescription>
+            </div>
+            <CreateOrderDialog
+              onOrderCreated={() => {
+                fetchOrders();
+                fetchStats();
+              }}
+            />
           </div>
-          <CreateOrderDialog
-            onOrderCreated={() => {
-              fetchOrders();
-              fetchStats();
-            }}
+          <WeekSelector
+            value={getWeekValue(filters.date_from || defaultWeek.dateFrom)}
+            onChange={handleWeekChange}
           />
         </CardHeader>
         <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">

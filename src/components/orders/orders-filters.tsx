@@ -1,17 +1,9 @@
 "use client";
 
-import { format } from "date-fns";
-import { CalendarIcon, Filter, Search, X } from "lucide-react";
+import { Filter, Search, X } from "lucide-react";
 import * as React from "react";
-import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -25,7 +17,6 @@ import {
   PAYMENT_STATUSES,
   SORT_OPTIONS,
 } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 import type {
   OrderFilters,
   OrderStatus,
@@ -41,7 +32,6 @@ export function OrdersFilters({
   filters,
   onFiltersChange,
 }: OrdersFiltersProps) {
-  // Local state for all filter inputs
   const [search, setSearch] = React.useState(filters.search || "");
   const [name, setName] = React.useState(filters.name || "");
   const [day, setDay] = React.useState(filters.day || "all");
@@ -49,29 +39,17 @@ export function OrdersFilters({
     filters.payment_status || "all",
   );
   const [orderStatus, setOrderStatus] = React.useState(filters.status || "all");
-  // Combined date range state
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
-    () => {
-      const from = filters.date_from ? new Date(filters.date_from) : undefined;
-      const to = filters.date_to ? new Date(filters.date_to) : undefined;
-      return from || to ? { from, to } : undefined;
-    },
-  );
   const [sortBy, setSortBy] = React.useState(filters.sort_by || "date");
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">(
     filters.sort_order || "desc",
   );
 
-  // Sync local state with external filter changes (e.g., from clear or pagination)
   React.useEffect(() => {
     setSearch(filters.search || "");
     setName(filters.name || "");
     setDay(filters.day || "all");
     setPaymentStatus(filters.payment_status || "all");
     setOrderStatus(filters.status || "all");
-    const from = filters.date_from ? new Date(filters.date_from) : undefined;
-    const to = filters.date_to ? new Date(filters.date_to) : undefined;
-    setDateRange(from || to ? { from, to } : undefined);
     setSortBy(filters.sort_by || "date");
     setSortOrder(filters.sort_order || "desc");
   }, [filters]);
@@ -85,8 +63,6 @@ export function OrdersFilters({
       payment_status:
         paymentStatus === "all" ? "" : (paymentStatus as PaymentStatus),
       status: orderStatus === "all" ? undefined : (orderStatus as OrderStatus),
-      date_from: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "",
-      date_to: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "",
       sort_by: sortBy,
       sort_order: sortOrder,
       page: 1,
@@ -99,7 +75,6 @@ export function OrdersFilters({
     setDay("all");
     setPaymentStatus("all");
     setOrderStatus("all");
-    setDateRange(undefined);
     setSortBy("date");
     setSortOrder("desc");
     onFiltersChange({
@@ -107,31 +82,24 @@ export function OrdersFilters({
       page_size: 20,
       sort_by: "date",
       sort_order: "desc",
+      date_from: filters.date_from,
+      date_to: filters.date_to,
     });
   };
 
-  // Check if any filters are active (different from defaults)
-  // Default is: no search, no name, all days, all payment status, no date range
   const hasActiveFilters =
     search ||
     name ||
     day !== "all" ||
     paymentStatus !== "all" ||
-    orderStatus !== "all" ||
-    dateRange?.from ||
-    dateRange?.to;
+    orderStatus !== "all";
 
-  // Check if local state differs from applied filters
   const hasUnappliedChanges =
     search !== (filters.search || "") ||
     name !== (filters.name || "") ||
     day !== (filters.day || "all") ||
     paymentStatus !== (filters.payment_status || "all") ||
     orderStatus !== (filters.status || "all") ||
-    (dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "") !==
-      (filters.date_from || "") ||
-    (dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "") !==
-      (filters.date_to || "") ||
     sortBy !== (filters.sort_by || "date") ||
     sortOrder !== (filters.sort_order || "desc");
 
@@ -206,50 +174,8 @@ export function OrdersFilters({
         </Select>
       </div>
 
-      {/* Bottom Row: Date Range, Sort, Actions */}
+      {/* Bottom Row: Sort, Actions */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap sm:gap-3">
-        {/* Date Range Picker */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-            Date:
-          </span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "justify-start text-left font-normal w-[240px] neo-brutal neo-brutal-white text-xs sm:text-sm",
-                  !dateRange && "text-muted-foreground",
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "MMM dd")} -{" "}
-                      {format(dateRange.to, "MMM dd, yyyy")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "MMM dd, yyyy")
-                  )
-                ) : (
-                  "Pick a date range"
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="range"
-                selected={dateRange}
-                onSelect={setDateRange}
-                numberOfMonths={2}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
         {/* Sort */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
