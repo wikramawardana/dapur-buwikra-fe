@@ -31,8 +31,10 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
     string,
     { name: string; items: string; notes: string }[]
   > = {};
+  const itemQtyByDay: Record<string, number> = {};
   for (const day of DAYS_OF_WEEK) {
     ordersByDay[day] = [];
+    itemQtyByDay[day] = 0;
   }
 
   // Track unique orders for total count
@@ -50,13 +52,20 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
             .map((item) => `${item.name}${item.qty > 1 ? ` ×${item.qty}` : ""}`)
             .join(", ");
 
+          // Sum item quantities for this day
+          const dayItemQty = dayOrder.items.reduce(
+            (sum, item) => sum + item.qty,
+            0,
+          );
+
           ordersByDay[day].push({
             name: order.name,
             items: itemsSummary,
             notes: order.notes || "",
           });
           uniqueOrderIds.add(order.id);
-          totalOrderByDay++;
+          itemQtyByDay[day] += dayItemQty;
+          totalOrderByDay += dayItemQty;
         }
       }
     }
@@ -70,7 +79,7 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
   // Build output for each day
   for (const day of daysToShow) {
     const dayOrders = ordersByDay[day];
-    lines.push(`${day} (${dayOrders.length}) :`);
+    lines.push(`${day} (${itemQtyByDay[day]}) :`);
     if (dayOrders.length === 0) {
       lines.push("-");
     } else {
