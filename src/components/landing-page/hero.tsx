@@ -9,12 +9,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getUploadUrl } from "@/lib/api.config";
 import { getDefaultWeek } from "@/lib/week-utils";
 import { getFeaturedMenus } from "@/services/menu.service";
 import type { Menu } from "@/types/menu.types";
 import { NeoButton, NeoCard } from "./neocard";
-
-const DAY_NAMES = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
 
 function getDatesForWeek(dateFrom: string): string[] {
   const start = new Date(`${dateFrom}T00:00:00`);
@@ -37,7 +36,7 @@ function formatWeekLabel(dateFrom: string, dateTo: string): string {
 
 export const Hero: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false);
-  const [weekMenus, setWeekMenus] = useState<(Menu | null)[]>([]);
+  const [weekMenus, setWeekMenus] = useState<Menu[]>([]);
   const [weekLabel, setWeekLabel] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,9 +52,9 @@ export const Hero: React.FC = () => {
       const mapped = dates.map(
         (date) => allMenus.find((m) => m.start_date === date) ?? null,
       );
-      setWeekMenus(mapped);
+      setWeekMenus(mapped.filter((m): m is Menu => m !== null));
     } catch {
-      setWeekMenus(Array(5).fill(null));
+      setWeekMenus([]);
     } finally {
       setIsLoading(false);
     }
@@ -151,42 +150,39 @@ export const Hero: React.FC = () => {
                 ))}
               </div>
             </div>
+          ) : weekMenus.length === 0 ? (
+            <p className="text-center text-gray-400 italic py-8">
+              Menu belum tersedia
+            </p>
           ) : (
-            <div className="space-y-4 pt-2">
-              {DAY_NAMES.map((day, i) => {
-                const menu = weekMenus[i];
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              {weekMenus.map((menu, i) => {
+                const imageUrl = menu?.image_urls?.[0]
+                  ? getUploadUrl(menu.image_urls[0])
+                  : null;
                 return (
                   <div
-                    key={day}
-                    className="border-4 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                    key={i}
+                    className="border-4 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden"
                   >
-                    <div className="bg-black text-white px-3 py-1.5 font-black text-sm uppercase">
-                      {day}
-                    </div>
-                    <div className="bg-white px-3 py-2.5">
-                      {menu ? (
-                        <>
-                          <p className="font-bold text-base leading-tight mb-1">
-                            {menu.title}
-                          </p>
-                          <ul className="space-y-0.5">
-                            {menu.items.map((item) => (
-                              <li
-                                key={item.name}
-                                className="text-sm text-gray-700 flex items-start gap-1.5"
-                              >
-                                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-black shrink-0" />
-                                {item.name}
-                              </li>
-                            ))}
-                          </ul>
-                        </>
-                      ) : (
-                        <p className="text-sm text-gray-400 italic">
-                          Menu belum tersedia
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={menu?.title ?? "Menu"}
+                        className="w-full aspect-[3/4] object-cover"
+                      />
+                    ) : (
+                      <div className="w-full aspect-[3/4] bg-gray-100 flex items-center justify-center">
+                        <span className="text-4xl">🍱</span>
+                      </div>
+                    )}
+                    {menu && (
+                      <div className="bg-black text-white px-2 py-1.5">
+                        <p className="font-black text-xs leading-tight line-clamp-1">
+                          {menu.title}
                         </p>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
