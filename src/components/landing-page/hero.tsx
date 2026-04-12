@@ -126,7 +126,7 @@ export const Hero: React.FC = () => {
 
       {/* Weekly Menu Dialog */}
       <Dialog open={showMenu} onOpenChange={setShowMenu}>
-        <DialogContent className="border-4 border-black shadow-neo bg-white max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="border-4 border-black shadow-neo bg-white max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black uppercase">
               Menu Minggu Ini
@@ -155,7 +155,7 @@ export const Hero: React.FC = () => {
               Menu belum tersedia
             </p>
           ) : (
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="flex flex-col gap-6 pt-2">
               {weekMenus.map((menu, i) => {
                 const imageUrl = menu?.image_urls?.[0]
                   ? getUploadUrl(menu.image_urls[0])
@@ -163,22 +163,22 @@ export const Hero: React.FC = () => {
                 return (
                   <div
                     key={i}
-                    className="border-4 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden"
+                    className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden"
                   >
                     {imageUrl ? (
                       <img
                         src={imageUrl}
                         alt={menu?.title ?? "Menu"}
-                        className="w-full aspect-[3/4] object-cover"
+                        className="w-full object-cover"
                       />
                     ) : (
-                      <div className="w-full aspect-[3/4] bg-gray-100 flex items-center justify-center">
-                        <span className="text-4xl">🍱</span>
+                      <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                        <span className="text-6xl">🍱</span>
                       </div>
                     )}
                     {menu && (
-                      <div className="bg-black text-white px-2 py-1.5">
-                        <p className="font-black text-xs leading-tight line-clamp-1">
+                      <div className="bg-black text-white px-4 py-2">
+                        <p className="font-black text-sm leading-tight">
                           {menu.title}
                         </p>
                       </div>
