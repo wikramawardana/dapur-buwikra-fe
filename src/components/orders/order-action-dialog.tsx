@@ -151,6 +151,9 @@ export function OrderActionDialog({
   const [editPaymentStatus, setEditPaymentStatus] =
     React.useState<PaymentStatus>(order.payment_status);
   const [editNotes, setEditNotes] = React.useState(order.notes || "");
+  const [editDropOffLocation, setEditDropOffLocation] = React.useState(
+    order.drop_off_location || "",
+  );
 
   // Price list for adding items
   const [priceListItems, setPriceListItems] = React.useState<PriceListItem[]>(
@@ -196,6 +199,7 @@ export function OrderActionDialog({
     setEditDayOrders(JSON.parse(JSON.stringify(order.day_orders || [])));
     setEditPaymentStatus(order.payment_status);
     setEditNotes(order.notes || "");
+    setEditDropOffLocation(order.drop_off_location || "");
     setSelectedNewDates([]);
     setDialogOpen(true);
   };
@@ -296,6 +300,7 @@ export function OrderActionDialog({
         day_orders: validDayOrders,
         payment_status: editPaymentStatus,
         notes: editNotes,
+        drop_off_location: editDropOffLocation || undefined,
       });
       setOrder(response.data);
       toast.success("Order updated successfully!");
@@ -968,6 +973,38 @@ export function OrderActionDialog({
                 </div>
               ) : (
                 <p className="text-muted-foreground">No items in this order.</p>
+              )}
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label className="text-base font-bold uppercase tracking-wide">
+                Drop Off Location
+              </Label>
+              {isViewMode ? (
+                <p className="text-base">
+                  {order.drop_off_location || "No drop off location"}
+                </p>
+              ) : (
+                <Select
+                  value={editDropOffLocation}
+                  onValueChange={setEditDropOffLocation}
+                >
+                  <SelectTrigger className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium">
+                    <SelectValue placeholder="Select drop off location..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Gama Tower - Lobby">
+                      Gama Tower - Lobby
+                    </SelectItem>
+                    <SelectItem value="Trinity Tower - Catering Point 18 Floor">
+                      Trinity Tower - Catering Point 18 Floor
+                    </SelectItem>
+                    <SelectItem value="Trinity Tower - 23 Floor">
+                      Trinity Tower - 23 Floor
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               )}
             </div>
 

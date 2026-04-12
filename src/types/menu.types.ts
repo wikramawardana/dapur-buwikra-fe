@@ -13,6 +13,7 @@ export interface Menu {
   items: MenuItem[];
   image_urls: string[];
   is_active: boolean;
+  is_featured: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -24,6 +25,7 @@ export interface CreateMenuPayload {
   description?: string;
   items: MenuItem[];
   is_active: boolean;
+  is_featured: boolean;
 }
 
 export interface UpdateMenuPayload {
@@ -31,6 +33,7 @@ export interface UpdateMenuPayload {
   description?: string;
   items?: MenuItem[];
   is_active?: boolean;
+  is_featured?: boolean;
 }
 
 export interface MenusPaginatedData {

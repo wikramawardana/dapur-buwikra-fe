@@ -63,26 +63,13 @@ export const Hero: React.FC = () => {
         {/* Right Content: Logo Visual */}
         <div className="order-1 md:order-2 flex justify-center relative">
           <div className="absolute inset-0 bg-brut-blue border-4 border-black transform translate-x-4 translate-y-4 z-0"></div>
-          <div className="relative z-10 bg-white border-4 border-black p-8 shadow-neo-lg w-full max-w-md flex flex-col items-center">
+          <div className="relative z-10 bg-white border-4 border-black shadow-neo-lg w-full max-w-md flex flex-col items-center overflow-hidden">
             <img
               src="/image/dapur-buwikra-logo.png"
               alt="Logo Dapur Bu Wikra"
-              className="w-full h-auto object-cover border-b-4 border-black mb-6"
+              className="w-full h-auto object-cover border-b-4 border-black"
             />
-            {/* Note: User provided a specific logo in prompt, but for code generation I am using a placeholder that resembles the description or the user provided URL if it was text-readable. 
-                   Since I cannot browse the internet for the exact URL provided in the prompt image, I am using the user's provided description: "Muslim woman chef". 
-                   Wait, I should check if I can extract the url from the prompt. The user provided an image attachment but usually I get text.
-                   I will use the placeholder image that matches the "Muslim woman chef" vibe or a generic cooking placeholder if the specific one fails, 
-                   BUT since the user gave an image, let's try to simulate the look with a placeholder that fits the style.
-                   
-                   Actually, I will use the URL from the prompt description if I could, but I can't see the image URL string in the text prompt provided in the system instruction. 
-                   I will use a high quality placeholder and instruct the user to replace it.
-                */}
-            {/* 
-                    Wait, looking at the user prompt again, they included an image attachment visual but the text contains the request.
-                    I will use a placeholder image for now and add a comment.
-                 */}
-            <div className="text-center">
+            <div className="text-center py-4 px-6">
               <h2 className="text-3xl font-black uppercase tracking-tighter">
                 Katering Kantoran
               </h2>

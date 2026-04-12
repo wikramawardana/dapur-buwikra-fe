@@ -1,4 +1,5 @@
 import type React from "react";
+import { FeaturedCarousel } from "./featured-carousel";
 
 export const MenuSection: React.FC = () => {
   return (
@@ -11,20 +12,9 @@ export const MenuSection: React.FC = () => {
               Dimasak subuh-subuh dengan penuh kasih sayang (dan bumbu rahasia).
             </p>
           </div>
-          {/* <div className="bg-brut-blue text-white font-bold px-6 py-3 border-4 border-black shadow-neo transform rotate-2">
-            STOK TERBATAS!
-          </div> */}
         </div>
 
-        {/* Coming Soon Placeholder */}
-        <div className="flex flex-col items-center justify-center py-16 px-8 border-4 border-dashed border-black bg-gray-50">
-          <h3 className="text-3xl font-black mb-2 text-center">
-            SEGERA HADIR!
-          </h3>
-          <p className="text-lg font-medium text-gray-600 text-center max-w-md">
-            Menu lengkap lagi diracik. Sabar ya, dijamin worth the wait!
-          </p>
-        </div>
+        <FeaturedCarousel />
 
         {/* TODO: Uncomment this when menu is ready
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

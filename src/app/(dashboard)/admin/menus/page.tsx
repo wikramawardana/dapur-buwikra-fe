@@ -90,6 +90,7 @@ export default function MenusPage() {
   const [formEndDate, setFormEndDate] = React.useState<Date | undefined>();
   const [formItems, setFormItems] = React.useState<MenuItem[]>([]);
   const [formIsActive, setFormIsActive] = React.useState(true);
+  const [formIsFeatured, setFormIsFeatured] = React.useState(false);
   const [formImage, setFormImage] = React.useState<File | null>(null);
   const [formImagePreview, setFormImagePreview] = React.useState<string | null>(
     null,
@@ -161,6 +162,7 @@ export default function MenusPage() {
     setFormEndDate(undefined);
     setFormItems([{ name: "", description: "", price: 0 }]);
     setFormIsActive(true);
+    setFormIsFeatured(false);
     setFormImage(null);
     setFormImagePreview(null);
     setIsDialogOpen(true);
@@ -178,6 +180,7 @@ export default function MenusPage() {
         : [{ name: "", description: "", price: 0 }],
     );
     setFormIsActive(menu.is_active);
+    setFormIsFeatured(menu.is_featured);
     setFormImage(null);
     setFormImagePreview(
       menu.image_urls?.[0] ? getUploadUrl(menu.image_urls[0]) : null,
@@ -256,6 +259,7 @@ export default function MenusPage() {
           description: formDescription,
           items: validItems,
           is_active: formIsActive,
+          is_featured: formIsFeatured,
         });
         // Upload new image if selected
         if (formImage) {
@@ -271,6 +275,7 @@ export default function MenusPage() {
           end_date: format(formEndDate, "yyyy-MM-dd"),
           items: validItems,
           is_active: formIsActive,
+          is_featured: formIsFeatured,
         });
         // Upload image if selected
         if (formImage && response.data?.id) {
@@ -418,10 +423,15 @@ export default function MenusPage() {
                             </p>
                           </div>
                           <div
-                            className="flex items-center gap-2"
+                            className="flex items-center gap-2 flex-wrap justify-end"
                             role="presentation"
                             onClick={(e) => e.stopPropagation()}
                           >
+                            {menu.is_featured && (
+                              <span className="px-2 py-1 text-xs font-bold uppercase border-2 border-black bg-yellow-300">
+                                ⭐ Featured
+                              </span>
+                            )}
                             <span
                               className={`px-2 py-1 text-xs font-bold uppercase border-2 border-black ${menu.is_active ? "bg-green-200" : "bg-gray-200"}`}
                             >
@@ -732,6 +742,13 @@ export default function MenusPage() {
                 onCheckedChange={setFormIsActive}
               />
               <Label>Active</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formIsFeatured}
+                onCheckedChange={setFormIsFeatured}
+              />
+              <Label>⭐ Show on landing page (Featured)</Label>
             </div>
 
             <div className="space-y-3">

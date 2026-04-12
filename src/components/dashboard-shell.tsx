@@ -4,6 +4,7 @@ import {
   ChefHat,
   DollarSign,
   Home,
+  LayoutDashboard,
   PanelLeft,
   ShoppingCart,
   UtensilsCrossed,
@@ -35,7 +36,7 @@ import { cn } from "@/lib/utils";
 const dashboardItem = {
   title: "Dashboard",
   href: "/dashboard",
-  icon: Home,
+  icon: LayoutDashboard,
   group: "menu" as const,
 };
 
@@ -198,6 +199,34 @@ export function DashboardShell({ children }: DashboardShellProps) {
             </nav>
           </>
         )}
+
+        {/* Back to Home */}
+        <div className="px-2 pt-2 mt-auto border-t border-black/10 dark:border-white/10 mx-2">
+          {collapsed && !inSheet ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/"
+                  prefetch={false}
+                  className="flex items-center justify-center px-2 py-2.5 text-sm font-bold transition-all border-2 border-transparent text-black/60 dark:text-white/60 hover:border-black dark:hover:border-white hover:bg-yellow-100 dark:hover:bg-yellow-900"
+                >
+                  <Home className="h-4 w-4 shrink-0" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">Back to Home</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link
+              href="/"
+              prefetch={false}
+              onClick={() => inSheet && setMobileOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold transition-all border-2 border-transparent text-black/60 dark:text-white/60 hover:border-black dark:hover:border-white hover:bg-yellow-100 dark:hover:bg-yellow-900"
+            >
+              <Home className="h-4 w-4 shrink-0" />
+              <span>Back to Home</span>
+            </Link>
+          )}
+        </div>
       </ScrollArea>
     );
   }

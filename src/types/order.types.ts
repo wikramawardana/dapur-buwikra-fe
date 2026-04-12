@@ -19,6 +19,7 @@ export interface Order {
   day_orders: DayOrder[];
   total_price: number;
   notes: string;
+  drop_off_location?: string;
   status: OrderStatus;
   rejection_reason: string | null;
   payment_status: PaymentStatus;
@@ -62,6 +63,7 @@ export interface CreateOrderPayload {
   email?: string;
   day_orders: DayOrder[];
   notes?: string;
+  drop_off_location?: string;
 }
 
 export interface UpdateOrderPayload {
@@ -70,6 +72,7 @@ export interface UpdateOrderPayload {
   day_orders?: DayOrder[];
   payment_status?: PaymentStatus;
   notes?: string;
+  drop_off_location?: string;
 }
 
 export interface OrderFilters {
@@ -100,6 +103,7 @@ export interface OrderStats {
   total_nasi: number;
   total_kulit_kecil: number;
   total_kulit_besar: number;
+  days_breakdown?: OrderCountByDayItem[];
 }
 
 export interface OrderStatsResponse {

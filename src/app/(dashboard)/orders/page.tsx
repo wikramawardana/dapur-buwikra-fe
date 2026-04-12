@@ -48,8 +48,8 @@ export default function OrdersPage() {
   const [filters, setFilters] = React.useState<OrderFilters>(() => ({
     page: 1,
     page_size: 20,
-    sort_by: "date",
-    sort_order: "desc",
+    sort_by: "name",
+    sort_order: "asc",
     date_from: defaultWeek.dateFrom,
     date_to: defaultWeek.dateTo,
   }));
@@ -109,6 +109,7 @@ export default function OrdersPage() {
         total_nasi: countByDayResponse.data.total_nasi,
         total_kulit_kecil: countByDayResponse.data.total_kulit_kecil,
         total_kulit_besar: countByDayResponse.data.total_kulit_besar,
+        days_breakdown: countByDayResponse.data.days,
       });
     } catch (error) {
       // Don't show toast for auth errors - let the redirect handle it

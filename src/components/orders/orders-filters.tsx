@@ -39,9 +39,9 @@ export function OrdersFilters({
     filters.payment_status || "all",
   );
   const [orderStatus, setOrderStatus] = React.useState(filters.status || "all");
-  const [sortBy, setSortBy] = React.useState(filters.sort_by || "date");
+  const [sortBy, setSortBy] = React.useState(filters.sort_by || "name");
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">(
-    filters.sort_order || "desc",
+    filters.sort_order || "asc",
   );
 
   React.useEffect(() => {
@@ -50,8 +50,8 @@ export function OrdersFilters({
     setDay(filters.day || "all");
     setPaymentStatus(filters.payment_status || "all");
     setOrderStatus(filters.status || "all");
-    setSortBy(filters.sort_by || "date");
-    setSortOrder(filters.sort_order || "desc");
+    setSortBy(filters.sort_by || "name");
+    setSortOrder(filters.sort_order || "asc");
   }, [filters]);
 
   const handleApplyFilters = () => {
@@ -75,13 +75,13 @@ export function OrdersFilters({
     setDay("all");
     setPaymentStatus("all");
     setOrderStatus("all");
-    setSortBy("date");
-    setSortOrder("desc");
+    setSortBy("name");
+    setSortOrder("asc");
     onFiltersChange({
       page: 1,
       page_size: 20,
-      sort_by: "date",
-      sort_order: "desc",
+      sort_by: "name",
+      sort_order: "asc",
       date_from: filters.date_from,
       date_to: filters.date_to,
     });
@@ -100,8 +100,8 @@ export function OrdersFilters({
     day !== (filters.day || "all") ||
     paymentStatus !== (filters.payment_status || "all") ||
     orderStatus !== (filters.status || "all") ||
-    sortBy !== (filters.sort_by || "date") ||
-    sortOrder !== (filters.sort_order || "desc");
+    sortBy !== (filters.sort_by || "name") ||
+    sortOrder !== (filters.sort_order || "asc");
 
   return (
     <div className="space-y-3 sm:space-y-4">

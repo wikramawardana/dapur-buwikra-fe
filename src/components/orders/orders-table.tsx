@@ -103,27 +103,35 @@ export function OrdersTable({
         ),
       },
       {
-        id: "dates",
-        header: () => <div className="text-left font-semibold">Days</div>,
+        id: "ordered",
+        header: () => <div className="text-left font-semibold">Ordered</div>,
         cell: ({ row }) => {
           const order = row.original;
           if (!order.day_orders || order.day_orders.length === 0) {
             return <div className="text-muted-foreground">-</div>;
           }
-          const dayCount = order.day_orders.length;
           return (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="font-medium text-left text-blue-600 cursor-pointer hover:underline">
-                  {dayCount} {dayCount === 1 ? "day" : "days"}
+                <div className="text-left text-gray-700 max-w-[200px] truncate cursor-pointer hover:underline">
+                  {getOrderedSummary(order)}
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <div className="space-y-1">
+              <TooltipContent side="right" className="max-w-sm">
+                <div className="space-y-2">
                   {order.day_orders.map((dayOrder, idx) => (
-                    <div key={idx} className="text-sm">
-                      <span className="font-semibold">{dayOrder.day}</span> -{" "}
-                      {formatDate(dayOrder.date)}
+                    <div key={idx}>
+                      <p className="font-semibold text-sm">
+                        {dayOrder.day} — {formatDate(dayOrder.date)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {dayOrder.items
+                          .map(
+                            (item) =>
+                              `${item.name}${item.qty > 1 ? ` ×${item.qty}` : ""}`,
+                          )
+                          .join(", ")}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -133,22 +141,24 @@ export function OrdersTable({
         },
       },
       {
-        id: "ordered",
-        header: () => <div className="text-left font-semibold">Ordered</div>,
-        cell: ({ row }) => (
-          <div className="text-left text-gray-700 max-w-[200px] truncate">
-            {getOrderedSummary(row.original)}
-          </div>
-        ),
-      },
-      {
         accessorKey: "notes",
         header: () => <div className="text-left font-semibold">Notes</div>,
-        cell: ({ row }) => (
-          <div className="text-left text-gray-500 max-w-[150px] truncate">
-            {row.getValue("notes") || "-"}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const notes = row.getValue("notes") as string;
+          if (!notes) return <div className="text-left text-gray-400">-</div>;
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="text-left text-gray-500 max-w-[180px] line-clamp-2 cursor-pointer italic">
+                  {notes}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs">
+                <p className="text-sm whitespace-pre-wrap">{notes}</p>
+              </TooltipContent>
+            </Tooltip>
+          );
+        },
       },
       {
         id: "total_price",
@@ -252,26 +262,6 @@ export function OrdersTable({
                   <h3 className="font-bold text-black truncate">
                     {order.name}
                   </h3>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="mt-1 text-sm text-blue-600 cursor-pointer hover:underline inline-block">
-                        {order.day_orders?.length || 0}{" "}
-                        {(order.day_orders?.length || 0) === 1 ? "day" : "days"}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-xs">
-                      <div className="space-y-1">
-                        {order.day_orders?.map((dayOrder, idx) => (
-                          <div key={idx} className="text-sm">
-                            <span className="font-semibold">
-                              {dayOrder.day}
-                            </span>{" "}
-                            - {formatDate(dayOrder.date)}
-                          </div>
-                        ))}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
                 </div>
                 <OrderActionDialog
                   order={order}
@@ -281,16 +271,39 @@ export function OrdersTable({
               </div>
 
               <div className="mt-3 space-y-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-500">Ordered:</span>
-                  <span className="text-gray-700 text-right max-w-[60%] truncate">
-                    {getOrderedSummary(order)}
-                  </span>
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-gray-500 shrink-0">Ordered:</span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-gray-700 text-right cursor-pointer hover:underline">
+                        {getOrderedSummary(order)}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="max-w-sm">
+                      <div className="space-y-2">
+                        {order.day_orders?.map((dayOrder, idx) => (
+                          <div key={idx}>
+                            <p className="font-semibold text-sm">
+                              {dayOrder.day} — {formatDate(dayOrder.date)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {dayOrder.items
+                                .map(
+                                  (item) =>
+                                    `${item.name}${item.qty > 1 ? ` ×${item.qty}` : ""}`,
+                                )
+                                .join(", ")}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 {order.notes && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Notes:</span>
-                    <span className="text-gray-500 italic text-right max-w-[60%] truncate">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-gray-500 shrink-0">Notes:</span>
+                    <span className="text-gray-500 italic text-right">
                       {order.notes}
                     </span>
                   </div>

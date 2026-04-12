@@ -47,6 +47,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { getUploadUrl } from "@/lib/api.config";
 import { useSession } from "@/lib/auth-client";
@@ -92,6 +99,7 @@ const orderFormSchema = z.object({
     ),
   ),
   notes: z.string().optional(),
+  drop_off_location: z.string().optional(),
 });
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
@@ -144,6 +152,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       selectedDates: [],
       dayOrders: {},
       notes: "",
+      drop_off_location: "",
     },
   });
 
@@ -314,6 +323,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
         email: data.email || undefined,
         day_orders: dayOrdersPayload,
         notes: data.notes || "",
+        drop_off_location: data.drop_off_location || undefined,
       };
 
       await createOrder(payload);
@@ -682,8 +692,38 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
               </div>
             )}
 
-            {/* Section 4: Notes */}
+            {/* Section 4: Drop Off Location & Notes */}
             <div className="space-y-3 sm:space-y-4">
+              <FormField
+                control={form.control}
+                name="drop_off_location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-bold uppercase tracking-wide">
+                      Drop Off Location (Optional)
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium">
+                          <SelectValue placeholder="Select drop off location..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Gama Tower - Lobby">
+                          Gama Tower - Lobby
+                        </SelectItem>
+                        <SelectItem value="Trinity Tower - Catering Point 18 Floor">
+                          Trinity Tower - Catering Point 18 Floor
+                        </SelectItem>
+                        <SelectItem value="Trinity Tower - 23 Floor">
+                          Trinity Tower - 23 Floor
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="notes"

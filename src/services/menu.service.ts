@@ -1,6 +1,7 @@
-import { apiFetch, buildQueryString } from "@/lib/api.config";
+import { API_BASE_URL, apiFetch, buildQueryString } from "@/lib/api.config";
 import type {
   CreateMenuPayload,
+  Menu,
   MenusResponse,
   SingleMenuResponse,
   UpdateMenuPayload,
@@ -108,4 +109,14 @@ export async function deleteMenu(id: string): Promise<void> {
   return apiFetch<void>(`/menus/${id}`, {
     method: "DELETE",
   });
+}
+
+/**
+ * Fetch featured menus (public, no auth required)
+ */
+export async function getFeaturedMenus(): Promise<Menu[]> {
+  const res = await fetch(`${API_BASE_URL}/public/menus/featured`);
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json?.data ?? [];
 }
