@@ -19,7 +19,7 @@ function App() {
             className="flex items-center gap-2 px-4 py-2 font-bold bg-brut-blue text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
           >
             <LayoutDashboard size={18} />
-            <span className="hidden sm:inline">Dashboard</span>
+            <span className="hidden sm:inline">Order Now !</span>
           </Link>
         </div>
       </nav>

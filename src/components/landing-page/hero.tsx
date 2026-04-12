@@ -1,19 +1,66 @@
 "use client";
 
-import { Heart, MapPin, Rocket } from "lucide-react";
+import { Heart, MapPin } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getDefaultWeek } from "@/lib/week-utils";
+import { getFeaturedMenus } from "@/services/menu.service";
+import type { Menu } from "@/types/menu.types";
 import { NeoButton, NeoCard } from "./neocard";
 
+const DAY_NAMES = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
+
+function getDatesForWeek(dateFrom: string): string[] {
+  const start = new Date(`${dateFrom}T00:00:00`);
+  return Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    return d.toISOString().split("T")[0];
+  });
+}
+
+function formatWeekLabel(dateFrom: string, dateTo: string): string {
+  const from = new Date(`${dateFrom}T00:00:00`);
+  const to = new Date(`${dateTo}T00:00:00`);
+  const monthYear = from.toLocaleDateString("id-ID", {
+    month: "long",
+    year: "numeric",
+  });
+  return `${from.getDate()}–${to.getDate()} ${monthYear}`;
+}
+
 export const Hero: React.FC = () => {
-  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [weekMenus, setWeekMenus] = useState<(Menu | null)[]>([]);
+  const [weekLabel, setWeekLabel] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleShowMenu = async () => {
+    setShowMenu(true);
+    if (weekMenus.length > 0) return;
+    setIsLoading(true);
+    try {
+      const { dateFrom, dateTo } = getDefaultWeek();
+      setWeekLabel(formatWeekLabel(dateFrom, dateTo));
+      const allMenus = await getFeaturedMenus();
+      const dates = getDatesForWeek(dateFrom);
+      const mapped = dates.map(
+        (date) => allMenus.find((m) => m.start_date === date) ?? null,
+      );
+      setWeekMenus(mapped);
+    } catch {
+      setWeekMenus(Array(5).fill(null));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <section className="container mx-auto px-4 py-12 md:py-20 max-w-6xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -43,16 +90,13 @@ export const Hero: React.FC = () => {
           </NeoCard>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <NeoButton
-              variant="primary"
-              onClick={() => setShowComingSoon(true)}
-            >
-              Lihat Menu Hari Ini
+            <NeoButton variant="primary" onClick={handleShowMenu}>
+              Lihat Menu
             </NeoButton>
             <NeoButton
               variant="secondary"
               className="flex items-center justify-center gap-2"
-              onClick={() => setShowComingSoon(true)}
+              onClick={handleShowMenu}
             >
               <MapPin size={20} />
               Area Kantor Only
@@ -62,7 +106,7 @@ export const Hero: React.FC = () => {
 
         {/* Right Content: Logo Visual */}
         <div className="order-1 md:order-2 flex justify-center relative">
-          <div className="absolute inset-0 bg-brut-blue border-4 border-black transform translate-x-4 translate-y-4 z-0"></div>
+          <div className="absolute inset-0 bg-brut-blue border-4 border-black transform translate-x-4 translate-y-4 z-0" />
           <div className="relative z-10 bg-white border-4 border-black shadow-neo-lg w-full max-w-md flex flex-col items-center overflow-hidden">
             <img
               src="/image/dapur-buwikra-logo.png"
@@ -81,27 +125,73 @@ export const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Coming Soon Dialog */}
-      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
-        <DialogContent className="border-4 border-black shadow-neo bg-white max-w-sm text-center">
-          <DialogHeader className="items-center">
-            <div className="bg-brut-blue p-4 rounded-full border-4 border-black mb-2">
-              <Rocket className="w-10 h-10 text-white" />
-            </div>
+      {/* Weekly Menu Dialog */}
+      <Dialog open={showMenu} onOpenChange={setShowMenu}>
+        <DialogContent className="border-4 border-black shadow-neo bg-white max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
             <DialogTitle className="text-2xl font-black uppercase">
-              Coming Soon!
+              Menu Minggu Ini
             </DialogTitle>
-            <DialogDescription className="text-base font-medium text-black">
-              Fitur ini masih dalam pengembangan. Tunggu update selanjutnya ya!
-            </DialogDescription>
+            {weekLabel && (
+              <p className="text-sm font-bold bg-black text-white inline-block px-2 py-0.5 w-fit">
+                {weekLabel}
+              </p>
+            )}
           </DialogHeader>
-          <NeoButton
-            variant="primary"
-            onClick={() => setShowComingSoon(false)}
-            className="w-full mt-2"
-          >
-            OK, Siap!
-          </NeoButton>
+
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="flex gap-2">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="h-3 w-3 bg-black rounded-full animate-bounce"
+                    style={{ animationDelay: `${i * 0.15}s` }}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-2">
+              {DAY_NAMES.map((day, i) => {
+                const menu = weekMenus[i];
+                return (
+                  <div
+                    key={day}
+                    className="border-4 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                  >
+                    <div className="bg-black text-white px-3 py-1.5 font-black text-sm uppercase">
+                      {day}
+                    </div>
+                    <div className="bg-white px-3 py-2.5">
+                      {menu ? (
+                        <>
+                          <p className="font-bold text-base leading-tight mb-1">
+                            {menu.title}
+                          </p>
+                          <ul className="space-y-0.5">
+                            {menu.items.map((item) => (
+                              <li
+                                key={item.name}
+                                className="text-sm text-gray-700 flex items-start gap-1.5"
+                              >
+                                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-black shrink-0" />
+                                {item.name}
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : (
+                        <p className="text-sm text-gray-400 italic">
+                          Menu belum tersedia
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </section>

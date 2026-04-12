@@ -9,7 +9,8 @@ export const MenuSection: React.FC = () => {
           <div>
             <h2 className="text-5xl font-black mb-4">MENU ANDALAN</h2>
             <p className="text-xl font-medium text-gray-600 max-w-lg">
-              Dimasak subuh-subuh dengan penuh kasih sayang (dan bumbu rahasia).
+              Dimasak dari jam 2 pagi dengan penuh kasih sayang (dan bumbu
+              rahasia).
             </p>
           </div>
         </div>
