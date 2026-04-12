@@ -29,7 +29,7 @@ function App() {
         <MenuSection />
 
         {/* Availability Banner */}
-        <section className="container mx-auto px-4 py-12">
+        <section id="area-section" className="container mx-auto px-4 py-12">
           <div className="bg-black text-white border-4 border-brut-blue p-8 md:p-12 shadow-neo-lg text-center transform md:rotate-1">
             <h3 className="text-3xl md:text-5xl font-black mb-4">
               MAAF YA, MASIH TERBATAS!

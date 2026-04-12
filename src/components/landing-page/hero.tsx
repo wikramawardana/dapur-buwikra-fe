@@ -95,7 +95,11 @@ export const Hero: React.FC = () => {
             <NeoButton
               variant="secondary"
               className="flex items-center justify-center gap-2"
-              onClick={handleShowMenu}
+              onClick={() =>
+                document
+                  .getElementById("area-section")
+                  ?.scrollIntoView({ behavior: "smooth" })
+              }
             >
               <MapPin size={20} />
               Area Kantor Only
