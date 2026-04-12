@@ -8,10 +8,10 @@ export const MenuSection: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div>
             <h2 className="text-5xl font-black mb-4">MENU ANDALAN</h2>
-            <p className="text-xl font-medium text-gray-600 max-w-lg">
+            {/* <p className="text-xl font-medium text-gray-600 max-w-lg">
               Dimasak dari jam 2 pagi dengan penuh kasih sayang (dan bumbu
               rahasia).
-            </p>
+            </p> */}
           </div>
         </div>
 
