@@ -29,7 +29,7 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
   // Group orders by day from day_orders structure
   const ordersByDay: Record<
     string,
-    { name: string; items: string; notes: string }[]
+    { name: string; items: string; notes: string; drop_point: string }[]
   > = {};
   const itemQtyByDay: Record<string, number> = {};
   for (const day of DAYS_OF_WEEK) {
@@ -62,6 +62,7 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
             name: order.name,
             items: itemsSummary,
             notes: order.notes || "",
+            drop_point: order.drop_off_location || "",
           });
           uniqueOrderIds.add(order.id);
           itemQtyByDay[day] += dayItemQty;
@@ -85,8 +86,11 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
     } else {
       dayOrders.forEach((orderInfo, index) => {
         const notesStr = orderInfo.notes ? ` — ${orderInfo.notes}` : "";
+        const dropStr = orderInfo.drop_point
+          ? ` [${orderInfo.drop_point}]`
+          : "";
         lines.push(
-          `${index + 1}. ${orderInfo.name} (${orderInfo.items})${notesStr}`,
+          `${index + 1}. ${orderInfo.name} (${orderInfo.items})${dropStr}${notesStr}`,
         );
       });
     }

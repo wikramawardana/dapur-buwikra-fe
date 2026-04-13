@@ -161,6 +161,22 @@ export function OrdersTable({
         },
       },
       {
+        accessorKey: "drop_off_location",
+        header: () => <div className="text-left font-semibold">Drop Point</div>,
+        cell: ({ row }) => {
+          const loc = row.getValue("drop_off_location") as string | undefined;
+          if (!loc) return <div className="text-left text-gray-400">-</div>;
+          return (
+            <div
+              className="text-left text-gray-700 max-w-[160px] truncate"
+              title={loc}
+            >
+              {loc}
+            </div>
+          );
+        },
+      },
+      {
         id: "total_price",
         header: () => (
           <div className="text-left font-semibold">Total Price</div>
@@ -305,6 +321,14 @@ export function OrdersTable({
                     <span className="text-gray-500 shrink-0">Notes:</span>
                     <span className="text-gray-500 italic text-right">
                       {order.notes}
+                    </span>
+                  </div>
+                )}
+                {order.drop_off_location && (
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-gray-500 shrink-0">Drop Point:</span>
+                    <span className="text-gray-700 text-right">
+                      {order.drop_off_location}
                     </span>
                   </div>
                 )}
