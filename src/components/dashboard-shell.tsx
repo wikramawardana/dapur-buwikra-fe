@@ -65,7 +65,7 @@ const adminMenuItems = [
     roles: ["admin"],
     group: "admin" as const,
   },
-  // Hidden: user management is now centralized via Wikra Auth
+  // Hidden: user management is now centralized via Auth
   // {
   //   title: "User Management",
   //   href: "/admin/users",

@@ -64,7 +64,7 @@ function LoginForm() {
     setIsLoading(true);
     try {
       await authClient.signIn.oauth2({
-        providerId: "wikra-auth",
+        providerId: "auth",
         callbackURL: callbackUrl,
       });
     } catch (error) {
@@ -118,7 +118,7 @@ function LoginForm() {
           </Button>
 
           <p className="text-center text-xs text-black/40 leading-relaxed">
-            Secured by Wikra Auth.
+            Secured by Auth.
             <br />
             Only authorized users can access this system.
           </p>

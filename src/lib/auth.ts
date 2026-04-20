@@ -6,7 +6,7 @@ import { Pool } from "pg";
 dns.setDefaultResultOrder("ipv4first");
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-const wikraAuthUrl = process.env.WIKRA_AUTH_URL || "http://localhost:3001";
+const authServiceUrl = process.env.AUTH_URL || "http://localhost:3001";
 
 export const auth = betterAuth({
   baseURL: appUrl,
@@ -31,10 +31,10 @@ export const auth = betterAuth({
     genericOAuth({
       config: [
         {
-          providerId: "wikra-auth",
-          clientId: process.env.WIKRA_AUTH_CLIENT_ID || "dapur-buwikra",
-          clientSecret: process.env.WIKRA_AUTH_CLIENT_SECRET!,
-          discoveryUrl: `${wikraAuthUrl}/api/auth/.well-known/openid-configuration`,
+          providerId: "auth",
+          clientId: process.env.AUTH_CLIENT_ID || "dapur-buwikra",
+          clientSecret: process.env.AUTH_CLIENT_SECRET!,
+          discoveryUrl: `${authServiceUrl}/api/auth/.well-known/openid-configuration`,
           scopes: ["openid", "profile", "email"],
         },
       ],
@@ -53,7 +53,7 @@ export const auth = betterAuth({
   },
   trustedOrigins: [
     appUrl,
-    wikraAuthUrl,
+    authServiceUrl,
     "http://localhost:3000",
     "http://127.0.0.1:3000",
   ],
