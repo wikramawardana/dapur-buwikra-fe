@@ -2,7 +2,11 @@ import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 
 const publicPrefixes = ["/login", "/api/auth"];
-const adminRoutes = ["/admin"];
+const routeRoles: Array<{ prefix: string; roles: string[] }> = [
+  { prefix: "/admin/menus", roles: ["admin", "chef"] },
+  { prefix: "/admin/pricelist", roles: ["admin"] },
+  { prefix: "/admin/users", roles: ["admin"] },
+];
 
 function isPublicRoute(pathname: string): boolean {
   if (pathname === "/") return true;
@@ -44,8 +48,10 @@ export async function middleware(request: NextRequest) {
     return redirectToLogin(request, pathname);
   }
 
-  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
-  if (!isAdminRoute) {
+  const protectedRoute = routeRoles.find((route) =>
+    pathname.startsWith(route.prefix),
+  );
+  if (!protectedRoute) {
     return NextResponse.next();
   }
 
@@ -67,7 +73,7 @@ export async function middleware(request: NextRequest) {
       return redirectToLogin(request, pathname);
     }
 
-    if (session.user.role !== "admin") {
+    if (!protectedRoute.roles.includes(session.user.role)) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 

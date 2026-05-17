@@ -36,6 +36,17 @@ export const auth = betterAuth({
           clientSecret: process.env.AUTH_CLIENT_SECRET!,
           discoveryUrl: `${authServiceUrl}/api/auth/.well-known/openid-configuration`,
           scopes: ["openid", "profile", "email"],
+          overrideUserInfo: true,
+          mapProfileToUser: (profile: Record<string, unknown>) => {
+            const appRole =
+              typeof profile.app_role === "string" ? profile.app_role : "user";
+            const email =
+              typeof profile.email === "string"
+                ? profile.email.toLowerCase()
+                : undefined;
+
+            return { email, role: appRole };
+          },
         },
       ],
     }),
