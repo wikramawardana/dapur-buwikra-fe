@@ -55,6 +55,7 @@ import { getUploadUrl } from "@/lib/api.config";
 import { useSession } from "@/lib/auth-client";
 import {
   createMenu,
+  deleteAllMenuImages,
   deleteMenu,
   deleteMenuImage,
   getMenus,
@@ -82,6 +83,7 @@ export default function MenusPage() {
   const [deletingMenu, setDeletingMenu] = React.useState<Menu | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [_isUploadingImage, setIsUploadingImage] = React.useState(false);
+  const imageInputRef = React.useRef<HTMLInputElement>(null);
 
   // Form state
   const [formTitle, setFormTitle] = React.useState("");
@@ -95,6 +97,7 @@ export default function MenusPage() {
   const [formImagePreview, setFormImagePreview] = React.useState<string | null>(
     null,
   );
+  const [removeExistingImages, setRemoveExistingImages] = React.useState(false);
 
   const userRole = session?.user?.role;
   const canAccess = userRole === "admin" || userRole === "chef";
@@ -165,6 +168,7 @@ export default function MenusPage() {
     setFormIsFeatured(false);
     setFormImage(null);
     setFormImagePreview(null);
+    setRemoveExistingImages(false);
     setIsDialogOpen(true);
   };
 
@@ -185,6 +189,7 @@ export default function MenusPage() {
     setFormImagePreview(
       menu.image_urls?.[0] ? getUploadUrl(menu.image_urls[0]) : null,
     );
+    setRemoveExistingImages(false);
     setIsDialogOpen(true);
   };
 
@@ -221,7 +226,13 @@ export default function MenusPage() {
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.type && !file.type.startsWith("image/")) {
+        toast.error("Please select an image file");
+        return;
+      }
+
       setFormImage(file);
+      setRemoveExistingImages(Boolean(editingMenu?.image_urls?.length));
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormImagePreview(reader.result as string);
@@ -232,11 +243,15 @@ export default function MenusPage() {
 
   const clearSelectedImage = () => {
     setFormImage(null);
-    setFormImagePreview(
-      editingMenu?.image_urls?.[0]
-        ? getUploadUrl(editingMenu.image_urls[0])
-        : null,
-    );
+    setFormImagePreview(null);
+    setRemoveExistingImages(Boolean(editingMenu?.image_urls?.length));
+  };
+
+  const openImagePicker = () => {
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+      imageInputRef.current.click();
+    }
   };
 
   const handleSubmit = async () => {
@@ -261,7 +276,11 @@ export default function MenusPage() {
           is_active: formIsActive,
           is_featured: formIsFeatured,
         });
-        // Upload new image if selected
+
+        if (removeExistingImages && editingMenu.image_urls?.length) {
+          await deleteAllMenuImages(editingMenu.id);
+        }
+
         if (formImage) {
           await uploadMenuImage(editingMenu.id, formImage);
         }
@@ -702,6 +721,13 @@ export default function MenusPage() {
             {/* Image Upload */}
             <div className="space-y-2">
               <Label className="font-bold">Menu Image</Label>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*,.heic,.heif"
+                className="sr-only"
+                onChange={handleImageSelect}
+              />
               {formImagePreview ? (
                 <div className="relative h-40 border-2 border-black rounded-none overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -719,20 +745,33 @@ export default function MenusPage() {
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={openImagePicker}
+                    className="absolute bottom-2 right-2 gap-2 border-2 border-black rounded-none bg-white text-black"
+                  >
+                    <ImagePlus className="h-4 w-4" />
+                    Change
+                  </Button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-black rounded-none cursor-pointer hover:bg-gray-50">
+                <button
+                  type="button"
+                  onClick={openImagePicker}
+                  className="flex h-40 w-full flex-col items-center justify-center border-2 border-dashed border-black rounded-none cursor-pointer hover:bg-gray-50"
+                >
                   <ImagePlus className="h-8 w-8 mb-2 text-gray-400" />
                   <span className="text-sm text-gray-500">
-                    Click to upload image
+                    Tap to upload image
                   </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageSelect}
-                  />
-                </label>
+                </button>
+              )}
+              {removeExistingImages && !formImage && (
+                <p className="text-xs text-muted-foreground">
+                  Current menu image will be removed when you save.
+                </p>
               )}
             </div>
 

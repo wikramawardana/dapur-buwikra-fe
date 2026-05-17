@@ -100,6 +100,88 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
   return lines.join("\n").trim();
 }
 
+function getExportFilename(dayFilter?: string): string {
+  const day =
+    !dayFilter || dayFilter === "all" || dayFilter === ""
+      ? "all-days"
+      : dayFilter.toLowerCase();
+
+  return `orders-${day}-${new Date().toISOString().slice(0, 10)}.md`;
+}
+
+function fallbackCopyToClipboard(text: string): boolean {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.top = "-1000px";
+  textarea.style.left = "-1000px";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  try {
+    return document.execCommand("copy");
+  } finally {
+    document.body.removeChild(textarea);
+  }
+}
+
+async function copyMarkdown(text: string): Promise<boolean> {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Some mobile browsers expose Clipboard API but deny writes.
+    }
+  }
+
+  return fallbackCopyToClipboard(text);
+}
+
+function downloadMarkdown(markdown: string, filename: string) {
+  const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
+
+async function shareMarkdown(markdown: string, filename: string) {
+  if (!navigator.share) return false;
+
+  const file = new File([markdown], filename, {
+    type: "text/markdown",
+  });
+
+  try {
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({
+        title: "Orders Markdown",
+        text: "Dapur Bu Wikra orders export",
+        files: [file],
+      });
+      return true;
+    }
+
+    await navigator.share({
+      title: "Orders Markdown",
+      text: markdown,
+    });
+    return true;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      return true;
+    }
+    return false;
+  }
+}
+
 export function ExportMarkdownButton({
   filters,
   disabled = false,
@@ -121,7 +203,23 @@ export function ExportMarkdownButton({
       }
 
       const markdown = ordersToMarkdown(orders, filters.day);
-      await navigator.clipboard.writeText(markdown);
+      const filename = getExportFilename(filters.day);
+      const isLikelyMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(
+        navigator.userAgent,
+      );
+
+      if (isLikelyMobile && (await shareMarkdown(markdown, filename))) {
+        toast.success("Markdown export opened");
+        return;
+      }
+
+      const copiedToClipboard = await copyMarkdown(markdown);
+      if (!copiedToClipboard) {
+        downloadMarkdown(markdown, filename);
+        toast.success("Markdown downloaded");
+        return;
+      }
+
       setCopied(true);
       toast.success("Orders copied to clipboard as Markdown!");
 
