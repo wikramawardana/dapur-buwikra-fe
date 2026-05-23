@@ -111,6 +111,18 @@ interface UserLookupResult {
 
 const emailLookupSchema = z.string().email();
 
+function getNameFromEmail(email: string): string {
+  const localPart = email.split("@")[0]?.split("+")[0] ?? "";
+
+  return localPart
+    .replace(/[._-]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+    .join(" ");
+}
+
 // Calculate total price from all day orders
 const calculateTotalPrice = (
   dayOrders: Record<string, OrderMenuItem[]>,
@@ -190,6 +202,30 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
     }
 
     const timeoutId = window.setTimeout(async () => {
+      const fillName = (name: string) => {
+        if (form.getValues("email").trim().toLowerCase() !== normalizedEmail) {
+          return;
+        }
+
+        const currentName = form.getValues("name").trim();
+        const canAutoFill =
+          currentName === "" || currentName === autoFilledNameRef.current;
+
+        if (canAutoFill) {
+          form.setValue("name", name, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          autoFilledNameEmailRef.current = normalizedEmail;
+          autoFilledNameRef.current = name;
+        }
+      };
+
+      const fallbackName = getNameFromEmail(normalizedEmail);
+      if (fallbackName) {
+        fillName(fallbackName);
+      }
+
       try {
         const response = await authClient.admin.listUsers({
           query: {
@@ -207,25 +243,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
         );
 
         if (!matchedUser?.name) return;
-
-        if (form.getValues("email").trim().toLowerCase() !== normalizedEmail) {
-          return;
-        }
-
-        const currentName = form.getValues("name").trim();
-        const canAutoFill =
-          currentName === "" ||
-          currentName === autoFilledNameRef.current ||
-          autoFilledNameEmailRef.current === normalizedEmail;
-
-        if (canAutoFill) {
-          form.setValue("name", matchedUser.name, {
-            shouldDirty: true,
-            shouldValidate: true,
-          });
-          autoFilledNameEmailRef.current = normalizedEmail;
-          autoFilledNameRef.current = matchedUser.name;
-        }
+        fillName(matchedUser.name);
       } catch (error) {
         console.error("Failed to look up customer email:", error);
       }
