@@ -58,6 +58,17 @@ export interface SingleOrderResponse {
   data: Order;
 }
 
+export interface OrderCustomer {
+  name: string;
+  email: string;
+}
+
+export interface OrderCustomersResponse {
+  status: string;
+  message: string;
+  data: OrderCustomer[];
+}
+
 export interface CreateOrderPayload {
   name: string;
   email?: string;

@@ -61,13 +61,13 @@ import { getUploadUrl } from "@/lib/api.config";
 import { authClient, useSession } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
 import { getMenuByDate } from "@/services/menu.service";
-import { createOrder, getOrders } from "@/services/orders.service";
+import { createOrder, getOrderCustomers } from "@/services/orders.service";
 import { getActivePriceList } from "@/services/pricelist.service";
 import type { Menu } from "@/types/menu.types";
 import type {
   CreateOrderPayload,
   DayOrder,
-  Order,
+  OrderCustomer,
   OrderMenuItem,
 } from "@/types/order.types";
 import type { PriceListItem } from "@/types/pricelist.types";
@@ -112,10 +112,7 @@ interface UserLookupResult {
   name: string | null;
 }
 
-interface CustomerSuggestion {
-  email: string;
-  name: string;
-}
+type CustomerSuggestion = OrderCustomer;
 
 const emailLookupSchema = z.string().email();
 
@@ -129,26 +126,6 @@ function getNameFromEmail(email: string): string {
     .filter(Boolean)
     .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
     .join(" ");
-}
-
-function getCustomerSuggestions(orders: Order[]): CustomerSuggestion[] {
-  const customersByEmail = new Map<string, CustomerSuggestion>();
-
-  for (const order of orders) {
-    const email = order.email?.trim();
-    const name = order.name?.trim();
-
-    if (!email || !name) continue;
-
-    customersByEmail.set(email.toLowerCase(), {
-      email,
-      name,
-    });
-  }
-
-  return Array.from(customersByEmail.values()).sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
 }
 
 function upsertCustomerSuggestion(
@@ -269,15 +246,10 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
     let isCancelled = false;
 
     setIsLoadingCustomers(true);
-    getOrders({
-      page: 1,
-      page_size: 500,
-      sort_by: "name",
-      sort_order: "asc",
-    })
+    getOrderCustomers()
       .then((response) => {
         if (isCancelled) return;
-        setCustomerSuggestions(getCustomerSuggestions(response.data.data));
+        setCustomerSuggestions(response.data);
       })
       .catch((error) => {
         console.error("Failed to load previous customers:", error);
