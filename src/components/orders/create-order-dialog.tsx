@@ -20,7 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Command,
+  CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -59,12 +61,13 @@ import { getUploadUrl } from "@/lib/api.config";
 import { authClient, useSession } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
 import { getMenuByDate } from "@/services/menu.service";
-import { createOrder } from "@/services/orders.service";
+import { createOrder, getOrders } from "@/services/orders.service";
 import { getActivePriceList } from "@/services/pricelist.service";
 import type { Menu } from "@/types/menu.types";
 import type {
   CreateOrderPayload,
   DayOrder,
+  Order,
   OrderMenuItem,
 } from "@/types/order.types";
 import type { PriceListItem } from "@/types/pricelist.types";
@@ -109,6 +112,11 @@ interface UserLookupResult {
   name: string | null;
 }
 
+interface CustomerSuggestion {
+  email: string;
+  name: string;
+}
+
 const emailLookupSchema = z.string().email();
 
 function getNameFromEmail(email: string): string {
@@ -121,6 +129,26 @@ function getNameFromEmail(email: string): string {
     .filter(Boolean)
     .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
     .join(" ");
+}
+
+function getCustomerSuggestions(orders: Order[]): CustomerSuggestion[] {
+  const customersByEmail = new Map<string, CustomerSuggestion>();
+
+  for (const order of orders) {
+    const email = order.email?.trim();
+    const name = order.name?.trim();
+
+    if (!email || !name) continue;
+
+    customersByEmail.set(email.toLowerCase(), {
+      email,
+      name,
+    });
+  }
+
+  return Array.from(customersByEmail.values()).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 }
 
 // Calculate total price from all day orders
@@ -146,7 +174,11 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
     [],
   );
   const [isLoadingPriceList, setIsLoadingPriceList] = React.useState(false);
-  const autoFilledNameEmailRef = React.useRef<string | null>(null);
+  const [customerSuggestions, setCustomerSuggestions] = React.useState<
+    CustomerSuggestion[]
+  >([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = React.useState(false);
+  const [isCustomerPickerOpen, setIsCustomerPickerOpen] = React.useState(false);
   const autoFilledNameRef = React.useRef<string | null>(null);
 
   // Menu preview state
@@ -161,7 +193,9 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
 
   // Get session for email prefill
   const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "admin";
+  const userRole = session?.user?.role;
+  const isAdmin = userRole === "admin";
+  const canChooseCustomer = isAdmin || userRole === "chef";
   const sessionEmail = session?.user?.email || "";
   const sessionName = session?.user?.name || "";
 
@@ -180,21 +214,52 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   // Prefill form with session data when dialog opens
   React.useEffect(() => {
     if (open && session?.user) {
-      // For non-admin, prefill both name and email from session
-      if (!isAdmin) {
+      // For regular users, prefill both name and email from session
+      if (!canChooseCustomer) {
         form.setValue("email", sessionEmail);
         form.setValue("name", sessionName);
       }
     }
-  }, [open, session, isAdmin, sessionEmail, sessionName, form]);
+  }, [open, session, canChooseCustomer, sessionEmail, sessionName, form]);
 
   const selectedDates = form.watch("selectedDates");
   const dayOrders = form.watch("dayOrders");
+  const watchedName = form.watch("name");
   const watchedEmail = form.watch("email");
   const totalPrice = calculateTotalPrice(dayOrders || {});
 
   React.useEffect(() => {
-    if (!open || !isAdmin) return;
+    if (!open || !canChooseCustomer || customerSuggestions.length > 0) return;
+
+    let isCancelled = false;
+
+    setIsLoadingCustomers(true);
+    getOrders({
+      page: 1,
+      page_size: 500,
+      sort_by: "name",
+      sort_order: "asc",
+    })
+      .then((response) => {
+        if (isCancelled) return;
+        setCustomerSuggestions(getCustomerSuggestions(response.data.data));
+      })
+      .catch((error) => {
+        console.error("Failed to load previous customers:", error);
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsLoadingCustomers(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [canChooseCustomer, customerSuggestions.length, open]);
+
+  React.useEffect(() => {
+    if (!open || !canChooseCustomer) return;
 
     const normalizedEmail = watchedEmail.trim().toLowerCase();
     if (!emailLookupSchema.safeParse(normalizedEmail).success) {
@@ -216,7 +281,6 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
             shouldDirty: true,
             shouldValidate: true,
           });
-          autoFilledNameEmailRef.current = normalizedEmail;
           autoFilledNameRef.current = name;
         }
       };
@@ -225,6 +289,8 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       if (fallbackName) {
         fillName(fallbackName);
       }
+
+      if (!isAdmin) return;
 
       try {
         const response = await authClient.admin.listUsers({
@@ -250,7 +316,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
     }, 350);
 
     return () => window.clearTimeout(timeoutId);
-  }, [form, isAdmin, open, watchedEmail]);
+  }, [canChooseCustomer, form, isAdmin, open, watchedEmail]);
 
   // Fetch price list when dialog opens
   React.useEffect(() => {
@@ -369,10 +435,22 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
     });
   };
 
+  const selectCustomer = (customer: CustomerSuggestion) => {
+    form.setValue("name", customer.name, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue("email", customer.email, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    autoFilledNameRef.current = customer.name;
+    setIsCustomerPickerOpen(false);
+  };
+
   const handleOpenChange = (open: boolean) => {
     setOpen(open);
     if (!open) {
-      autoFilledNameEmailRef.current = null;
       autoFilledNameRef.current = null;
       form.reset();
     }
@@ -411,7 +489,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
 
       await createOrder(payload);
       // Show different message based on user role
-      if (isAdmin) {
+      if (canChooseCustomer) {
         toast.success("Order created successfully!");
       } else {
         toast.success("Order submitted! Your order is pending approval.", {
@@ -474,6 +552,66 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                 </h3>
               </div>
               <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 items-start">
+                {canChooseCustomer && (
+                  <div className="md:col-span-2">
+                    <FormItem>
+                      <FormLabel className="text-base font-bold uppercase tracking-wide">
+                        Customer
+                      </FormLabel>
+                      <Popover
+                        open={isCustomerPickerOpen}
+                        onOpenChange={setIsCustomerPickerOpen}
+                      >
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full h-12 justify-between text-left font-medium text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
+                            >
+                              <span className="min-w-0 truncate">
+                                {watchedEmail
+                                  ? `${watchedName || getNameFromEmail(watchedEmail)} — ${watchedEmail}`
+                                  : "Search previous customer"}
+                              </span>
+                              <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                          <Command>
+                            <CommandInput placeholder="Search name or email..." />
+                            <CommandList>
+                              <CommandEmpty>
+                                {isLoadingCustomers
+                                  ? "Loading customers..."
+                                  : "No previous customers found."}
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {customerSuggestions.map((customer) => (
+                                  <CommandItem
+                                    key={customer.email}
+                                    value={`${customer.name} ${customer.email}`}
+                                    onSelect={() => selectCustomer(customer)}
+                                  >
+                                    <div className="min-w-0">
+                                      <p className="truncate font-medium">
+                                        {customer.name}
+                                      </p>
+                                      <p className="truncate text-xs text-muted-foreground">
+                                        {customer.email}
+                                      </p>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </FormItem>
+                  </div>
+                )}
                 {/* Name */}
                 <FormField
                   control={form.control}
@@ -501,20 +639,22 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-base font-bold uppercase tracking-wide">
-                        Email *{!isAdmin && " (from your account)"}
+                        Email *{!canChooseCustomer && " (from your account)"}
                       </FormLabel>
                       <FormControl>
                         <Input
                           type="email"
                           placeholder="customer@email.com"
-                          disabled={!isAdmin}
+                          disabled={!canChooseCustomer}
                           className={`h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium ${
-                            !isAdmin ? "opacity-70 cursor-not-allowed" : ""
+                            !canChooseCustomer
+                              ? "opacity-70 cursor-not-allowed"
+                              : ""
                           }`}
                           {...field}
                         />
                       </FormControl>
-                      {!isAdmin && (
+                      {!canChooseCustomer && (
                         <p className="text-xs text-muted-foreground">
                           Email is auto-filled from your account
                         </p>
