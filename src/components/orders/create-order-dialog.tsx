@@ -151,6 +151,21 @@ function getCustomerSuggestions(orders: Order[]): CustomerSuggestion[] {
   );
 }
 
+function upsertCustomerSuggestion(
+  customers: CustomerSuggestion[],
+  customer: CustomerSuggestion,
+): CustomerSuggestion[] {
+  const customersByEmail = new Map(
+    customers.map((item) => [item.email.toLowerCase(), item]),
+  );
+
+  customersByEmail.set(customer.email.toLowerCase(), customer);
+
+  return Array.from(customersByEmail.values()).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+}
+
 // Calculate total price from all day orders
 const calculateTotalPrice = (
   dayOrders: Record<string, OrderMenuItem[]>,
@@ -179,6 +194,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   >([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = React.useState(false);
   const [isCustomerPickerOpen, setIsCustomerPickerOpen] = React.useState(false);
+  const [customerSearch, setCustomerSearch] = React.useState("");
   const autoFilledNameRef = React.useRef<string | null>(null);
 
   // Menu preview state
@@ -227,6 +243,25 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   const watchedName = form.watch("name");
   const watchedEmail = form.watch("email");
   const totalPrice = calculateTotalPrice(dayOrders || {});
+  const normalizedCustomerSearch = customerSearch.trim().toLowerCase();
+  const normalizedWatchedEmail = watchedEmail.trim().toLowerCase();
+  const searchedEmail = emailLookupSchema.safeParse(normalizedCustomerSearch)
+    .success
+    ? normalizedCustomerSearch
+    : "";
+  const currentEmail = emailLookupSchema.safeParse(normalizedWatchedEmail)
+    .success
+    ? normalizedWatchedEmail
+    : "";
+  const customerOptionEmail = searchedEmail || currentEmail;
+  const customerOptionName = customerOptionEmail
+    ? getNameFromEmail(customerOptionEmail)
+    : "";
+  const hasCustomerOption =
+    !!customerOptionEmail &&
+    !customerSuggestions.some(
+      (customer) => customer.email.toLowerCase() === customerOptionEmail,
+    );
 
   React.useEffect(() => {
     if (!open || !canChooseCustomer || customerSuggestions.length > 0) return;
@@ -445,13 +480,23 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       shouldValidate: true,
     });
     autoFilledNameRef.current = customer.name;
+    setCustomerSearch(`${customer.name} ${customer.email}`);
     setIsCustomerPickerOpen(false);
+  };
+
+  const handleCustomerPickerOpenChange = (open: boolean) => {
+    setIsCustomerPickerOpen(open);
+    if (open) {
+      setCustomerSearch(watchedEmail || watchedName || "");
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
     setOpen(open);
     if (!open) {
       autoFilledNameRef.current = null;
+      setCustomerSearch("");
+      setIsCustomerPickerOpen(false);
       form.reset();
     }
   };
@@ -488,6 +533,12 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       };
 
       await createOrder(payload);
+      setCustomerSuggestions((customers) =>
+        upsertCustomerSuggestion(customers, {
+          email: payload.email || data.email,
+          name: payload.name,
+        }),
+      );
       // Show different message based on user role
       if (canChooseCustomer) {
         toast.success("Order created successfully!");
@@ -560,7 +611,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                       </FormLabel>
                       <Popover
                         open={isCustomerPickerOpen}
-                        onOpenChange={setIsCustomerPickerOpen}
+                        onOpenChange={handleCustomerPickerOpenChange}
                       >
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -579,15 +630,43 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                          <Command>
+                          <Command
+                            value={customerSearch}
+                            onValueChange={setCustomerSearch}
+                          >
                             <CommandInput placeholder="Search name or email..." />
                             <CommandList>
                               <CommandEmpty>
                                 {isLoadingCustomers
                                   ? "Loading customers..."
-                                  : "No previous customers found."}
+                                  : emailLookupSchema.safeParse(
+                                        normalizedCustomerSearch,
+                                      ).success
+                                    ? "Press enter to use this email."
+                                    : "No previous customers found."}
                               </CommandEmpty>
                               <CommandGroup>
+                                {hasCustomerOption && (
+                                  <CommandItem
+                                    key={customerOptionEmail}
+                                    value={`${customerOptionName} ${customerOptionEmail}`}
+                                    onSelect={() =>
+                                      selectCustomer({
+                                        email: customerOptionEmail,
+                                        name: customerOptionName,
+                                      })
+                                    }
+                                  >
+                                    <div className="min-w-0">
+                                      <p className="truncate font-medium">
+                                        {customerOptionName}
+                                      </p>
+                                      <p className="truncate text-xs text-muted-foreground">
+                                        {customerOptionEmail}
+                                      </p>
+                                    </div>
+                                  </CommandItem>
+                                )}
                                 {customerSuggestions.map((customer) => (
                                   <CommandItem
                                     key={customer.email}
