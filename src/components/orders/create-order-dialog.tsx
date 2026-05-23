@@ -56,7 +56,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { getUploadUrl } from "@/lib/api.config";
-import { useSession } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
 import { getMenuByDate } from "@/services/menu.service";
 import { createOrder } from "@/services/orders.service";
@@ -104,6 +104,13 @@ const orderFormSchema = z.object({
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
 
+interface UserLookupResult {
+  email: string;
+  name: string | null;
+}
+
+const emailLookupSchema = z.string().email();
+
 // Calculate total price from all day orders
 const calculateTotalPrice = (
   dayOrders: Record<string, OrderMenuItem[]>,
@@ -127,6 +134,8 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
     [],
   );
   const [isLoadingPriceList, setIsLoadingPriceList] = React.useState(false);
+  const autoFilledNameEmailRef = React.useRef<string | null>(null);
+  const autoFilledNameRef = React.useRef<string | null>(null);
 
   // Menu preview state
   const [menuCache, setMenuCache] = React.useState<Record<string, Menu | null>>(
@@ -169,7 +178,61 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
 
   const selectedDates = form.watch("selectedDates");
   const dayOrders = form.watch("dayOrders");
+  const watchedEmail = form.watch("email");
   const totalPrice = calculateTotalPrice(dayOrders || {});
+
+  React.useEffect(() => {
+    if (!open || !isAdmin) return;
+
+    const normalizedEmail = watchedEmail.trim().toLowerCase();
+    if (!emailLookupSchema.safeParse(normalizedEmail).success) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const response = await authClient.admin.listUsers({
+          query: {
+            limit: 1,
+            offset: 0,
+            searchValue: normalizedEmail,
+            searchField: "email",
+          },
+        });
+
+        const matchedUser = (
+          response.data?.users as UserLookupResult[] | undefined
+        )?.find(
+          (user) => user.email.toLowerCase() === normalizedEmail && user.name,
+        );
+
+        if (!matchedUser?.name) return;
+
+        if (form.getValues("email").trim().toLowerCase() !== normalizedEmail) {
+          return;
+        }
+
+        const currentName = form.getValues("name").trim();
+        const canAutoFill =
+          currentName === "" ||
+          currentName === autoFilledNameRef.current ||
+          autoFilledNameEmailRef.current === normalizedEmail;
+
+        if (canAutoFill) {
+          form.setValue("name", matchedUser.name, {
+            shouldDirty: true,
+            shouldValidate: true,
+          });
+          autoFilledNameEmailRef.current = normalizedEmail;
+          autoFilledNameRef.current = matchedUser.name;
+        }
+      } catch (error) {
+        console.error("Failed to look up customer email:", error);
+      }
+    }, 350);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [form, isAdmin, open, watchedEmail]);
 
   // Fetch price list when dialog opens
   React.useEffect(() => {
@@ -291,6 +354,8 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   const handleOpenChange = (open: boolean) => {
     setOpen(open);
     if (!open) {
+      autoFilledNameEmailRef.current = null;
+      autoFilledNameRef.current = null;
       form.reset();
     }
   };
