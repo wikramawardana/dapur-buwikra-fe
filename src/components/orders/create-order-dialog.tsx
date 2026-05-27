@@ -463,6 +463,15 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
     }
   };
 
+  const handleCustomerListWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    const list = event.currentTarget;
+    if (list.scrollHeight <= list.clientHeight) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    list.scrollTop += event.deltaY;
+  };
+
   const handleOpenChange = (open: boolean) => {
     setOpen(open);
     if (!open) {
@@ -582,6 +591,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                         Customer
                       </FormLabel>
                       <Popover
+                        modal
                         open={isCustomerPickerOpen}
                         onOpenChange={handleCustomerPickerOpenChange}
                       >
@@ -601,13 +611,19 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[min(24rem,var(--radix-popover-content-available-height))] overflow-hidden p-0">
                           <Command
                             value={customerSearch}
                             onValueChange={setCustomerSearch}
                           >
                             <CommandInput placeholder="Search name or email..." />
-                            <CommandList>
+                            <CommandList
+                              className="max-h-[min(20rem,var(--radix-popover-content-available-height))] overflow-y-auto overscroll-contain touch-pan-y pr-1"
+                              onWheel={handleCustomerListWheel}
+                              onTouchMoveCapture={(event) =>
+                                event.stopPropagation()
+                              }
+                            >
                               <CommandEmpty>
                                 {isLoadingCustomers
                                   ? "Loading customers..."
