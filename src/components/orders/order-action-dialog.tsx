@@ -994,15 +994,16 @@ export function OrderActionDialog({
                     <SelectValue placeholder="Select drop off location..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Gama Tower - Lobby">
-                      Gama Tower - Lobby
+                    <SelectItem value="Trinity - 18 Floor">
+                      Trinity - 18 Floor
                     </SelectItem>
-                    <SelectItem value="Trinity Tower - Catering Point 18 Floor">
-                      Trinity Tower - Catering Point 18 Floor
+                    <SelectItem value="Trinity - 23 Floor">
+                      Trinity - 23 Floor
                     </SelectItem>
-                    <SelectItem value="Trinity Tower - 23 Floor">
-                      Trinity Tower - 23 Floor
+                    <SelectItem value="Trinity - 26 Floor">
+                      Trinity - 26 Floor
                     </SelectItem>
+                    <SelectItem value="Gama - Lobby">Gama - Lobby</SelectItem>
                   </SelectContent>
                 </Select>
               )}
