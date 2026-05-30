@@ -451,6 +451,11 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       shouldDirty: true,
       shouldValidate: true,
     });
+    if (customer.drop_off_location) {
+      form.setValue("drop_off_location", customer.drop_off_location, {
+        shouldDirty: true,
+      });
+    }
     autoFilledNameRef.current = customer.name;
     setCustomerSearch(`${customer.name} ${customer.email}`);
     setIsCustomerPickerOpen(false);
@@ -518,6 +523,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
         upsertCustomerSuggestion(customers, {
           email: payload.email || data.email,
           name: payload.name,
+          drop_off_location: data.drop_off_location || undefined,
         }),
       );
       // Show different message based on user role
@@ -1005,11 +1011,17 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                         <SelectItem value="Trinity - 23 Floor">
                           Trinity - 23 Floor
                         </SelectItem>
+                        <SelectItem value="Trinity - 25 Floor">
+                          Trinity - 25 Floor
+                        </SelectItem>
                         <SelectItem value="Trinity - 26 Floor">
                           Trinity - 26 Floor
                         </SelectItem>
                         <SelectItem value="Gama - Lobby">
                           Gama - Lobby
+                        </SelectItem>
+                        <SelectItem value="Hermina Bekasi">
+                          Hermina Bekasi
                         </SelectItem>
                       </SelectContent>
                     </Select>

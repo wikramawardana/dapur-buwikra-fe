@@ -1000,10 +1000,16 @@ export function OrderActionDialog({
                     <SelectItem value="Trinity - 23 Floor">
                       Trinity - 23 Floor
                     </SelectItem>
+                    <SelectItem value="Trinity - 25 Floor">
+                      Trinity - 25 Floor
+                    </SelectItem>
                     <SelectItem value="Trinity - 26 Floor">
                       Trinity - 26 Floor
                     </SelectItem>
                     <SelectItem value="Gama - Lobby">Gama - Lobby</SelectItem>
+                    <SelectItem value="Hermina Bekasi">
+                      Hermina Bekasi
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               )}

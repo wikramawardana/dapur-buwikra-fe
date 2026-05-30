@@ -61,6 +61,7 @@ export interface SingleOrderResponse {
 export interface OrderCustomer {
   name: string;
   email: string;
+  drop_off_location?: string;
 }
 
 export interface OrderCustomersResponse {
