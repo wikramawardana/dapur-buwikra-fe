@@ -103,6 +103,22 @@ dapur-buwikra.postman_collection.json
 
 Import it into Postman to test all API endpoints.
 
+## Production Deployment
+
+Production image tags use the short git SHA. After you push to `main`, GitHub
+Actions builds and pushes `ghcr.io/wikramawardana/dapur-buwikra-fe:<short-sha>`.
+If the build succeeds, the workflow automatically updates GitOps:
+
+`wikra-gitops/manifests/dapur-buwikra-fe/overlays/prod/kustomization.yaml`
+
+So the normal flow is:
+
+1. Edit this repo.
+2. Commit and push to `main`.
+3. Wait for the GitHub Actions build to succeed.
+4. Confirm the workflow committed the new GitOps `newTag`.
+5. Wait for Argo CD to show `dapur-buwikra-fe` as `Synced` and `Healthy`.
+
 ## Docker Deployment
 
 ### Build
