@@ -8,6 +8,27 @@ const routeRoles: Array<{ prefix: string; roles: string[] }> = [
   { prefix: "/admin/users", roles: ["admin"] },
 ];
 
+function logRequest(
+  request: NextRequest,
+  response: NextResponse,
+  startedAt: number,
+  reason: string,
+) {
+  const durationMs = Date.now() - startedAt;
+  const { pathname, search } = request.nextUrl;
+  const log = {
+    event: "frontend_request",
+    method: request.method,
+    path: `${pathname}${search}`,
+    status: response.status,
+    reason,
+    duration_ms: durationMs,
+  };
+
+  console.log(JSON.stringify(log));
+  return response;
+}
+
 function isPublicRoute(pathname: string): boolean {
   if (pathname === "/") return true;
   return publicPrefixes.some((prefix) => pathname.startsWith(prefix));
@@ -30,14 +51,20 @@ function redirectToLogin(request: NextRequest, pathname: string) {
 }
 
 export async function middleware(request: NextRequest) {
+  const startedAt = Date.now();
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/api/v1")) {
-    return NextResponse.next();
+    return logRequest(
+      request,
+      NextResponse.next(),
+      startedAt,
+      "api_passthrough",
+    );
   }
 
   if (isPublicRoute(pathname)) {
-    return NextResponse.next();
+    return logRequest(request, NextResponse.next(), startedAt, "public");
   }
 
   const sessionCookie = getSessionCookie(request, {
@@ -45,14 +72,19 @@ export async function middleware(request: NextRequest) {
   });
 
   if (!sessionCookie) {
-    return redirectToLogin(request, pathname);
+    return logRequest(
+      request,
+      redirectToLogin(request, pathname),
+      startedAt,
+      "no_session",
+    );
   }
 
   const protectedRoute = routeRoles.find((route) =>
     pathname.startsWith(route.prefix),
   );
   if (!protectedRoute) {
-    return NextResponse.next();
+    return logRequest(request, NextResponse.next(), startedAt, "authenticated");
   }
 
   try {
@@ -64,23 +96,43 @@ export async function middleware(request: NextRequest) {
     });
 
     if (!sessionResponse.ok) {
-      return redirectToLogin(request, pathname);
+      return logRequest(
+        request,
+        redirectToLogin(request, pathname),
+        startedAt,
+        "session_lookup_failed",
+      );
     }
 
     const session = await sessionResponse.json();
 
     if (!session?.user) {
-      return redirectToLogin(request, pathname);
+      return logRequest(
+        request,
+        redirectToLogin(request, pathname),
+        startedAt,
+        "missing_user",
+      );
     }
 
     if (!protectedRoute.roles.includes(session.user.role)) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return logRequest(
+        request,
+        NextResponse.redirect(new URL("/dashboard", request.url)),
+        startedAt,
+        "forbidden_role",
+      );
     }
 
-    return NextResponse.next();
+    return logRequest(request, NextResponse.next(), startedAt, "authorized");
   } catch (error) {
     console.error("Middleware auth error:", error);
-    return redirectToLogin(request, pathname);
+    return logRequest(
+      request,
+      redirectToLogin(request, pathname),
+      startedAt,
+      "auth_error",
+    );
   }
 }
 
