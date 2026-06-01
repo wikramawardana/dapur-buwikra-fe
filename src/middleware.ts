@@ -14,6 +14,11 @@ function logRequest(
   startedAt: number,
   reason: string,
 ) {
+  const userAgent = request.headers.get("user-agent") || "";
+  if (userAgent.startsWith("kube-probe")) {
+    return response;
+  }
+
   const durationMs = Date.now() - startedAt;
   const { pathname, search } = request.nextUrl;
   const log = {
