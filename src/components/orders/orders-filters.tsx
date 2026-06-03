@@ -17,6 +17,7 @@ import {
   PAYMENT_STATUSES,
   SORT_OPTIONS,
 } from "@/lib/constants";
+import { getOrderCustomers } from "@/services/orders.service";
 import type {
   OrderFilters,
   OrderStatus,
@@ -39,10 +40,14 @@ export function OrdersFilters({
     filters.payment_status || "all",
   );
   const [orderStatus, setOrderStatus] = React.useState(filters.status || "all");
+  const [dropOffLocation, setDropOffLocation] = React.useState(
+    filters.drop_off_location || "all",
+  );
   const [sortBy, setSortBy] = React.useState(filters.sort_by || "name");
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">(
     filters.sort_order || "asc",
   );
+  const [pickupPoints, setPickupPoints] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     setSearch(filters.search || "");
@@ -50,9 +55,28 @@ export function OrdersFilters({
     setDay(filters.day || "all");
     setPaymentStatus(filters.payment_status || "all");
     setOrderStatus(filters.status || "all");
+    setDropOffLocation(filters.drop_off_location || "all");
     setSortBy(filters.sort_by || "name");
     setSortOrder(filters.sort_order || "asc");
   }, [filters]);
+
+  // Fetch distinct pickup points from customers
+  React.useEffect(() => {
+    getOrderCustomers()
+      .then((res) => {
+        const unique = Array.from(
+          new Set(
+            res.data
+              .map((c) => c.drop_off_location)
+              .filter((loc): loc is string => !!loc && loc.trim() !== ""),
+          ),
+        ).sort();
+        setPickupPoints(unique);
+      })
+      .catch(() => {
+        setPickupPoints([]);
+      });
+  }, []);
 
   const handleApplyFilters = () => {
     onFiltersChange({
@@ -63,6 +87,7 @@ export function OrdersFilters({
       payment_status:
         paymentStatus === "all" ? "" : (paymentStatus as PaymentStatus),
       status: orderStatus === "all" ? undefined : (orderStatus as OrderStatus),
+      drop_off_location: dropOffLocation === "all" ? "" : dropOffLocation,
       sort_by: sortBy,
       sort_order: sortOrder,
       page: 1,
@@ -75,6 +100,7 @@ export function OrdersFilters({
     setDay("all");
     setPaymentStatus("all");
     setOrderStatus("all");
+    setDropOffLocation("all");
     setSortBy("name");
     setSortOrder("asc");
     onFiltersChange({
@@ -92,7 +118,8 @@ export function OrdersFilters({
     name ||
     day !== "all" ||
     paymentStatus !== "all" ||
-    orderStatus !== "all";
+    orderStatus !== "all" ||
+    dropOffLocation !== "all";
 
   const hasUnappliedChanges =
     search !== (filters.search || "") ||
@@ -100,6 +127,7 @@ export function OrdersFilters({
     day !== (filters.day || "all") ||
     paymentStatus !== (filters.payment_status || "all") ||
     orderStatus !== (filters.status || "all") ||
+    dropOffLocation !== (filters.drop_off_location || "all") ||
     sortBy !== (filters.sort_by || "name") ||
     sortOrder !== (filters.sort_order || "asc");
 
@@ -168,6 +196,23 @@ export function OrdersFilters({
             {ORDER_STATUSES.map((status) => (
               <SelectItem key={status.value} value={status.value}>
                 {status.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Second Row: Pickup Point Filter */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <Select value={dropOffLocation} onValueChange={setDropOffLocation}>
+          <SelectTrigger className="neo-brutal neo-brutal-white w-full sm:w-[220px]">
+            <SelectValue placeholder="All Pickup Points" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Pickup Points</SelectItem>
+            {pickupPoints.map((loc) => (
+              <SelectItem key={loc} value={loc}>
+                {loc}
               </SelectItem>
             ))}
           </SelectContent>

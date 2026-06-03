@@ -95,6 +95,7 @@ export interface OrderFilters {
   payment_status?: PaymentStatus | "";
   day?: string;
   name?: string;
+  drop_off_location?: string;
   date_from?: string;
   date_to?: string;
   sort_by?: string;
