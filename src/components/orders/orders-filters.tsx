@@ -1,7 +1,8 @@
 "use client";
 
-import { Filter, Plus, Search, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import * as React from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import {
   DAYS_OF_WEEK,
   ORDER_STATUSES,
@@ -30,7 +30,12 @@ interface OrdersFiltersProps {
   onFiltersChange: (filters: OrderFilters) => void;
 }
 
-type FilterType = "day" | "payment_status" | "status" | "drop_off_location" | "name";
+type FilterType =
+  | "day"
+  | "payment_status"
+  | "status"
+  | "drop_off_location"
+  | "name";
 
 interface ActiveFilter {
   type: FilterType;
@@ -57,7 +62,9 @@ export function OrdersFilters({
   );
   const [pickupPoints, setPickupPoints] = React.useState<string[]>([]);
   const [activeFilters, setActiveFilters] = React.useState<ActiveFilter[]>([]);
-  const [selectedFilterType, setSelectedFilterType] = React.useState<FilterType | "">("");
+  const [selectedFilterType, setSelectedFilterType] = React.useState<
+    FilterType | ""
+  >("");
   const [selectedFilterValue, setSelectedFilterValue] = React.useState("");
 
   // Sync from parent filters
@@ -65,25 +72,47 @@ export function OrdersFilters({
     setSearch(filters.search || "");
     setSortBy(filters.sort_by || "name");
     setSortOrder(filters.sort_order || "asc");
-    
+
     // Rebuild active filters from parent
     const newActive: ActiveFilter[] = [];
     if (filters.day) {
-      newActive.push({ type: "day", value: filters.day, label: `Day: ${filters.day}` });
+      newActive.push({
+        type: "day",
+        value: filters.day,
+        label: `Day: ${filters.day}`,
+      });
     }
     if (filters.payment_status) {
-      const ps = PAYMENT_STATUSES.find(p => p.value === filters.payment_status);
-      newActive.push({ type: "payment_status", value: filters.payment_status, label: `Payment: ${ps?.label || filters.payment_status}` });
+      const ps = PAYMENT_STATUSES.find(
+        (p) => p.value === filters.payment_status,
+      );
+      newActive.push({
+        type: "payment_status",
+        value: filters.payment_status,
+        label: `Payment: ${ps?.label || filters.payment_status}`,
+      });
     }
     if (filters.status) {
-      const os = ORDER_STATUSES.find(s => s.value === filters.status);
-      newActive.push({ type: "status", value: filters.status, label: `Status: ${os?.label || filters.status}` });
+      const os = ORDER_STATUSES.find((s) => s.value === filters.status);
+      newActive.push({
+        type: "status",
+        value: filters.status,
+        label: `Status: ${os?.label || filters.status}`,
+      });
     }
     if (filters.drop_off_location) {
-      newActive.push({ type: "drop_off_location", value: filters.drop_off_location, label: `Pickup: ${filters.drop_off_location}` });
+      newActive.push({
+        type: "drop_off_location",
+        value: filters.drop_off_location,
+        label: `Pickup: ${filters.drop_off_location}`,
+      });
     }
     if (filters.name) {
-      newActive.push({ type: "name", value: filters.name, label: `Name: ${filters.name}` });
+      newActive.push({
+        type: "name",
+        value: filters.name,
+        label: `Name: ${filters.name}`,
+      });
     }
     setActiveFilters(newActive);
   }, [filters]);
@@ -108,33 +137,42 @@ export function OrdersFilters({
 
   const addFilter = () => {
     if (!selectedFilterType || !selectedFilterValue) return;
-    
+
     // Remove existing filter of same type
-    const filtered = activeFilters.filter(f => f.type !== selectedFilterType);
-    
+    const filtered = activeFilters.filter((f) => f.type !== selectedFilterType);
+
     let label = "";
     if (selectedFilterType === "day") {
       label = `Day: ${selectedFilterValue}`;
     } else if (selectedFilterType === "payment_status") {
-      const ps = PAYMENT_STATUSES.find(p => p.value === selectedFilterValue);
+      const ps = PAYMENT_STATUSES.find((p) => p.value === selectedFilterValue);
       label = `Payment: ${ps?.label || selectedFilterValue}`;
     } else if (selectedFilterType === "status") {
-      const os = ORDER_STATUSES.find(s => s.value === selectedFilterValue);
+      const os = ORDER_STATUSES.find((s) => s.value === selectedFilterValue);
       label = `Status: ${os?.label || selectedFilterValue}`;
     } else if (selectedFilterType === "drop_off_location") {
       label = `Pickup: ${selectedFilterValue}`;
     } else if (selectedFilterType === "name") {
       label = `Name: ${selectedFilterValue}`;
     }
-    
-    setActiveFilters([...filtered, { type: selectedFilterType, value: selectedFilterValue, label }]);
+
+    setActiveFilters([
+      ...filtered,
+      { type: selectedFilterType, value: selectedFilterValue, label },
+    ]);
     setSelectedFilterType("");
     setSelectedFilterValue("");
-    applyFilters([...filtered, { type: selectedFilterType, value: selectedFilterValue, label }], search);
+    applyFilters(
+      [
+        ...filtered,
+        { type: selectedFilterType, value: selectedFilterValue, label },
+      ],
+      search,
+    );
   };
 
   const removeFilter = (type: FilterType) => {
-    const newFilters = activeFilters.filter(f => f.type !== type);
+    const newFilters = activeFilters.filter((f) => f.type !== type);
     setActiveFilters(newFilters);
     applyFilters(newFilters, search);
   };
@@ -148,15 +186,17 @@ export function OrdersFilters({
       date_from: filters.date_from,
       date_to: filters.date_to,
     };
-    
-    filtersList.forEach(f => {
+
+    filtersList.forEach((f) => {
       if (f.type === "day") newFilters.day = f.value;
-      else if (f.type === "payment_status") newFilters.payment_status = f.value as PaymentStatus;
+      else if (f.type === "payment_status")
+        newFilters.payment_status = f.value as PaymentStatus;
       else if (f.type === "status") newFilters.status = f.value as OrderStatus;
-      else if (f.type === "drop_off_location") newFilters.drop_off_location = f.value;
+      else if (f.type === "drop_off_location")
+        newFilters.drop_off_location = f.value;
       else if (f.type === "name") newFilters.name = f.value;
     });
-    
+
     onFiltersChange(newFilters);
   };
 
@@ -184,15 +224,17 @@ export function OrdersFilters({
       date_from: filters.date_from,
       date_to: filters.date_to,
     };
-    
-    activeFilters.forEach(f => {
+
+    activeFilters.forEach((f) => {
       if (f.type === "day") newFilters.day = f.value;
-      else if (f.type === "payment_status") newFilters.payment_status = f.value as PaymentStatus;
+      else if (f.type === "payment_status")
+        newFilters.payment_status = f.value as PaymentStatus;
       else if (f.type === "status") newFilters.status = f.value as OrderStatus;
-      else if (f.type === "drop_off_location") newFilters.drop_off_location = f.value;
+      else if (f.type === "drop_off_location")
+        newFilters.drop_off_location = f.value;
       else if (f.type === "name") newFilters.name = f.value;
     });
-    
+
     onFiltersChange(newFilters);
   };
 
@@ -200,67 +242,87 @@ export function OrdersFilters({
 
   const renderFilterValueInput = () => {
     if (!selectedFilterType) return null;
-    
+
     if (selectedFilterType === "day") {
       return (
-        <Select value={selectedFilterValue} onValueChange={setSelectedFilterValue}>
+        <Select
+          value={selectedFilterValue}
+          onValueChange={setSelectedFilterValue}
+        >
           <SelectTrigger className="w-[150px] neo-brutal neo-brutal-white">
             <SelectValue placeholder="Select day" />
           </SelectTrigger>
           <SelectContent>
             {DAYS_OF_WEEK.map((d) => (
-              <SelectItem key={d} value={d}>{d}</SelectItem>
+              <SelectItem key={d} value={d}>
+                {d}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       );
     }
-    
+
     if (selectedFilterType === "payment_status") {
       return (
-        <Select value={selectedFilterValue} onValueChange={setSelectedFilterValue}>
+        <Select
+          value={selectedFilterValue}
+          onValueChange={setSelectedFilterValue}
+        >
           <SelectTrigger className="w-[150px] neo-brutal neo-brutal-white">
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
           <SelectContent>
             {PAYMENT_STATUSES.map((s) => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+              <SelectItem key={s.value} value={s.value}>
+                {s.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       );
     }
-    
+
     if (selectedFilterType === "status") {
       return (
-        <Select value={selectedFilterValue} onValueChange={setSelectedFilterValue}>
+        <Select
+          value={selectedFilterValue}
+          onValueChange={setSelectedFilterValue}
+        >
           <SelectTrigger className="w-[150px] neo-brutal neo-brutal-white">
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
           <SelectContent>
             {ORDER_STATUSES.map((s) => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+              <SelectItem key={s.value} value={s.value}>
+                {s.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       );
     }
-    
+
     if (selectedFilterType === "drop_off_location") {
       return (
-        <Select value={selectedFilterValue} onValueChange={setSelectedFilterValue}>
+        <Select
+          value={selectedFilterValue}
+          onValueChange={setSelectedFilterValue}
+        >
           <SelectTrigger className="w-[150px] neo-brutal neo-brutal-white">
             <SelectValue placeholder="Select pickup" />
           </SelectTrigger>
           <SelectContent>
             {pickupPoints.map((loc) => (
-              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+              <SelectItem key={loc} value={loc}>
+                {loc}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
       );
     }
-    
+
     if (selectedFilterType === "name") {
       return (
         <Input
@@ -272,7 +334,7 @@ export function OrdersFilters({
         />
       );
     }
-    
+
     return null;
   };
 
@@ -289,25 +351,30 @@ export function OrdersFilters({
             className="pl-9 neo-brutal neo-brutal-white w-full"
           />
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <Select value={selectedFilterType} onValueChange={(v) => {
-            setSelectedFilterType(v as FilterType);
-            setSelectedFilterValue("");
-          }}>
+          <Select
+            value={selectedFilterType}
+            onValueChange={(v) => {
+              setSelectedFilterType(v as FilterType);
+              setSelectedFilterValue("");
+            }}
+          >
             <SelectTrigger className="w-[140px] neo-brutal neo-brutal-white">
               <Plus className="h-4 w-4 mr-1" />
               <SelectValue placeholder="Add filter" />
             </SelectTrigger>
             <SelectContent>
               {FILTER_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          
+
           {renderFilterValueInput()}
-          
+
           <Button
             onClick={addFilter}
             size="sm"
@@ -330,6 +397,7 @@ export function OrdersFilters({
             >
               {f.label}
               <button
+                type="button"
                 onClick={() => removeFilter(f.type)}
                 className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
               >
@@ -347,17 +415,28 @@ export function OrdersFilters({
             Sort:
           </span>
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[140px] neo-brutal neo-brutal-white" size="sm">
+            <SelectTrigger
+              className="w-[140px] neo-brutal neo-brutal-white"
+              size="sm"
+            >
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
               {SORT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Select value={sortOrder} onValueChange={(v: "asc" | "desc") => setSortOrder(v)}>
-            <SelectTrigger className="w-[140px] neo-brutal neo-brutal-white" size="sm">
+          <Select
+            value={sortOrder}
+            onValueChange={(v: "asc" | "desc") => setSortOrder(v)}
+          >
+            <SelectTrigger
+              className="w-[140px] neo-brutal neo-brutal-white"
+              size="sm"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
