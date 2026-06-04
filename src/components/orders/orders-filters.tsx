@@ -202,10 +202,11 @@ export function OrdersFilters({
         </Select>
       </div>
 
-      {/* Second Row: Pickup Point Filter */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      {/* Second Row: Pickup Point + Sort + Actions */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap sm:gap-3">
+        {/* Pickup Point */}
         <Select value={dropOffLocation} onValueChange={setDropOffLocation}>
-          <SelectTrigger className="neo-brutal neo-brutal-white w-full sm:w-[220px]">
+          <SelectTrigger className="neo-brutal neo-brutal-white w-full sm:w-[180px]">
             <SelectValue placeholder="All Pickup Points" />
           </SelectTrigger>
           <SelectContent>
@@ -217,10 +218,7 @@ export function OrdersFilters({
             ))}
           </SelectContent>
         </Select>
-      </div>
 
-      {/* Bottom Row: Sort, Actions */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap sm:gap-3">
         {/* Sort */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
