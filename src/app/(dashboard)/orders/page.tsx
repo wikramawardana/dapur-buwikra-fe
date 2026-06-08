@@ -144,7 +144,11 @@ export default function OrdersPage() {
   };
 
   const handleFiltersChange = (newFilters: OrderFilters) => {
-    setFilters(newFilters);
+    setFilters({
+      ...newFilters,
+      date_from: newFilters.date_from || defaultWeek.dateFrom,
+      date_to: newFilters.date_to || defaultWeek.dateTo,
+    });
   };
 
   const handlePageChange = (page: number) => {

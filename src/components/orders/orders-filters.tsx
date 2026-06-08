@@ -210,6 +210,8 @@ export function OrdersFilters({
       page_size: 20,
       sort_by: "name",
       sort_order: "asc",
+      date_from: filters.date_from,
+      date_to: filters.date_to,
     });
   };
 
