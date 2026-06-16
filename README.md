@@ -105,8 +105,9 @@ Import it into Postman to test all API endpoints.
 
 ## Production Deployment
 
-Production image tags use the short git SHA. After you push to `main`, GitHub
-Actions builds and pushes `ghcr.io/wikramawardana/dapur-buwikra-fe:<short-sha>`.
+Production image tags use immutable version-build tags. After you push to
+`main`, GitHub Actions builds and pushes a tag such as
+`ghcr.io/wikramawardana/dapur-buwikra-fe:v0.1.0-build.123`.
 If the build succeeds, the workflow automatically updates GitOps:
 
 `wikra-gitops/manifests/dapur-buwikra-fe/overlays/prod/kustomization.yaml`
