@@ -35,7 +35,13 @@ function logRequest(
 }
 
 function isPublicRoute(pathname: string): boolean {
-  if (pathname === "/") return true;
+  if (
+    pathname === "/" ||
+    pathname === "/qris" ||
+    pathname === "/payment/qris"
+  ) {
+    return true;
+  }
   return publicPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 

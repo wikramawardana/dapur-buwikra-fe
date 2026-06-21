@@ -121,7 +121,9 @@ export async function apiFetch<T>(
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
 
-      if (response.status === 401 || response.status === 403) {
+      // 401 means the session token is missing or invalid. A 403 means the
+      // user is authenticated but lacks permission, so keep their session.
+      if (response.status === 401) {
         forceSignOutAndRedirect();
       }
 

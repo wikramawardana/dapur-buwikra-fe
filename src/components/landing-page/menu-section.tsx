@@ -1,13 +1,18 @@
 import type React from "react";
+import type { LandingContent } from "@/types/landing-content";
 import { FeaturedCarousel } from "./featured-carousel";
 
-export const MenuSection: React.FC = () => {
+interface MenuSectionProps {
+  content: LandingContent["featured"];
+}
+
+export const MenuSection: React.FC<MenuSectionProps> = ({ content }) => {
   return (
     <section className="bg-white border-y-4 border-black py-20">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div>
-            <h2 className="text-5xl font-black mb-4">MENU ANDALAN</h2>
+            <h2 className="text-5xl font-black mb-4">{content.title}</h2>
             {/* <p className="text-xl font-medium text-gray-600 max-w-lg">
               Dimasak dari jam 2 pagi dengan penuh kasih sayang (dan bumbu
               rahasia).
@@ -15,7 +20,10 @@ export const MenuSection: React.FC = () => {
           </div>
         </div>
 
-        <FeaturedCarousel />
+        <FeaturedCarousel
+          emptyTitle={content.emptyTitle}
+          emptyBody={content.emptyBody}
+        />
 
         {/* TODO: Uncomment this when menu is ready
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

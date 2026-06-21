@@ -38,14 +38,15 @@ export const auth = betterAuth({
           scopes: ["openid", "profile", "email"],
           overrideUserInfo: true,
           mapProfileToUser: (profile: Record<string, unknown>) => {
-            const appRole =
-              typeof profile.app_role === "string" ? profile.app_role : "user";
             const email =
               typeof profile.email === "string"
                 ? profile.email.toLowerCase()
                 : undefined;
 
-            return { email, role: appRole };
+            // This app shares Better Auth's user table with the central Auth
+            // service. Never write the app-specific OIDC role into user.role:
+            // doing so can demote a central Auth admin during a Dapur login.
+            return { email };
           },
         },
       ],

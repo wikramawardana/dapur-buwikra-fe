@@ -15,7 +15,15 @@ import { getUploadUrl } from "@/lib/api.config";
 import { getFeaturedMenus } from "@/services/menu.service";
 import type { Menu } from "@/types/menu.types";
 
-export const FeaturedCarousel: React.FC = () => {
+interface FeaturedCarouselProps {
+  emptyTitle: string;
+  emptyBody: string;
+}
+
+export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
+  emptyTitle,
+  emptyBody,
+}) => {
   const [menus, setMenus] = React.useState<Menu[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [api, setApi] = React.useState<CarouselApi>();
@@ -54,9 +62,9 @@ export const FeaturedCarousel: React.FC = () => {
   if (menus.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-8 border-4 border-dashed border-black bg-gray-50">
-        <h3 className="text-3xl font-black mb-2 text-center">SEGERA HADIR!</h3>
+        <h3 className="text-3xl font-black mb-2 text-center">{emptyTitle}</h3>
         <p className="text-lg font-medium text-gray-600 text-center max-w-md">
-          Menu lengkap lagi diracik. Sabar ya, dijamin worth the wait!
+          {emptyBody}
         </p>
       </div>
     );

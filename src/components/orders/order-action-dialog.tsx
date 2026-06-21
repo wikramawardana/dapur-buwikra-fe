@@ -110,6 +110,82 @@ const calculateTotalFromDayOrders = (dayOrders: DayOrder[]): number => {
   }, 0);
 };
 
+const buildInvoiceText = (order: Order): string => {
+  const dayOrders = order.day_orders || [];
+  const totalPrice = calculateTotalFromDayOrders(dayOrders);
+  const invoiceNumber = `INV-${order.id.slice(0, 8).toUpperCase()}`;
+  const invoiceDate = format(new Date(order.created_at), "dd MMMM yyyy");
+  const qrisUrl = `${window.location.origin}/payment/qris`;
+  const lines = [
+    "DAPUR BUWIKRA",
+    `Invoice: ${invoiceNumber}`,
+    `Tanggal: ${invoiceDate}`,
+    "",
+    `Pelanggan: ${order.name}`,
+  ];
+
+  if (order.email) {
+    lines.push(`Email: ${order.email}`);
+  }
+
+  for (const dayOrder of dayOrders) {
+    lines.push(
+      "",
+      `${dayOrder.day}, ${format(new Date(dayOrder.date), "dd MMM yyyy")}`,
+    );
+
+    for (const item of dayOrder.items) {
+      lines.push(
+        `- ${item.name} x${item.qty} - ${formatCurrency(item.qty * item.unit_price)}`,
+      );
+    }
+
+    const dayTotal = dayOrder.items.reduce(
+      (sum, item) => sum + item.qty * item.unit_price,
+      0,
+    );
+    lines.push(`Subtotal: ${formatCurrency(dayTotal)}`);
+  }
+
+  if (order.notes) {
+    lines.push("", `Catatan: ${order.notes}`);
+  }
+
+  lines.push(
+    "",
+    `TOTAL: ${formatCurrency(totalPrice)}`,
+    `Status: ${order.payment_status === "paid" ? "LUNAS" : "BELUM LUNAS"}`,
+  );
+
+  if (order.payment_status !== "paid") {
+    lines.push("", "Pembayaran QRIS:", qrisUrl);
+  }
+
+  lines.push("", "Terima kasih atas pesanan Anda!");
+  return lines.join("\n");
+};
+
+const copyTextToClipboard = async (text: string): Promise<boolean> => {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall through to the compatibility path below.
+    }
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  const copied = document.execCommand("copy");
+  document.body.removeChild(textarea);
+  return copied;
+};
+
 export function OrderActionDialog({
   order: initialOrder,
   onOrderUpdated,
@@ -423,6 +499,16 @@ export function OrderActionDialog({
   const handleCopyInvoice = async () => {
     setIsCopyingInvoice(true);
     try {
+      const copiedAsText = await copyTextToClipboard(buildInvoiceText(order));
+      if (copiedAsText) {
+        setInvoiceCopied(true);
+        toast.success("Invoice text copied to clipboard!");
+        setTimeout(() => setInvoiceCopied(false), 2000);
+        return;
+      }
+
+      // Keep the current image download as a compatibility fallback for
+      // browsers that block both clipboard text APIs.
       const displayDayOrders = order.day_orders || [];
       const totalPrice = calculateTotalFromDayOrders(displayDayOrders);
 
