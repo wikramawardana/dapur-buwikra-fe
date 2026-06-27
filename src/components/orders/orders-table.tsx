@@ -246,7 +246,7 @@ export function OrdersTable({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  if (isLoading) {
+  if (isLoading && orders.length === 0) {
     return <TableSkeleton rows={5} columns={isMobile ? 3 : 9} />;
   }
 
@@ -269,7 +269,10 @@ export function OrdersTable({
   // Mobile card view
   if (isMobile) {
     return (
-      <div className="space-y-3">
+      <div
+        className={`space-y-3 transition-opacity ${isLoading ? "opacity-60" : ""}`}
+        aria-busy={isLoading}
+      >
         {orders.map((order) => (
           <Card key={order.id} className="neo-brutal neo-brutal-white">
             <CardContent className="p-4">
@@ -351,7 +354,10 @@ export function OrdersTable({
 
   // Desktop table view
   return (
-    <div className="neo-brutal neo-brutal-white">
+    <div
+      className={`neo-brutal neo-brutal-white transition-opacity ${isLoading ? "opacity-60" : ""}`}
+      aria-busy={isLoading}
+    >
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

@@ -55,16 +55,21 @@ export default function OrdersPage() {
   }));
   const [isLoading, setIsLoading] = React.useState(true);
   const [isStatsLoading, setIsStatsLoading] = React.useState(true);
+  const ordersRequestId = React.useRef(0);
+  const statsRequestId = React.useRef(0);
 
   const isAuthenticated = !!session?.user;
 
   const fetchOrders = React.useCallback(async () => {
+    const requestId = ++ordersRequestId.current;
     setIsLoading(true);
     try {
       const response = await getOrders(filters);
+      if (requestId !== ordersRequestId.current) return;
       setOrders(response.data.data);
       setPagination(response.data.pagination);
     } catch (error) {
+      if (requestId !== ordersRequestId.current) return;
       // Don't show toast for auth errors - let the redirect handle it
       if (error instanceof Error && error.message.includes("401")) {
         return;
@@ -74,11 +79,14 @@ export default function OrdersPage() {
       );
       setOrders([]);
     } finally {
-      setIsLoading(false);
+      if (requestId === ordersRequestId.current) {
+        setIsLoading(false);
+      }
     }
   }, [filters]);
 
   const fetchStats = React.useCallback(async () => {
+    const requestId = ++statsRequestId.current;
     setIsStatsLoading(true);
     try {
       // Get stats with the same filters (excluding pagination)
@@ -93,6 +101,8 @@ export default function OrdersPage() {
           getOrdersSum(statsFilters),
           getOrdersCountByDay(statsFilters),
         ]);
+
+      if (requestId !== statsRequestId.current) return;
 
       // Combine the results
       setStats({
@@ -112,6 +122,7 @@ export default function OrdersPage() {
         days_breakdown: countByDayResponse.data.days,
       });
     } catch (error) {
+      if (requestId !== statsRequestId.current) return;
       // Don't show toast for auth errors - let the redirect handle it
       if (error instanceof Error && error.message.includes("401")) {
         return;
@@ -121,7 +132,9 @@ export default function OrdersPage() {
       );
       setStats(null);
     } finally {
-      setIsStatsLoading(false);
+      if (requestId === statsRequestId.current) {
+        setIsStatsLoading(false);
+      }
     }
   }, [filters]);
 
@@ -204,7 +217,18 @@ export default function OrdersPage() {
             filters={filters}
             onFiltersChange={handleFiltersChange}
           />
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between gap-3">
+            {isLoading || isStatsLoading ? (
+              <div
+                className="flex items-center gap-2 text-xs font-medium text-muted-foreground"
+                role="status"
+              >
+                <Spinner className="h-3.5 w-3.5" />
+                Updating results...
+              </div>
+            ) : (
+              <div />
+            )}
             <ExportMarkdownButton filters={filters} disabled={isLoading} />
           </div>
           <OrdersTable

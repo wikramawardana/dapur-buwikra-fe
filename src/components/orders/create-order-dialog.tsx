@@ -62,6 +62,7 @@ import { authClient, useSession } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
 import { getMenuByDate } from "@/services/menu.service";
 import { createOrder, getOrderCustomers } from "@/services/orders.service";
+import { getActivePickupPoints } from "@/services/pickup-point.service";
 import { getActivePriceList } from "@/services/pricelist.service";
 import type { Menu } from "@/types/menu.types";
 import type {
@@ -166,6 +167,9 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
     [],
   );
   const [isLoadingPriceList, setIsLoadingPriceList] = React.useState(false);
+  const [pickupPoints, setPickupPoints] = React.useState<string[]>([]);
+  const [isLoadingPickupPoints, setIsLoadingPickupPoints] =
+    React.useState(false);
   const [customerSuggestions, setCustomerSuggestions] = React.useState<
     CustomerSuggestion[]
   >([]);
@@ -345,6 +349,23 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
     }
   }, [open, priceListItems.length]);
 
+  React.useEffect(() => {
+    if (open && pickupPoints.length === 0) {
+      setIsLoadingPickupPoints(true);
+      getActivePickupPoints()
+        .then((response) => {
+          setPickupPoints(response.data.map((point) => point.name));
+        })
+        .catch((error) => {
+          toast.error("Failed to load pickup points");
+          console.error(error);
+        })
+        .finally(() => {
+          setIsLoadingPickupPoints(false);
+        });
+    }
+  }, [open, pickupPoints.length]);
+
   // Get day name from date
   const getDayName = (date: Date): string => {
     return DAY_NAMES[getDay(date)];
@@ -451,8 +472,15 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       shouldDirty: true,
       shouldValidate: true,
     });
-    if (customer.drop_off_location) {
+    if (
+      customer.drop_off_location &&
+      pickupPoints.includes(customer.drop_off_location)
+    ) {
       form.setValue("drop_off_location", customer.drop_off_location, {
+        shouldDirty: true,
+      });
+    } else {
+      form.setValue("drop_off_location", "", {
         shouldDirty: true,
       });
     }
@@ -547,12 +575,12 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   };
 
   // Group price list items by category (with defensive check)
-  const mainItems = (priceListItems || []).filter(
-    (item) => item.category === "main",
-  );
-  const addonItems = (priceListItems || []).filter(
-    (item) => item.category === "addon",
-  );
+  const mainItems = (priceListItems || [])
+    .filter((item) => item.category === "main")
+    .sort((a, b) => a.price - b.price);
+  const addonItems = (priceListItems || [])
+    .filter((item) => item.category === "addon")
+    .sort((a, b) => a.price - b.price);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -998,31 +1026,28 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                     <FormLabel className="text-base font-bold uppercase tracking-wide">
                       Drop Off Location (Optional)
                     </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={isLoadingPickupPoints}
+                    >
                       <FormControl>
                         <SelectTrigger className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium">
-                          <SelectValue placeholder="Select drop off location..." />
+                          <SelectValue
+                            placeholder={
+                              isLoadingPickupPoints
+                                ? "Loading pickup points..."
+                                : "Select drop off location..."
+                            }
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Trinity - 18 Floor">
-                          Trinity - 18 Floor
-                        </SelectItem>
-                        <SelectItem value="Trinity - 23 Floor">
-                          Trinity - 23 Floor
-                        </SelectItem>
-                        <SelectItem value="Trinity - 25 Floor">
-                          Trinity - 25 Floor
-                        </SelectItem>
-                        <SelectItem value="Trinity - 26 Floor">
-                          Trinity - 26 Floor
-                        </SelectItem>
-                        <SelectItem value="Gama - Lobby">
-                          Gama - Lobby
-                        </SelectItem>
-                        <SelectItem value="Hermina Bekasi">
-                          Hermina Bekasi
-                        </SelectItem>
+                        {pickupPoints.map((point) => (
+                          <SelectItem key={point} value={point}>
+                            {point}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

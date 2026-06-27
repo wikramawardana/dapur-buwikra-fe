@@ -5,6 +5,7 @@ const publicPrefixes = ["/login", "/api/auth"];
 const routeRoles: Array<{ prefix: string; roles: string[] }> = [
   { prefix: "/admin/menus", roles: ["admin", "chef"] },
   { prefix: "/admin/pricelist", roles: ["admin"] },
+  { prefix: "/admin/pickup-points", roles: ["admin"] },
   { prefix: "/admin/users", roles: ["admin"] },
 ];
 

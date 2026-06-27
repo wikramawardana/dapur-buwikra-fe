@@ -46,7 +46,7 @@ export function OrderStatsCards({
 
   const dateRange = formatDateRange(filters?.date_from, filters?.date_to);
 
-  if (isLoading) {
+  if (isLoading && !stats) {
     return (
       <div className="space-y-3">
         <div className="grid gap-3 grid-cols-2">
@@ -63,7 +63,10 @@ export function OrderStatsCards({
   }
 
   return (
-    <div className="space-y-3">
+    <div
+      className={`space-y-3 transition-opacity ${isLoading ? "opacity-60" : ""}`}
+      aria-busy={isLoading}
+    >
       {/* Filter Context */}
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Filter className="h-3 w-3" />
