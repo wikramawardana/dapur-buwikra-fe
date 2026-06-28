@@ -19,6 +19,12 @@ export const ORDER_STATUSES = [
 
 export const PAYMENT_STATUSES = [
   { value: "paid", label: "Paid" },
+  { value: "partial", label: "Partially Paid" },
+  { value: "unpaid", label: "Unpaid" },
+] as const;
+
+export const DAY_PAYMENT_STATUSES = [
+  { value: "paid", label: "Paid" },
   { value: "unpaid", label: "Unpaid" },
 ] as const;
 

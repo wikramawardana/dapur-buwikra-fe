@@ -65,7 +65,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/lib/auth-client";
-import { PAYMENT_STATUSES } from "@/lib/constants";
+import { DAY_PAYMENT_STATUSES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import {
   acceptOrder,
@@ -78,7 +78,12 @@ import {
 } from "@/services/orders.service";
 import { getActivePickupPoints } from "@/services/pickup-point.service";
 import { getActivePriceList } from "@/services/pricelist.service";
-import type { DayOrder, Order, PaymentStatus } from "@/types/order.types";
+import type {
+  DayOrder,
+  DayPaymentStatus,
+  Order,
+  PaymentStatus,
+} from "@/types/order.types";
 import type { PriceListItem } from "@/types/pricelist.types";
 import { StatusBadge } from "./status-badge";
 
@@ -111,33 +116,102 @@ const calculateTotalFromDayOrders = (dayOrders: DayOrder[]): number => {
   }, 0);
 };
 
+const resolveDayPaymentStatus = (
+  dayOrder: DayOrder,
+  parentStatus: PaymentStatus = "unpaid",
+): DayPaymentStatus =>
+  dayOrder.payment_status || (parentStatus === "paid" ? "paid" : "unpaid");
+
+const calculatePaymentTotals = (
+  dayOrders: DayOrder[],
+  parentStatus: PaymentStatus = "unpaid",
+) =>
+  dayOrders.reduce(
+    (totals, dayOrder) => {
+      const subtotal = dayOrder.items.reduce(
+        (sum, item) => sum + item.qty * item.unit_price,
+        0,
+      );
+      if (resolveDayPaymentStatus(dayOrder, parentStatus) === "paid") {
+        totals.paid += subtotal;
+      } else {
+        totals.unpaid += subtotal;
+      }
+      return totals;
+    },
+    { paid: 0, unpaid: 0 },
+  );
+
+const BILL_WIDTH = 36;
+
+const billDivider = (character = "="): string => character.repeat(BILL_WIDTH);
+
+const centerBillText = (value: string): string => {
+  const padding = Math.max(0, Math.floor((BILL_WIDTH - value.length) / 2));
+  return `${" ".repeat(padding)}${value}`;
+};
+
+const billRow = (label: string, value: string): string => {
+  const gap = BILL_WIDTH - label.length - value.length;
+  if (gap > 0) {
+    return `${label}${" ".repeat(gap)}${value}`;
+  }
+
+  return `${label}\n${value.padStart(BILL_WIDTH)}`;
+};
+
 const buildInvoiceText = (order: Order): string => {
   const dayOrders = order.day_orders || [];
   const totalPrice = calculateTotalFromDayOrders(dayOrders);
+  const paymentTotals = calculatePaymentTotals(dayOrders, order.payment_status);
   const invoiceNumber = `INV-${order.id.slice(0, 8).toUpperCase()}`;
   const invoiceDate = format(new Date(order.created_at), "dd MMMM yyyy");
-  const qrisUrl = `${window.location.origin}/payment/qris`;
   const lines = [
-    "DAPUR BUWIKRA",
-    `Invoice: ${invoiceNumber}`,
-    `Tanggal: ${invoiceDate}`,
-    "",
-    `Pelanggan: ${order.name}`,
+    "```",
+    billDivider(),
+    centerBillText("DAPUR BU WIKRA"),
+    centerBillText("CATERING & HOMEMADE FOOD"),
+    billDivider(),
+    billRow("INVOICE |", invoiceNumber),
+    billRow("TANGGAL |", invoiceDate),
+    billDivider("-"),
+    "DITAGIHKAN KEPADA",
+    `NAMA    | ${order.name}`,
   ];
 
   if (order.email) {
-    lines.push(`Email: ${order.email}`);
+    lines.push(`EMAIL   | ${order.email}`);
   }
+
+  if (order.drop_off_location) {
+    lines.push(`LOKASI  | ${order.drop_off_location}`);
+  }
+
+  lines.push(billDivider("="), "RINCIAN PESANAN");
 
   for (const dayOrder of dayOrders) {
     lines.push(
-      "",
-      `${dayOrder.day}, ${format(new Date(dayOrder.date), "dd MMM yyyy")}`,
+      billDivider("-"),
+      `${dayOrder.day.toUpperCase()} | ${format(
+        new Date(dayOrder.date),
+        "dd MMMM yyyy",
+      )}`,
+      billRow(
+        "PAYMENT",
+        resolveDayPaymentStatus(dayOrder, order.payment_status) === "paid"
+          ? "PAID"
+          : "UNPAID",
+      ),
+      billDivider("-"),
     );
 
     for (const item of dayOrder.items) {
       lines.push(
-        `- ${item.name} x${item.qty} - ${formatCurrency(item.qty * item.unit_price)}`,
+        billRow(
+          `${item.qty}x ${item.name}`,
+          formatCurrency(item.qty * item.unit_price),
+        ),
+        `   @ ${formatCurrency(item.unit_price)}`,
       );
     }
 
@@ -145,24 +219,43 @@ const buildInvoiceText = (order: Order): string => {
       (sum, item) => sum + item.qty * item.unit_price,
       0,
     );
-    lines.push(`Subtotal: ${formatCurrency(dayTotal)}`);
+    lines.push(billRow("SUBTOTAL", formatCurrency(dayTotal)));
   }
 
   if (order.notes) {
-    lines.push("", `Catatan: ${order.notes}`);
+    lines.push(billDivider("-"), `CATATAN | ${order.notes}`);
   }
 
   lines.push(
-    "",
-    `TOTAL: ${formatCurrency(totalPrice)}`,
-    `Status: ${order.payment_status === "paid" ? "LUNAS" : "BELUM LUNAS"}`,
+    billDivider("="),
+    billRow("TOTAL", formatCurrency(totalPrice)),
+    billRow("SUDAH DIBAYAR", formatCurrency(paymentTotals.paid)),
+    billRow("SISA TAGIHAN", formatCurrency(paymentTotals.unpaid)),
+    billRow(
+      "STATUS",
+      paymentTotals.unpaid === 0
+        ? "LUNAS"
+        : paymentTotals.paid > 0
+          ? "SEBAGIAN"
+          : "BELUM LUNAS",
+    ),
+    billDivider("="),
   );
 
-  if (order.payment_status !== "paid") {
-    lines.push("", "Pembayaran QRIS:", qrisUrl);
+  if (paymentTotals.unpaid > 0) {
+    lines.push(
+      "PEMBAYARAN QRIS",
+      `${window.location.origin}/payment/qris`,
+      billDivider("-"),
+    );
   }
 
-  lines.push("", "Terima kasih atas pesanan Anda!");
+  lines.push(
+    centerBillText("TERIMA KASIH SUDAH MEMESAN!"),
+    centerBillText("DAPUR BU WIKRA"),
+    "```",
+  );
+
   return lines.join("\n");
 };
 
@@ -225,8 +318,6 @@ export function OrderActionDialog({
   const [editDayOrders, setEditDayOrders] = React.useState<DayOrder[]>(
     order.day_orders || [],
   );
-  const [editPaymentStatus, setEditPaymentStatus] =
-    React.useState<PaymentStatus>(order.payment_status);
   const [editNotes, setEditNotes] = React.useState(order.notes || "");
   const [editDropOffLocation, setEditDropOffLocation] = React.useState(
     order.drop_off_location || "",
@@ -293,8 +384,13 @@ export function OrderActionDialog({
     setActionMode(mode);
     setEditName(order.name);
     setEditEmail(order.email || "");
-    setEditDayOrders(JSON.parse(JSON.stringify(order.day_orders || [])));
-    setEditPaymentStatus(order.payment_status);
+    setEditDayOrders(
+      (order.day_orders || []).map((dayOrder) => ({
+        ...dayOrder,
+        items: dayOrder.items.map((item) => ({ ...item })),
+        payment_status: resolveDayPaymentStatus(dayOrder, order.payment_status),
+      })),
+    );
     setEditNotes(order.notes || "");
     setEditDropOffLocation(order.drop_off_location || "");
     setSelectedNewDates([]);
@@ -359,6 +455,7 @@ export function OrderActionDialog({
           day: getDayName(date),
           date: dateKey,
           items: [],
+          payment_status: "unpaid",
         });
       }
     });
@@ -371,6 +468,28 @@ export function OrderActionDialog({
     }
 
     setSelectedNewDates([]);
+  };
+
+  const updateDayPaymentStatus = (
+    dayIndex: number,
+    paymentStatus: DayPaymentStatus,
+  ) => {
+    setEditDayOrders((current) =>
+      current.map((dayOrder, index) =>
+        index === dayIndex
+          ? { ...dayOrder, payment_status: paymentStatus }
+          : dayOrder,
+      ),
+    );
+  };
+
+  const markAllDaysPayment = (paymentStatus: DayPaymentStatus) => {
+    setEditDayOrders((current) =>
+      current.map((dayOrder) => ({
+        ...dayOrder,
+        payment_status: paymentStatus,
+      })),
+    );
   };
 
   const handleSubmit = async () => {
@@ -395,7 +514,6 @@ export function OrderActionDialog({
         name: editName,
         email: editEmail || undefined,
         day_orders: validDayOrders,
-        payment_status: editPaymentStatus,
         notes: editNotes,
         drop_off_location: editDropOffLocation || undefined,
       });
@@ -520,16 +638,20 @@ export function OrderActionDialog({
   const handleCopyInvoice = async () => {
     setIsCopyingInvoice(true);
     try {
-      const copiedAsText = await copyTextToClipboard(buildInvoiceText(order));
+      const invoiceText = buildInvoiceText(order);
+      const copiedAsText = await copyTextToClipboard(invoiceText);
       if (copiedAsText) {
         setInvoiceCopied(true);
-        toast.success("Invoice text copied to clipboard!");
+        toast.success("Bill text copied to clipboard!");
         setTimeout(() => setInvoiceCopied(false), 2000);
         return;
       }
 
-      // Keep the current image download as a compatibility fallback for
-      // browsers that block both clipboard text APIs.
+      if (invoiceText.length > 0) {
+        toast.error("Browser blocked clipboard access");
+        return;
+      }
+
       const displayDayOrders = order.day_orders || [];
       const totalPrice = calculateTotalFromDayOrders(displayDayOrders);
 
@@ -745,6 +867,16 @@ export function OrderActionDialog({
     .filter((item) => item.category === "addon")
     .sort((a, b) => a.price - b.price);
   const displayDayOrders = isViewMode ? order.day_orders || [] : editDayOrders;
+  const displayPaymentTotals = calculatePaymentTotals(
+    displayDayOrders,
+    order.payment_status,
+  );
+  const displayPaymentStatus: PaymentStatus =
+    displayPaymentTotals.unpaid === 0
+      ? "paid"
+      : displayPaymentTotals.paid > 0
+        ? "partial"
+        : "unpaid";
 
   return (
     <>
@@ -934,8 +1066,50 @@ export function OrderActionDialog({
                             <p className="text-sm text-muted-foreground">
                               {dayOrder.date}
                             </p>
+                            {isViewMode && dayOrder.paid_at && (
+                              <p className="mt-1 text-xs font-medium text-green-700 dark:text-green-400">
+                                Paid{" "}
+                                {format(
+                                  new Date(dayOrder.paid_at),
+                                  "dd MMM yyyy, HH:mm",
+                                )}
+                              </p>
+                            )}
                           </div>
                           <div className="flex items-center gap-2">
+                            {isViewMode ? (
+                              <StatusBadge
+                                status={resolveDayPaymentStatus(
+                                  dayOrder,
+                                  order.payment_status,
+                                )}
+                                type="payment"
+                              />
+                            ) : (
+                              <Select
+                                value={resolveDayPaymentStatus(dayOrder)}
+                                onValueChange={(value) =>
+                                  updateDayPaymentStatus(
+                                    dayIdx,
+                                    value as DayPaymentStatus,
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="h-8 w-28 rounded-none border-2 border-black bg-white text-xs font-bold dark:border-white dark:bg-black">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {DAY_PAYMENT_STATUSES.map((status) => (
+                                    <SelectItem
+                                      key={status.value}
+                                      value={status.value}
+                                    >
+                                      {status.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
                             <p className="font-bold text-lg">
                               {formatCurrency(dayTotal)}
                             </p>
@@ -1143,39 +1317,57 @@ export function OrderActionDialog({
               )}
             </div>
 
-            {/* Payment Status */}
+            {/* Payment Summary */}
             <div className="space-y-2">
               <Label className="text-base font-bold uppercase tracking-wide">
-                Payment Status
+                Payment Summary
               </Label>
-              {isViewMode ? (
-                <div
-                  className={`inline-block px-4 py-2 font-bold uppercase border-2 border-black dark:border-white ${
-                    order.payment_status === "paid"
-                      ? "bg-green-200 dark:bg-green-900"
-                      : "bg-red-200 dark:bg-red-900"
-                  }`}
-                >
-                  {order.payment_status === "paid" ? "✓ Paid" : "Unpaid"}
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="border-2 border-black bg-green-100 p-3 dark:border-white dark:bg-green-950">
+                  <p className="text-xs font-bold uppercase text-green-700 dark:text-green-300">
+                    Paid
+                  </p>
+                  <p className="text-lg font-black">
+                    {formatCurrency(displayPaymentTotals.paid)}
+                  </p>
                 </div>
-              ) : (
-                <Select
-                  value={editPaymentStatus}
-                  onValueChange={(v) =>
-                    setEditPaymentStatus(v as PaymentStatus)
-                  }
-                >
-                  <SelectTrigger className="w-full h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAYMENT_STATUSES.map((status) => (
-                      <SelectItem key={status.value} value={status.value}>
-                        {status.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="border-2 border-black bg-red-100 p-3 dark:border-white dark:bg-red-950">
+                  <p className="text-xs font-bold uppercase text-red-700 dark:text-red-300">
+                    Remaining
+                  </p>
+                  <p className="text-lg font-black">
+                    {formatCurrency(displayPaymentTotals.unpaid)}
+                  </p>
+                </div>
+                <div className="flex items-center justify-center border-2 border-black bg-white p-3 dark:border-white dark:bg-black">
+                  <StatusBadge
+                    status={displayPaymentStatus}
+                    type="payment"
+                    className="px-3 py-1.5 text-sm"
+                  />
+                </div>
+              </div>
+              {!isViewMode && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => markAllDaysPayment("paid")}
+                    className="rounded-none border-2 border-black bg-green-100 font-bold dark:border-white dark:bg-green-950"
+                  >
+                    Mark All Paid
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => markAllDaysPayment("unpaid")}
+                    className="rounded-none border-2 border-black bg-red-100 font-bold dark:border-white dark:bg-red-950"
+                  >
+                    Mark All Unpaid
+                  </Button>
+                </div>
               )}
             </div>
 
@@ -1282,7 +1474,7 @@ export function OrderActionDialog({
                 ) : (
                   <Copy className="mr-2 h-4 w-4" />
                 )}
-                {invoiceCopied ? "Copied!" : "Copy Invoice"}
+                {invoiceCopied ? "Copied!" : "Copy Bill Text"}
               </Button>
             )}
             <Button

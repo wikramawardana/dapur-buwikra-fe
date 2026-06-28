@@ -10,6 +10,8 @@ export interface DayOrder {
   day: string;
   date: string;
   items: OrderMenuItem[];
+  payment_status?: DayPaymentStatus;
+  paid_at?: string | null;
 }
 
 export interface Order {
@@ -34,7 +36,8 @@ export type OrderStatus =
   | "inprogress"
   | "completed"
   | "cancelled";
-export type PaymentStatus = "paid" | "unpaid";
+export type DayPaymentStatus = "paid" | "unpaid";
+export type PaymentStatus = DayPaymentStatus | "partial";
 
 export interface PaginationInfo {
   page: number;
