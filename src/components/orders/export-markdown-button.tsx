@@ -13,7 +13,17 @@ interface ExportMarkdownButtonProps {
   disabled?: boolean;
 }
 
-function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
+function getSelectedDays(dayFilter?: string | string[]): string[] {
+  if (!dayFilter) return [];
+  const values = Array.isArray(dayFilter) ? dayFilter : dayFilter.split(",");
+
+  return values.map((value) => value.trim()).filter(Boolean);
+}
+
+function ordersToMarkdown(
+  orders: Order[],
+  dayFilter?: string | string[],
+): string {
   if (orders.length === 0) {
     return "No orders to export.";
   }
@@ -21,10 +31,11 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
   const lines: string[] = [];
 
   // Determine which days to show based on filter
+  const selectedDays = getSelectedDays(dayFilter);
   const daysToShow =
-    !dayFilter || dayFilter === "all" || dayFilter === ""
+    selectedDays.length === 0
       ? DAYS_OF_WEEK
-      : [dayFilter];
+      : DAYS_OF_WEEK.filter((day) => selectedDays.includes(day));
 
   // Group orders by day from day_orders structure
   const ordersByDay: Record<
@@ -100,11 +111,12 @@ function ordersToMarkdown(orders: Order[], dayFilter?: string): string {
   return lines.join("\n").trim();
 }
 
-function getExportFilename(dayFilter?: string): string {
+function getExportFilename(dayFilter?: string | string[]): string {
+  const selectedDays = getSelectedDays(dayFilter);
   const day =
-    !dayFilter || dayFilter === "all" || dayFilter === ""
+    selectedDays.length === 0
       ? "all-days"
-      : dayFilter.toLowerCase();
+      : selectedDays.map((value) => value.toLowerCase()).join("-");
 
   return `orders-${day}-${new Date().toISOString().slice(0, 10)}.md`;
 }

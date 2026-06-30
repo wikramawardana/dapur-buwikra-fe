@@ -1,10 +1,16 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -30,7 +36,107 @@ interface OrdersFiltersProps {
   onFiltersChange: (filters: OrderFilters) => void;
 }
 
-const ALL_VALUE = "all";
+interface MultiSelectFilterProps {
+  allLabel: string;
+  idPrefix: string;
+  options: { value: string; label: string }[];
+  selectedValues: string[];
+  onChange: (values: string[]) => void;
+}
+
+function getFilterValues(value?: string | string[] | ""): string[] {
+  if (!value) return [];
+  const values = Array.isArray(value) ? value : value.split(",");
+
+  return values.map((item) => item.trim()).filter(Boolean);
+}
+
+function getFilteredValues<T extends string>(
+  value: string | string[] | "" | undefined,
+  options: readonly { value: T; label: string }[],
+): T[] {
+  return getFilterValues(value).filter((item): item is T =>
+    options.some((option) => option.value === item),
+  );
+}
+
+function MultiSelectFilter({
+  allLabel,
+  idPrefix,
+  options,
+  selectedValues,
+  onChange,
+}: MultiSelectFilterProps) {
+  const filterLabel =
+    selectedValues.length === 0
+      ? allLabel
+      : selectedValues
+          .map(
+            (value) =>
+              options.find((option) => option.value === value)?.label ?? value,
+          )
+          .join(", ");
+
+  const handleToggle = (value: string, isChecked: boolean) => {
+    const nextValues = isChecked
+      ? [...selectedValues, value]
+      : selectedValues.filter((selectedValue) => selectedValue !== value);
+
+    onChange(nextValues);
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-between neo-brutal neo-brutal-white font-normal"
+        >
+          <span className="truncate">{filterLabel}</span>
+          <ChevronDown className="h-4 w-4 opacity-60" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-56 rounded-none border-2 border-black p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+      >
+        <div className="space-y-2">
+          {options.map((option) => {
+            const checkboxId = `${idPrefix}-${option.value}`;
+            return (
+              <div key={option.value} className="flex items-center gap-2">
+                <Checkbox
+                  id={checkboxId}
+                  checked={selectedValues.includes(option.value)}
+                  onCheckedChange={(checked) =>
+                    handleToggle(option.value, checked === true)
+                  }
+                />
+                <Label
+                  htmlFor={checkboxId}
+                  className="cursor-pointer text-sm font-medium"
+                >
+                  {option.label}
+                </Label>
+              </div>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function getPaymentStatusValues(
+  paymentStatus: OrderFilters["payment_status"],
+): PaymentStatus[] {
+  return getFilteredValues(paymentStatus, PAYMENT_STATUSES);
+}
+
+function getOrderStatusValues(status: OrderFilters["status"]): OrderStatus[] {
+  return getFilteredValues(status, ORDER_STATUSES);
+}
 
 export function OrdersFilters({
   filters,
@@ -98,12 +204,49 @@ export function OrdersFilters({
     });
   };
 
+  const selectedPaymentStatuses = getPaymentStatusValues(
+    filters.payment_status,
+  );
+  const selectedOrderStatuses = getOrderStatusValues(filters.status);
+  const selectedDays = getFilterValues(filters.day);
+  const selectedPickupPoints = getFilterValues(filters.drop_off_location);
+  const pickupPointOptions = Array.from(
+    new Set([...pickupPoints, ...selectedPickupPoints]),
+  ).map((location) => ({
+    value: location,
+    label: location,
+  }));
+
+  const handleOrderStatusChange = (statuses: string[]) => {
+    updateFilters({
+      status: statuses.length > 0 ? (statuses as OrderStatus[]) : "",
+    });
+  };
+
+  const handlePaymentStatusChange = (statuses: string[]) => {
+    updateFilters({
+      payment_status: statuses.length > 0 ? (statuses as PaymentStatus[]) : "",
+    });
+  };
+
+  const handleDayChange = (days: string[]) => {
+    updateFilters({
+      day: days.length > 0 ? days : "",
+    });
+  };
+
+  const handlePickupPointChange = (locations: string[]) => {
+    updateFilters({
+      drop_off_location: locations.length > 0 ? locations : "",
+    });
+  };
+
   const hasActiveFilters =
     !!filters.search ||
-    !!filters.day ||
-    !!filters.payment_status ||
-    !!filters.status ||
-    !!filters.drop_off_location ||
+    selectedDays.length > 0 ||
+    selectedPaymentStatuses.length > 0 ||
+    selectedOrderStatuses.length > 0 ||
+    selectedPickupPoints.length > 0 ||
     !!filters.name ||
     (filters.sort_by || "name") !== "name" ||
     (filters.sort_order || "asc") !== "asc";
@@ -143,97 +286,46 @@ export function OrdersFilters({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <div className="space-y-1.5">
           <Label className="text-xs font-bold uppercase">Order Status</Label>
-          <Select
-            value={filters.status || ALL_VALUE}
-            onValueChange={(value) =>
-              updateFilters({
-                status: value === ALL_VALUE ? "" : (value as OrderStatus),
-              })
-            }
-          >
-            <SelectTrigger className="w-full neo-brutal neo-brutal-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_VALUE}>All statuses</SelectItem>
-              {ORDER_STATUSES.map((status) => (
-                <SelectItem key={status.value} value={status.value}>
-                  {status.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelectFilter
+            allLabel="All statuses"
+            idPrefix="status-filter"
+            options={[...ORDER_STATUSES]}
+            selectedValues={selectedOrderStatuses}
+            onChange={handleOrderStatusChange}
+          />
         </div>
 
         <div className="space-y-1.5">
           <Label className="text-xs font-bold uppercase">Payment</Label>
-          <Select
-            value={filters.payment_status || ALL_VALUE}
-            onValueChange={(value) =>
-              updateFilters({
-                payment_status:
-                  value === ALL_VALUE ? "" : (value as PaymentStatus),
-              })
-            }
-          >
-            <SelectTrigger className="w-full neo-brutal neo-brutal-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_VALUE}>All payments</SelectItem>
-              {PAYMENT_STATUSES.map((status) => (
-                <SelectItem key={status.value} value={status.value}>
-                  {status.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelectFilter
+            allLabel="All payments"
+            idPrefix="payment-filter"
+            options={[...PAYMENT_STATUSES]}
+            selectedValues={selectedPaymentStatuses}
+            onChange={handlePaymentStatusChange}
+          />
         </div>
 
         <div className="space-y-1.5">
           <Label className="text-xs font-bold uppercase">Day</Label>
-          <Select
-            value={filters.day || ALL_VALUE}
-            onValueChange={(value) =>
-              updateFilters({ day: value === ALL_VALUE ? "" : value })
-            }
-          >
-            <SelectTrigger className="w-full neo-brutal neo-brutal-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_VALUE}>All days</SelectItem>
-              {DAYS_OF_WEEK.map((day) => (
-                <SelectItem key={day} value={day}>
-                  {day}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelectFilter
+            allLabel="All days"
+            idPrefix="day-filter"
+            options={DAYS_OF_WEEK.map((day) => ({ value: day, label: day }))}
+            selectedValues={selectedDays}
+            onChange={handleDayChange}
+          />
         </div>
 
         <div className="space-y-1.5">
           <Label className="text-xs font-bold uppercase">Pickup Point</Label>
-          <Select
-            value={filters.drop_off_location || ALL_VALUE}
-            onValueChange={(value) =>
-              updateFilters({
-                drop_off_location: value === ALL_VALUE ? "" : value,
-              })
-            }
-          >
-            <SelectTrigger className="w-full neo-brutal neo-brutal-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_VALUE}>All pickup points</SelectItem>
-              {pickupPoints.map((location) => (
-                <SelectItem key={location} value={location}>
-                  {location}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelectFilter
+            allLabel="All pickup points"
+            idPrefix="pickup-filter"
+            options={pickupPointOptions}
+            selectedValues={selectedPickupPoints}
+            onChange={handlePickupPointChange}
+          />
         </div>
 
         <div className="space-y-1.5">

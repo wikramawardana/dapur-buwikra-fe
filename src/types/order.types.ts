@@ -94,11 +94,11 @@ export interface OrderFilters {
   search?: string;
   page?: number;
   page_size?: number;
-  status?: OrderStatus | "";
-  payment_status?: PaymentStatus | "";
-  day?: string;
+  status?: OrderStatus | OrderStatus[] | "";
+  payment_status?: PaymentStatus | PaymentStatus[] | "";
+  day?: string | string[];
   name?: string;
-  drop_off_location?: string;
+  drop_off_location?: string | string[];
   date_from?: string;
   date_to?: string;
   sort_by?: string;
