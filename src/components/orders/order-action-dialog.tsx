@@ -1,13 +1,12 @@
 "use client";
 
 import { format, getDay } from "date-fns";
-import html2canvas from "html2canvas";
 import {
   CalendarIcon,
   CheckCheck,
   ChevronsUpDown,
-  Copy,
   Eye,
+  ImageIcon,
   Loader2,
   Minus,
   MoreHorizontal,
@@ -67,6 +66,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/lib/auth-client";
 import { DAY_PAYMENT_STATUSES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
+import { generateInvoiceImage } from "@/lib/invoice-generator";
 import {
   acceptOrder,
   cancelOrder,
@@ -141,144 +141,6 @@ const calculatePaymentTotals = (
     },
     { paid: 0, unpaid: 0 },
   );
-
-const BILL_WIDTH = 36;
-
-const billDivider = (character = "="): string => character.repeat(BILL_WIDTH);
-
-const centerBillText = (value: string): string => {
-  const padding = Math.max(0, Math.floor((BILL_WIDTH - value.length) / 2));
-  return `${" ".repeat(padding)}${value}`;
-};
-
-const billRow = (label: string, value: string): string => {
-  const gap = BILL_WIDTH - label.length - value.length;
-  if (gap > 0) {
-    return `${label}${" ".repeat(gap)}${value}`;
-  }
-
-  return `${label}\n${value.padStart(BILL_WIDTH)}`;
-};
-
-const buildInvoiceText = (order: Order): string => {
-  const dayOrders = order.day_orders || [];
-  const totalPrice = calculateTotalFromDayOrders(dayOrders);
-  const paymentTotals = calculatePaymentTotals(dayOrders, order.payment_status);
-  const invoiceNumber = `INV-${order.id.slice(0, 8).toUpperCase()}`;
-  const invoiceDate = format(new Date(order.created_at), "dd MMMM yyyy");
-  const lines = [
-    "```",
-    billDivider(),
-    centerBillText("DAPUR BU WIKRA"),
-    centerBillText("CATERING & HOMEMADE FOOD"),
-    billDivider(),
-    billRow("INVOICE |", invoiceNumber),
-    billRow("TANGGAL |", invoiceDate),
-    billDivider("-"),
-    "DITAGIHKAN KEPADA",
-    `NAMA    | ${order.name}`,
-  ];
-
-  if (order.email) {
-    lines.push(`EMAIL   | ${order.email}`);
-  }
-
-  if (order.drop_off_location) {
-    lines.push(`LOKASI  | ${order.drop_off_location}`);
-  }
-
-  lines.push(billDivider("="), "RINCIAN PESANAN");
-
-  for (const dayOrder of dayOrders) {
-    lines.push(
-      billDivider("-"),
-      `${dayOrder.day.toUpperCase()} | ${format(
-        new Date(dayOrder.date),
-        "dd MMMM yyyy",
-      )}`,
-      billRow(
-        "PAYMENT",
-        resolveDayPaymentStatus(dayOrder, order.payment_status) === "paid"
-          ? "PAID"
-          : "UNPAID",
-      ),
-      billDivider("-"),
-    );
-
-    for (const item of dayOrder.items) {
-      lines.push(
-        billRow(
-          `${item.qty}x ${item.name}`,
-          formatCurrency(item.qty * item.unit_price),
-        ),
-        `   @ ${formatCurrency(item.unit_price)}`,
-      );
-    }
-
-    const dayTotal = dayOrder.items.reduce(
-      (sum, item) => sum + item.qty * item.unit_price,
-      0,
-    );
-    lines.push(billRow("SUBTOTAL", formatCurrency(dayTotal)));
-  }
-
-  if (order.notes) {
-    lines.push(billDivider("-"), `CATATAN | ${order.notes}`);
-  }
-
-  lines.push(
-    billDivider("="),
-    billRow("TOTAL", formatCurrency(totalPrice)),
-    billRow("SUDAH DIBAYAR", formatCurrency(paymentTotals.paid)),
-    billRow("SISA TAGIHAN", formatCurrency(paymentTotals.unpaid)),
-    billRow(
-      "STATUS",
-      paymentTotals.unpaid === 0
-        ? "LUNAS"
-        : paymentTotals.paid > 0
-          ? "SEBAGIAN"
-          : "BELUM LUNAS",
-    ),
-    billDivider("="),
-  );
-
-  if (paymentTotals.unpaid > 0) {
-    lines.push(
-      "PEMBAYARAN QRIS",
-      `${window.location.origin}/payment/qris`,
-      billDivider("-"),
-    );
-  }
-
-  lines.push(
-    centerBillText("TERIMA KASIH SUDAH MEMESAN!"),
-    centerBillText("DAPUR BU WIKRA"),
-    "```",
-  );
-
-  return lines.join("\n");
-};
-
-const copyTextToClipboard = async (text: string): Promise<boolean> => {
-  if (navigator.clipboard?.writeText && window.isSecureContext) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch {
-      // Fall through to the compatibility path below.
-    }
-  }
-
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.style.position = "fixed";
-  textarea.style.opacity = "0";
-  document.body.appendChild(textarea);
-  textarea.select();
-  const copied = document.execCommand("copy");
-  document.body.removeChild(textarea);
-  return copied;
-};
 
 export function OrderActionDialog({
   order: initialOrder,
@@ -638,212 +500,17 @@ export function OrderActionDialog({
   const handleCopyInvoice = async () => {
     setIsCopyingInvoice(true);
     try {
-      const invoiceText = buildInvoiceText(order);
-      const copiedAsText = await copyTextToClipboard(invoiceText);
-      if (copiedAsText) {
-        setInvoiceCopied(true);
-        toast.success("Bill text copied to clipboard!");
-        setTimeout(() => setInvoiceCopied(false), 2000);
-        return;
-      }
-
-      if (invoiceText.length > 0) {
-        toast.error("Browser blocked clipboard access");
-        return;
-      }
-
-      const displayDayOrders = order.day_orders || [];
-      const totalPrice = calculateTotalFromDayOrders(displayDayOrders);
-
-      // Generate invoice number and date
-      const invoiceNumber = `INV-${order.id.slice(0, 8).toUpperCase()}`;
-      const invoiceDate = format(new Date(order.created_at), "dd MMMM yyyy");
-
-      // Build order items HTML
-      let orderItemsHtml = "";
-      displayDayOrders.forEach((dayOrder) => {
-        const dayTotal = dayOrder.items.reduce(
-          (sum, item) => sum + item.qty * item.unit_price,
-          0,
-        );
-
-        // Day Header
-        orderItemsHtml += `<div style="background-color: #e5e5e5; padding: 8px 12px; border-top: 2px solid #000000;">
-          <p style="font-size: 14px; font-weight: 700; color: #000000; margin: 0;">${
-            dayOrder.day
-          } - ${format(new Date(dayOrder.date), "dd MMM yyyy")}</p>
-        </div>`;
-
-        // Items
-        dayOrder.items.forEach((item) => {
-          orderItemsHtml += `<div style="display: grid; grid-template-columns: 1fr 60px 100px; font-size: 14px; padding: 8px 12px; border-top: 1px solid #d1d5db;">
-            <div>
-              <p style="font-weight: 500; color: #000000; margin: 0;">${
-                item.name
-              }</p>
-              <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">@ ${formatCurrency(
-                item.unit_price,
-              )}</p>
-            </div>
-            <div style="text-align: center; font-weight: 500; color: #000000;">${
-              item.qty
-            }</div>
-            <div style="text-align: right; font-weight: 600; color: #000000;">${formatCurrency(
-              item.qty * item.unit_price,
-            )}</div>
-          </div>`;
-        });
-
-        // Day Subtotal
-        orderItemsHtml += `<div style="display: grid; grid-template-columns: 2fr 1fr; font-size: 14px; padding: 8px 12px; background-color: #f3f4f6; border-top: 1px solid #d1d5db;">
-          <div style="font-weight: 600; color: #374151;">Subtotal ${
-            dayOrder.day
-          }</div>
-          <div style="text-align: right; font-weight: 700; color: #000000;">${formatCurrency(
-            dayTotal,
-          )}</div>
-        </div>`;
-      });
-
-      const notesHtml = order.notes
-        ? `<div style="margin-bottom: 24px; padding: 16px; border: 2px solid #000000; background-color: #fefce8;">
-            <p style="font-size: 12px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Catatan</p>
-            <p style="font-size: 14px; color: #000000; margin: 0;">${order.notes}</p>
-          </div>`
-        : "";
-
-      const emailHtml = order.email
-        ? `<p style="font-size: 14px; color: #4b5563; margin: 4px 0 0 0;">${order.email}</p>`
-        : "";
-
-      const invoiceHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { background: #ffffff; }
-            </style>
-        </head>
-        <body>
-            <div style="width: 500px; background-color: #ffffff; padding: 32px; font-family: Arial, Helvetica, sans-serif; color: #000000;">
-                <!-- Header -->
-                <div style="text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 4px solid #000000;">
-                    <h1 style="font-size: 30px; font-weight: 900; letter-spacing: 3px; color: #000000; margin: 0 0 4px 0;">DAPUR BUWIKRA</h1>
-                    <p style="font-size: 14px; font-weight: 600; color: #000000; text-transform: uppercase; letter-spacing: 0.2em; margin: 0;">Invoice</p>
-                </div>
-
-                <!-- Invoice Info -->
-                <div style="display: flex; justify-content: space-between; margin-bottom: 24px; font-size: 14px;">
-                    <div>
-                        <p style="font-size: 12px; font-weight: 700; color: #4b5563; text-transform: uppercase; margin: 0 0 4px 0;">No. Invoice</p>
-                        <p style="font-weight: 700; color: #000000; margin: 0;">${invoiceNumber}</p>
-                    </div>
-                    <div style="text-align: right;">
-                        <p style="font-size: 12px; font-weight: 700; color: #4b5563; text-transform: uppercase; margin: 0 0 4px 0;">Tanggal</p>
-                        <p style="font-weight: 700; color: #000000; margin: 0;">${invoiceDate}</p>
-                    </div>
-                </div>
-
-                <!-- Customer Info -->
-                <div style="margin-bottom: 24px; padding: 16px; border: 2px solid #000000; background-color: #f9fafb;">
-                    <p style="font-size: 12px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px 0;">Pelanggan</p>
-                    <p style="font-size: 20px; font-weight: 900; color: #000000; margin: 0;">${
-                      order.name
-                    }</p>
-                    ${emailHtml}
-                </div>
-
-                <!-- Order Items -->
-                <div style="margin-bottom: 24px; border: 2px solid #000000;">
-                    <!-- Table Header -->
-                    <div style="display: grid; grid-template-columns: 1fr 60px 100px; background-color: #000000; color: #ffffff; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 8px 12px;">
-                        <div>Item</div>
-                        <div style="text-align: center;">Qty</div>
-                        <div style="text-align: right;">Subtotal</div>
-                    </div>
-                    ${orderItemsHtml}
-                </div>
-
-                ${notesHtml}
-
-                <!-- Total -->
-                <div style="background-color: #000000; color: #ffffff; padding: 16px; margin-bottom: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Total</span>
-                        <span style="font-size: 24px; font-weight: 900;">${formatCurrency(
-                          totalPrice,
-                        )}</span>
-                    </div>
-                </div>
-
-                <!-- Payment Status -->
-                <div style="text-align: center; margin-bottom: 24px;">
-                    <span style="display: inline-block; padding: 12px 24px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; border: 4px solid ${
-                      order.payment_status === "paid" ? "#16a34a" : "#dc2626"
-                    }; background-color: ${
-                      order.payment_status === "paid" ? "#dcfce7" : "#fee2e2"
-                    }; color: ${order.payment_status === "paid" ? "#166534" : "#991b1b"};">
-                        ${
-                          order.payment_status === "paid"
-                            ? "✓ LUNAS"
-                            : "BELUM LUNAS"
-                        }
-                    </span>
-                </div>
-
-                <!-- Footer -->
-                <div style="text-align: center; padding-top: 16px; border-top: 2px solid #d1d5db;">
-                    <p style="font-size: 12px; color: #6b7280; margin: 0 0 4px 0;">Terima kasih atas pesanan Anda!</p>
-                    <p style="font-size: 12px; color: #9ca3af; margin: 0;">Dapur Buwikra - Catering &amp; Homemade Food</p>
-                </div>
-            </div>
-        </body>
-        </html>
-      `;
-
-      const iframe = document.createElement("iframe");
-      iframe.style.cssText =
-        "position: fixed; left: -9999px; top: -9999px; width: 550px; height: 800px; border: none;";
-      document.body.appendChild(iframe);
-
-      const iframeDoc =
-        iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDoc) {
-        throw new Error("Could not access iframe document");
-      }
-      iframeDoc.open();
-      iframeDoc.write(invoiceHtml);
-      iframeDoc.close();
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      const invoiceElement = iframeDoc.body.firstElementChild as HTMLElement;
-      const canvas = await html2canvas(invoiceElement, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
-
-      document.body.removeChild(iframe);
-
-      const blob = await new Promise<Blob | null>((resolve) => {
-        canvas.toBlob((b) => resolve(b), "image/png", 1.0);
-      });
-
-      if (!blob) {
-        throw new Error("Failed to create image blob");
-      }
+      const blob = await generateInvoiceImage(order);
 
       try {
         await navigator.clipboard.write([
           new ClipboardItem({ "image/png": blob }),
         ]);
         setInvoiceCopied(true);
-        toast.success("Invoice copied to clipboard!");
+        toast.success("Invoice image copied to clipboard!");
         setTimeout(() => setInvoiceCopied(false), 2000);
       } catch {
+        // Fallback: download as file
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -1472,9 +1139,13 @@ export function OrderActionDialog({
                 ) : invoiceCopied ? (
                   <CheckCheck className="mr-2 h-4 w-4" />
                 ) : (
-                  <Copy className="mr-2 h-4 w-4" />
+                  <ImageIcon className="mr-2 h-4 w-4" />
                 )}
-                {invoiceCopied ? "Copied!" : "Copy Bill Text"}
+                {isCopyingInvoice
+                  ? "Generating..."
+                  : invoiceCopied
+                    ? "Copied!"
+                    : "Copy Invoice"}
               </Button>
             )}
             <Button
