@@ -161,3 +161,76 @@ export async function cancelOrder(
     body: JSON.stringify({ reason }),
   });
 }
+
+// ============ Bulk Operations ============
+
+export interface BulkOperationResult {
+  succeeded: string[];
+  failed: { id: string; error: string }[];
+}
+
+/**
+ * Start multiple orders in bulk (accepted → inprogress)
+ */
+export async function bulkStartOrders(
+  ids: string[],
+): Promise<BulkOperationResult> {
+  const results = await Promise.allSettled(ids.map((id) => startOrder(id)));
+  return processBulkResults(ids, results);
+}
+
+/**
+ * Complete multiple orders in bulk (inprogress → completed)
+ */
+export async function bulkCompleteOrders(
+  ids: string[],
+): Promise<BulkOperationResult> {
+  const results = await Promise.allSettled(ids.map((id) => completeOrder(id)));
+  return processBulkResults(ids, results);
+}
+
+/**
+ * Mark multiple orders as paid in bulk
+ */
+export async function bulkMarkPaid(
+  ids: string[],
+): Promise<BulkOperationResult> {
+  const results = await Promise.allSettled(
+    ids.map((id) => updateOrder(id, { payment_status: "paid" })),
+  );
+  return processBulkResults(ids, results);
+}
+
+/**
+ * Accept multiple orders in bulk (pending → accepted)
+ */
+export async function bulkAcceptOrders(
+  ids: string[],
+): Promise<BulkOperationResult> {
+  const results = await Promise.allSettled(ids.map((id) => acceptOrder(id)));
+  return processBulkResults(ids, results);
+}
+
+function processBulkResults(
+  ids: string[],
+  results: PromiseSettledResult<SingleOrderResponse>[],
+): BulkOperationResult {
+  const succeeded: string[] = [];
+  const failed: { id: string; error: string }[] = [];
+
+  results.forEach((result, index) => {
+    if (result.status === "fulfilled") {
+      succeeded.push(ids[index]);
+    } else {
+      failed.push({
+        id: ids[index],
+        error:
+          result.reason instanceof Error
+            ? result.reason.message
+            : "Unknown error",
+      });
+    }
+  });
+
+  return { succeeded, failed };
+}

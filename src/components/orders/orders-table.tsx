@@ -4,10 +4,12 @@ import {
   type ColumnDef,
   flexRender,
   getCoreRowModel,
+  type RowSelectionState,
   useReactTable,
 } from "@tanstack/react-table";
 import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Empty,
   EmptyDescription,
@@ -39,6 +41,8 @@ interface OrdersTableProps {
   isLoading?: boolean;
   onOrderUpdated?: () => void;
   onOrderDeleted?: () => void;
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: (selection: RowSelectionState) => void;
 }
 
 // Helper to calculate total from day_orders
@@ -79,11 +83,42 @@ export function OrdersTable({
   isLoading,
   onOrderUpdated,
   onOrderDeleted,
+  rowSelection = {},
+  onRowSelectionChange,
 }: OrdersTableProps) {
   const isMobile = useIsMobile();
 
   const columns = React.useMemo<ColumnDef<Order>[]>(
     () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <div className="flex items-center justify-center">
+            <Checkbox
+              checked={
+                table.getIsAllPageRowsSelected() ||
+                (table.getIsSomePageRowsSelected() && "indeterminate")
+              }
+              onCheckedChange={(value) =>
+                table.toggleAllPageRowsSelected(!!value)
+              }
+              aria-label="Select all"
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center">
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label="Select row"
+            />
+          </div>
+        ),
+        enableSorting: false,
+        enableHiding: false,
+        size: 40,
+      },
       {
         accessorKey: "name",
         header: () => <div className="text-left font-semibold">Name</div>,
@@ -244,10 +279,21 @@ export function OrdersTable({
     data: orders,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    state: {
+      rowSelection,
+    },
+    enableRowSelection: true,
+    onRowSelectionChange: (updater) => {
+      if (!onRowSelectionChange) return;
+      const newSelection =
+        typeof updater === "function" ? updater(rowSelection) : updater;
+      onRowSelectionChange(newSelection);
+    },
+    getRowId: (row) => row.id,
   });
 
   if (isLoading && orders.length === 0) {
-    return <TableSkeleton rows={5} columns={isMobile ? 3 : 9} />;
+    return <TableSkeleton rows={5} columns={isMobile ? 3 : 10} />;
   }
 
   if (orders.length === 0) {
@@ -273,81 +319,106 @@ export function OrdersTable({
         className={`space-y-3 transition-opacity ${isLoading ? "opacity-60" : ""}`}
         aria-busy={isLoading}
       >
-        {orders.map((order) => (
-          <Card key={order.id} className="neo-brutal neo-brutal-white">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-black truncate">
-                    {order.name}
-                  </h3>
-                </div>
-                <OrderActionDialog
-                  order={order}
-                  onOrderUpdated={onOrderUpdated}
-                  onOrderDeleted={onOrderDeleted}
-                />
-              </div>
-
-              <div className="mt-3 space-y-2 text-sm">
+        {orders.map((order) => {
+          const isSelected = !!rowSelection[order.id];
+          return (
+            <Card
+              key={order.id}
+              className={`neo-brutal neo-brutal-white transition-colors ${isSelected ? "ring-2 ring-black bg-amber-50/50" : ""}`}
+            >
+              <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-gray-500 shrink-0">Ordered:</span>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="text-gray-700 text-right cursor-pointer hover:underline">
-                        {getOrderedSummary(order)}
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(checked) => {
+                        if (!onRowSelectionChange) return;
+                        const newSelection = { ...rowSelection };
+                        if (checked) {
+                          newSelection[order.id] = true;
+                        } else {
+                          delete newSelection[order.id];
+                        }
+                        onRowSelectionChange(newSelection);
+                      }}
+                      aria-label={`Select ${order.name}`}
+                    />
+                    <h3 className="font-bold text-black truncate">
+                      {order.name}
+                    </h3>
+                  </div>
+                  <OrderActionDialog
+                    order={order}
+                    onOrderUpdated={onOrderUpdated}
+                    onOrderDeleted={onOrderDeleted}
+                  />
+                </div>
+
+                <div className="mt-3 space-y-2 text-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-gray-500 shrink-0">Ordered:</span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-gray-700 text-right cursor-pointer hover:underline">
+                          {getOrderedSummary(order)}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-sm">
+                        <div className="space-y-2">
+                          {order.day_orders?.map((dayOrder, idx) => (
+                            <div key={idx}>
+                              <p className="font-semibold text-sm">
+                                {dayOrder.day} — {formatDate(dayOrder.date)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {dayOrder.items
+                                  .map(
+                                    (item) =>
+                                      `${item.name}${item.qty > 1 ? ` ×${item.qty}` : ""}`,
+                                  )
+                                  .join(", ")}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  {order.notes && (
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-gray-500 shrink-0">Notes:</span>
+                      <span className="text-gray-500 italic text-right">
+                        {order.notes}
                       </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="left" className="max-w-sm">
-                      <div className="space-y-2">
-                        {order.day_orders?.map((dayOrder, idx) => (
-                          <div key={idx}>
-                            <p className="font-semibold text-sm">
-                              {dayOrder.day} — {formatDate(dayOrder.date)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {dayOrder.items
-                                .map(
-                                  (item) =>
-                                    `${item.name}${item.qty > 1 ? ` ×${item.qty}` : ""}`,
-                                )
-                                .join(", ")}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                {order.notes && (
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="text-gray-500 shrink-0">Notes:</span>
-                    <span className="text-gray-500 italic text-right">
-                      {order.notes}
+                    </div>
+                  )}
+                  {order.drop_off_location && (
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-gray-500 shrink-0">
+                        Drop Point:
+                      </span>
+                      <span className="text-gray-700 text-right">
+                        {order.drop_off_location}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <span className="font-bold text-green-600">
+                      {formatCurrency(calculateTotal(order))}
                     </span>
-                  </div>
-                )}
-                {order.drop_off_location && (
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="text-gray-500 shrink-0">Drop Point:</span>
-                    <span className="text-gray-700 text-right">
-                      {order.drop_off_location}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <span className="font-bold text-green-600">
-                    {formatCurrency(calculateTotal(order))}
-                  </span>
-                  <div className="flex gap-2">
-                    <StatusBadge status={order.status} type="order" />
-                    <StatusBadge status={order.payment_status} type="payment" />
+                    <div className="flex gap-2">
+                      <StatusBadge status={order.status} type="order" />
+                      <StatusBadge
+                        status={order.payment_status}
+                        type="payment"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     );
   }
@@ -363,7 +434,12 @@ export function OrdersTable({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
+                <TableHead
+                  key={header.id}
+                  style={
+                    header.column.id === "select" ? { width: 40 } : undefined
+                  }
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -379,7 +455,8 @@ export function OrdersTable({
           {table.getRowModel().rows.map((row) => (
             <TableRow
               key={row.id}
-              className="transition-smooth hover:bg-muted/50"
+              data-state={row.getIsSelected() && "selected"}
+              className={`transition-smooth hover:bg-muted/50 ${row.getIsSelected() ? "bg-amber-50/60" : ""}`}
             >
               {row.getVisibleCells().map((cell) => (
                 <TableCell key={cell.id}>

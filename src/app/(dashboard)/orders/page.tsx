@@ -1,7 +1,9 @@
 "use client";
 
+import type { RowSelectionState } from "@tanstack/react-table";
 import * as React from "react";
 import { toast } from "sonner";
+import { BulkActionsBar } from "@/components/orders/bulk-actions-bar";
 import { CreateOrderDialog } from "@/components/orders/create-order-dialog";
 import { ExportMarkdownButton } from "@/components/orders/export-markdown-button";
 import { OrderStatsCards } from "@/components/orders/order-stats-cards";
@@ -58,7 +60,16 @@ export default function OrdersPage() {
   const ordersRequestId = React.useRef(0);
   const statsRequestId = React.useRef(0);
 
+  // Row selection state for bulk actions
+  const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+
   const isAuthenticated = !!session?.user;
+
+  // Derive selected orders from the selection state
+  const selectedOrders = React.useMemo(
+    () => orders.filter((order) => rowSelection[order.id]),
+    [orders, rowSelection],
+  );
 
   const fetchOrders = React.useCallback(async () => {
     const requestId = ++ordersRequestId.current;
@@ -147,6 +158,12 @@ export default function OrdersPage() {
     fetchStats();
   }, [isAuthenticated, filters]);
 
+  // Clear selection when filters/page changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Intentionally clearing selection on filter change
+  React.useEffect(() => {
+    setRowSelection({});
+  }, [filters]);
+
   const handleWeekChange = (dateFrom: string, dateTo: string) => {
     setFilters((prev) => ({
       ...prev,
@@ -170,6 +187,11 @@ export default function OrdersPage() {
 
   const handlePageSizeChange = (pageSize: number) => {
     setFilters({ ...filters, page_size: pageSize, page: 1 });
+  };
+
+  const handleBulkActionComplete = () => {
+    fetchOrders();
+    fetchStats();
   };
 
   if (isSessionLoading || !session?.user) {
@@ -231,6 +253,13 @@ export default function OrdersPage() {
             )}
             <ExportMarkdownButton filters={filters} disabled={isLoading} />
           </div>
+          {session?.user?.role !== "user" && (
+            <BulkActionsBar
+              selectedOrders={selectedOrders}
+              onActionComplete={handleBulkActionComplete}
+              onClearSelection={() => setRowSelection({})}
+            />
+          )}
           <OrdersTable
             orders={orders}
             isLoading={isLoading}
@@ -242,6 +271,8 @@ export default function OrdersPage() {
               fetchOrders();
               fetchStats();
             }}
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
           />
           {!isLoading && orders.length > 0 && (
             <OrdersPagination
