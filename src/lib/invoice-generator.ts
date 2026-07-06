@@ -748,7 +748,15 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
       // pay. The QRIS is static and never expires. Requires the source to
       // return CORS headers (loadImage sets crossOrigin="anonymous"), else
       // the canvas is tainted and toBlob() throws.
-      const qrImage = await loadImage(QRIS_SOURCE_URL);
+      //
+      // The `cors=1` query param sidesteps any CDN object that was cached
+      // WITHOUT the Access-Control-Allow-Origin header (before CORS was
+      // enabled on the bucket). It maps to a distinct cache key that fills
+      // from a fresh origin request, which does return the CORS header.
+      const qrSrc = QRIS_SOURCE_URL.includes("?")
+        ? `${QRIS_SOURCE_URL}&cors=1`
+        : `${QRIS_SOURCE_URL}?cors=1`;
+      const qrImage = await loadImage(qrSrc);
 
       drawBrutBox(ctx, qrBoxX, y, qrBoxSize + 16, qrBoxSize + 16, {
         fill: WHITE,
