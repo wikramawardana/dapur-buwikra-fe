@@ -36,6 +36,13 @@ interface PaymentTotals {
 }
 
 // ── Constants ──────────────────────────────────────────────────────────
+// Static merchant QRIS embedded in the invoice. Must be browser-readable
+// (NEXT_PUBLIC_) since this runs on the client. Keep in sync with the
+// server-side QRIS_SOURCE_URL used by the /qris page.
+const QRIS_SOURCE_URL =
+  process.env.NEXT_PUBLIC_QRIS_SOURCE_URL ||
+  "https://static.wikra.cloud/payment/qris-dapurbuwikra.png";
+
 const W = 600; // canvas width
 const PAD = 32;
 const CONTENT_W = W - PAD * 2;
@@ -733,12 +740,15 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
     const qrBoxSize = 200;
     const qrBoxX = cardPad + (cardW - qrBoxSize - 16) / 2;
 
-    // Generate QR for the payment URL
+    // Fallback page URL (used only if the static QRIS image fails to load)
     const paymentUrl = `${window.location.origin}/payment/qris`;
 
     try {
-      const qrDataUrl = await generateQRDataUrl(paymentUrl);
-      const qrImage = await loadImage(qrDataUrl);
+      // Embed the real static QRIS image directly so customers scan once and
+      // pay. The QRIS is static and never expires. Requires the source to
+      // return CORS headers (loadImage sets crossOrigin="anonymous"), else
+      // the canvas is tainted and toBlob() throws.
+      const qrImage = await loadImage(QRIS_SOURCE_URL);
 
       drawBrutBox(ctx, qrBoxX, y, qrBoxSize + 16, qrBoxSize + 16, {
         fill: WHITE,
@@ -749,17 +759,32 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
 
       ctx.drawImage(qrImage, qrBoxX + 8, y + 8, qrBoxSize, qrBoxSize);
     } catch {
-      // Fallback: show URL text if QR generation fails
-      drawBrutBox(ctx, cardPad + 40, y, cardW - 80, 60, {
-        fill: YELLOW,
-        shadowOffset: 4,
-        borderWidth: 2,
-      });
-      drawText(ctx, paymentUrl, cardPad + cardW / 2, y + 22, {
-        font: 'bold 13px "Inter", Arial, sans-serif',
-        color: BLACK,
-        align: "center",
-      });
+      // Fallback: encode the payment page URL as a QR so the invoice still
+      // leads somewhere payable if the static QRIS image can't be embedded.
+      try {
+        const qrDataUrl = await generateQRDataUrl(paymentUrl);
+        const qrImage = await loadImage(qrDataUrl);
+
+        drawBrutBox(ctx, qrBoxX, y, qrBoxSize + 16, qrBoxSize + 16, {
+          fill: WHITE,
+          shadowOffset: 5,
+          shadowColor: BLUE,
+          borderWidth: 3,
+        });
+
+        ctx.drawImage(qrImage, qrBoxX + 8, y + 8, qrBoxSize, qrBoxSize);
+      } catch {
+        drawBrutBox(ctx, cardPad + 40, y, cardW - 80, 60, {
+          fill: YELLOW,
+          shadowOffset: 4,
+          borderWidth: 2,
+        });
+        drawText(ctx, paymentUrl, cardPad + cardW / 2, y + 22, {
+          font: 'bold 13px "Inter", Arial, sans-serif',
+          color: BLACK,
+          align: "center",
+        });
+      }
     }
 
     y += qrBoxSize + 32;
