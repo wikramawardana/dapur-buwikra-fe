@@ -249,7 +249,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
 
   if (hasUnpaid) {
     estimatedHeight += 20; // gap before QR
-    estimatedHeight += 320; // QR section
+    estimatedHeight += 440; // QR section (larger QR for easier scanning)
   }
 
   estimatedHeight += 20; // gap
@@ -736,8 +736,10 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
     );
     y += 24;
 
-    // QR Code box
-    const qrBoxSize = 200;
+    // QR Code box — sized large so the QR is easily scannable without
+    // zooming. The source is a full QRIS card, so the actual code is only a
+    // fraction of the image; a bigger box keeps it comfortably scannable.
+    const qrBoxSize = 320;
     const qrBoxX = cardPad + (cardW - qrBoxSize - 16) / 2;
 
     // Fallback page URL (used only if the static QRIS image fails to load)
