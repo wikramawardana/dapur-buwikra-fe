@@ -640,6 +640,21 @@ export function OrderActionDialog({
                   )}
                 </div>
               </div>
+              {isViewMode && order.created_by && (
+                <div className="border-2 border-dashed border-black/30 p-3 dark:border-white/30">
+                  <Label className="text-sm font-bold uppercase">
+                    Inserted by
+                  </Label>
+                  <p className="text-base font-medium">
+                    {order.created_by.name || order.created_by.email}
+                  </p>
+                  {order.created_by.name && (
+                    <p className="text-xs text-muted-foreground">
+                      {order.created_by.email}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Order Status - Only in view mode */}

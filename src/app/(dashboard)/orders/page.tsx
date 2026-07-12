@@ -5,6 +5,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { BulkActionsBar } from "@/components/orders/bulk-actions-bar";
 import { CreateOrderDialog } from "@/components/orders/create-order-dialog";
+import { CustomerActivity } from "@/components/orders/customer-activity";
 import { ExportMarkdownButton } from "@/components/orders/export-markdown-button";
 import { OrderStatsCards } from "@/components/orders/order-stats-cards";
 import { OrdersFilters } from "@/components/orders/orders-filters";
@@ -23,6 +24,7 @@ import { useSession } from "@/lib/auth-client";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { getDefaultWeek, getWeekValue } from "@/lib/week-utils";
 import {
+  getOrderCustomerActivity,
   getOrders,
   getOrdersCount,
   getOrdersCountByDay,
@@ -30,6 +32,7 @@ import {
 } from "@/services/orders.service";
 import type {
   Order,
+  OrderCustomerActivity,
   OrderFilters,
   OrderStats,
   PaginationInfo,
@@ -40,6 +43,9 @@ export default function OrdersPage() {
 
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [stats, setStats] = React.useState<OrderStats | null>(null);
+  const [customerActivity, setCustomerActivity] = React.useState<
+    OrderCustomerActivity[]
+  >([]);
   const [pagination, setPagination] = React.useState<PaginationInfo>({
     page: 1,
     page_size: DEFAULT_PAGE_SIZE,
@@ -57,8 +63,10 @@ export default function OrdersPage() {
   }));
   const [isLoading, setIsLoading] = React.useState(true);
   const [isStatsLoading, setIsStatsLoading] = React.useState(true);
+  const [isActivityLoading, setIsActivityLoading] = React.useState(true);
   const ordersRequestId = React.useRef(0);
   const statsRequestId = React.useRef(0);
+  const activityRequestId = React.useRef(0);
 
   // Row selection state for bulk actions
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
@@ -149,6 +157,31 @@ export default function OrdersPage() {
     }
   }, [filters]);
 
+  const fetchCustomerActivity = React.useCallback(async () => {
+    const requestId = ++activityRequestId.current;
+    setIsActivityLoading(true);
+    try {
+      const response = await getOrderCustomerActivity();
+      if (requestId === activityRequestId.current) {
+        setCustomerActivity(response.data);
+      }
+    } catch (error) {
+      if (requestId !== activityRequestId.current) return;
+      if (!(error instanceof Error && error.message.includes("401"))) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch customer activity",
+        );
+      }
+      setCustomerActivity([]);
+    } finally {
+      if (requestId === activityRequestId.current) {
+        setIsActivityLoading(false);
+      }
+    }
+  }, []);
+
   // Fetch data when authenticated and when filters change
   // biome-ignore lint/correctness/useExhaustiveDependencies: Only react to filters changes, not callback identity changes
   React.useEffect(() => {
@@ -157,6 +190,12 @@ export default function OrdersPage() {
     fetchOrders();
     fetchStats();
   }, [isAuthenticated, filters]);
+
+  React.useEffect(() => {
+    if (!isAuthenticated || session?.user?.role === "user") return;
+
+    fetchCustomerActivity();
+  }, [isAuthenticated, fetchCustomerActivity, session?.user?.role]);
 
   // Clear selection when filters/page changes
   // biome-ignore lint/correctness/useExhaustiveDependencies: Intentionally clearing selection on filter change
@@ -192,6 +231,7 @@ export default function OrdersPage() {
   const handleBulkActionComplete = () => {
     fetchOrders();
     fetchStats();
+    fetchCustomerActivity();
   };
 
   if (isSessionLoading || !session?.user) {
@@ -219,6 +259,7 @@ export default function OrdersPage() {
               onOrderCreated={() => {
                 fetchOrders();
                 fetchStats();
+                fetchCustomerActivity();
               }}
             />
           </div>
@@ -233,6 +274,12 @@ export default function OrdersPage() {
               stats={stats}
               filters={filters}
               isLoading={isStatsLoading}
+            />
+          )}
+          {session?.user?.role !== "user" && (
+            <CustomerActivity
+              activities={customerActivity}
+              isLoading={isActivityLoading}
             />
           )}
           <OrdersFilters
@@ -266,10 +313,12 @@ export default function OrdersPage() {
             onOrderUpdated={() => {
               fetchOrders();
               fetchStats();
+              fetchCustomerActivity();
             }}
             onOrderDeleted={() => {
               fetchOrders();
               fetchStats();
+              fetchCustomerActivity();
             }}
             rowSelection={rowSelection}
             onRowSelectionChange={setRowSelection}

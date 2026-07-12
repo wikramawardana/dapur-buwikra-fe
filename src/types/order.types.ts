@@ -24,9 +24,16 @@ export interface Order {
   drop_off_location?: string;
   status: OrderStatus;
   rejection_reason: string | null;
+  created_by?: OrderCreatedBy | null;
   payment_status: PaymentStatus;
   created_at: string;
   updated_at: string;
+}
+
+export interface OrderCreatedBy {
+  id: string;
+  email: string;
+  name?: string | null;
 }
 
 export type OrderStatus =
@@ -65,12 +72,27 @@ export interface OrderCustomer {
   name: string;
   email: string;
   drop_off_location?: string;
+  created_by?: OrderCreatedBy | null;
 }
 
 export interface OrderCustomersResponse {
   status: string;
   message: string;
   data: OrderCustomer[];
+}
+
+export interface OrderCustomerActivity {
+  action: "created" | "updated" | "deleted";
+  customer_name: string;
+  customer_email: string;
+  performed_by: OrderCreatedBy;
+  occurred_at: string;
+}
+
+export interface OrderCustomerActivityResponse {
+  status: string;
+  message: string;
+  data: OrderCustomerActivity[];
 }
 
 export interface CreateOrderPayload {

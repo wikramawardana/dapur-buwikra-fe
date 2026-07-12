@@ -546,12 +546,13 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
         drop_off_location: data.drop_off_location || undefined,
       };
 
-      await createOrder(payload);
+      const createdOrder = await createOrder(payload);
       setCustomerSuggestions((customers) =>
         upsertCustomerSuggestion(customers, {
           email: payload.email || data.email,
           name: payload.name,
           drop_off_location: data.drop_off_location || undefined,
+          created_by: createdOrder.data.created_by,
         }),
       );
       // Show different message based on user role
@@ -702,6 +703,13 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                       <p className="truncate text-xs text-muted-foreground">
                                         {customer.email}
                                       </p>
+                                      {customer.created_by && (
+                                        <p className="truncate text-xs text-muted-foreground/80">
+                                          Added by{" "}
+                                          {customer.created_by.name ||
+                                            customer.created_by.email}
+                                        </p>
+                                      )}
                                     </div>
                                   </CommandItem>
                                 ))}

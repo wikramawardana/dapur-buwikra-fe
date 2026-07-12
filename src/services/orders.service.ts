@@ -3,6 +3,7 @@ import type {
   CreateOrderPayload,
   OrderCountByDayResponse,
   OrderCountResponse,
+  OrderCustomerActivityResponse,
   OrderCustomersResponse,
   OrderFilters,
   OrderSumResponse,
@@ -33,6 +34,13 @@ export async function getOrderById(id: string): Promise<SingleOrderResponse> {
  */
 export async function getOrderCustomers(): Promise<OrderCustomersResponse> {
   return apiFetch<OrderCustomersResponse>("/orders/customers");
+}
+
+/**
+ * Fetch the latest customer insertion activity.
+ */
+export async function getOrderCustomerActivity(): Promise<OrderCustomerActivityResponse> {
+  return apiFetch<OrderCustomerActivityResponse>("/orders/customer-activity");
 }
 
 /**

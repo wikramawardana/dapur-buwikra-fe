@@ -122,11 +122,21 @@ export function OrdersTable({
       {
         accessorKey: "name",
         header: () => <div className="text-left font-semibold">Name</div>,
-        cell: ({ row }) => (
-          <div className="text-left font-bold text-black">
-            {row.getValue("name")}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const order = row.original;
+          const creator = order.created_by;
+
+          return (
+            <div className="text-left">
+              <div className="font-bold text-black">{order.name}</div>
+              {creator && (
+                <div className="mt-0.5 max-w-[180px] truncate text-xs text-muted-foreground">
+                  Added by {creator.name || creator.email}
+                </div>
+              )}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "created_at",
@@ -343,9 +353,17 @@ export function OrdersTable({
                       }}
                       aria-label={`Select ${order.name}`}
                     />
-                    <h3 className="font-bold text-black truncate">
-                      {order.name}
-                    </h3>
+                    <div className="min-w-0">
+                      <h3 className="truncate font-bold text-black">
+                        {order.name}
+                      </h3>
+                      {order.created_by && (
+                        <p className="truncate text-xs text-muted-foreground">
+                          Added by{" "}
+                          {order.created_by.name || order.created_by.email}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <OrderActionDialog
                     order={order}
