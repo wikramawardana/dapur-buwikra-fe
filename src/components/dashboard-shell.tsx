@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   MapPin,
   PanelLeft,
+  Receipt,
   ShoppingCart,
   UtensilsCrossed,
 } from "lucide-react";
@@ -47,6 +48,13 @@ const menuItems = [
     href: "/orders",
     icon: ShoppingCart,
     roles: ["admin", "chef", "user"],
+    group: "menu" as const,
+  },
+  {
+    title: "Shopping Costs",
+    href: "/shopping-costs",
+    icon: Receipt,
+    roles: ["admin", "chef"],
     group: "menu" as const,
   },
 ];

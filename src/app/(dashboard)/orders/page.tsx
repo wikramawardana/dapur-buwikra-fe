@@ -30,7 +30,7 @@ import {
   getOrdersCountByDay,
   getOrdersSum,
 } from "@/services/orders.service";
-import { getWeeklyExpense } from "@/services/weekly-expense.service";
+import { getWeeklyExpenses } from "@/services/weekly-expense.service";
 import type {
   Order,
   OrderCustomerActivity,
@@ -66,8 +66,9 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isStatsLoading, setIsStatsLoading] = React.useState(true);
   const [isActivityLoading, setIsActivityLoading] = React.useState(true);
-  const [weeklyExpense, setWeeklyExpense] =
-    React.useState<WeeklyExpense | null>(null);
+  const [weeklyExpenses, setWeeklyExpenses] = React.useState<WeeklyExpense[]>(
+    [],
+  );
   const [isWeeklyExpenseLoading, setIsWeeklyExpenseLoading] =
     React.useState(true);
   const ordersRequestId = React.useRef(0);
@@ -82,16 +83,16 @@ export default function OrdersPage() {
 
   const fetchWeeklyExpense = React.useCallback(async () => {
     if (!filters.date_from || !canViewWeeklyProfit) {
-      setWeeklyExpense(null);
+      setWeeklyExpenses([]);
       setIsWeeklyExpenseLoading(false);
       return;
     }
 
     setIsWeeklyExpenseLoading(true);
-    setWeeklyExpense(null);
+    setWeeklyExpenses([]);
     try {
-      const response = await getWeeklyExpense(filters.date_from);
-      setWeeklyExpense(response.data);
+      const response = await getWeeklyExpenses(filters.date_from);
+      setWeeklyExpenses(response.data);
     } catch (error) {
       if (!(error instanceof Error && error.message.includes("401"))) {
         toast.error(
@@ -100,7 +101,7 @@ export default function OrdersPage() {
             : "Failed to fetch weekly shopping cost",
         );
       }
-      setWeeklyExpense(null);
+      setWeeklyExpenses([]);
     } finally {
       setIsWeeklyExpenseLoading(false);
     }
@@ -313,9 +314,8 @@ export default function OrdersPage() {
               stats={stats}
               filters={filters}
               isLoading={isStatsLoading}
-              weeklyExpense={weeklyExpense}
+              weeklyExpenses={weeklyExpenses}
               isWeeklyExpenseLoading={isWeeklyExpenseLoading}
-              onWeeklyExpenseSaved={setWeeklyExpense}
             />
           )}
           {session?.user?.role !== "user" && (

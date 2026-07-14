@@ -8,13 +8,19 @@ export interface WeeklyExpense {
   updated_at: string;
 }
 
+export interface WeeklyExpensesResponse {
+  status: string;
+  message: string;
+  data: WeeklyExpense[];
+}
+
 export interface WeeklyExpenseResponse {
   status: string;
   message: string;
-  data: WeeklyExpense | null;
+  data: WeeklyExpense;
 }
 
-export interface SaveWeeklyExpensePayload {
+export interface WeeklyExpensePayload {
   week_start: string;
   week_end: string;
   amount: number;

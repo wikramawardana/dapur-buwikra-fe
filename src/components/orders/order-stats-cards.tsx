@@ -15,9 +15,8 @@ interface OrderStatsCardsProps {
   stats: OrderStats | null;
   filters?: OrderFilters;
   isLoading?: boolean;
-  weeklyExpense?: WeeklyExpense | null;
+  weeklyExpenses?: WeeklyExpense[];
   isWeeklyExpenseLoading?: boolean;
-  onWeeklyExpenseSaved?: (expense: WeeklyExpense) => void;
 }
 
 const DAYS = [
@@ -46,9 +45,8 @@ export function OrderStatsCards({
   stats,
   filters,
   isLoading,
-  weeklyExpense = null,
+  weeklyExpenses = [],
   isWeeklyExpenseLoading = false,
-  onWeeklyExpenseSaved = () => undefined,
 }: OrderStatsCardsProps) {
   const [showRevenue, setShowRevenue] = useState(false);
 
@@ -164,12 +162,11 @@ export function OrderStatsCards({
 
       <WeeklyProfitCard
         revenue={stats?.total_sum ?? 0}
-        expense={weeklyExpense}
+        expenses={weeklyExpenses}
         weekStart={filters?.date_from}
         weekEnd={filters?.date_to}
         isLoading={isWeeklyExpenseLoading}
         showAmount={showRevenue}
-        onExpenseSaved={onWeeklyExpenseSaved}
       />
 
       {/* Row 2: Per-day breakdown */}
