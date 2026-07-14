@@ -3,16 +3,21 @@
 import { format } from "date-fns";
 import { Eye, EyeOff, Filter, ShoppingCart, Utensils } from "lucide-react";
 import { useState } from "react";
+import { WeeklyProfitCard } from "@/components/orders/weekly-profit-card";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
 import type { OrderFilters, OrderStats } from "@/types/order.types";
+import type { WeeklyExpense } from "@/types/weekly-expense.types";
 
 interface OrderStatsCardsProps {
   stats: OrderStats | null;
   filters?: OrderFilters;
   isLoading?: boolean;
+  weeklyExpense?: WeeklyExpense | null;
+  isWeeklyExpenseLoading?: boolean;
+  onWeeklyExpenseSaved?: (expense: WeeklyExpense) => void;
 }
 
 const DAYS = [
@@ -41,6 +46,9 @@ export function OrderStatsCards({
   stats,
   filters,
   isLoading,
+  weeklyExpense = null,
+  isWeeklyExpenseLoading = false,
+  onWeeklyExpenseSaved = () => undefined,
 }: OrderStatsCardsProps) {
   const [showRevenue, setShowRevenue] = useState(false);
 
@@ -153,6 +161,16 @@ export function OrderStatsCards({
           </CardContent>
         </Card>
       </div>
+
+      <WeeklyProfitCard
+        revenue={stats?.total_sum ?? 0}
+        expense={weeklyExpense}
+        weekStart={filters?.date_from}
+        weekEnd={filters?.date_to}
+        isLoading={isWeeklyExpenseLoading}
+        showAmount={showRevenue}
+        onExpenseSaved={onWeeklyExpenseSaved}
+      />
 
       {/* Row 2: Per-day breakdown */}
       <div className="grid gap-2 grid-cols-5">

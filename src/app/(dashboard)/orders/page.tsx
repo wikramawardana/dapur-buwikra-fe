@@ -30,6 +30,7 @@ import {
   getOrdersCountByDay,
   getOrdersSum,
 } from "@/services/orders.service";
+import { getWeeklyExpense } from "@/services/weekly-expense.service";
 import type {
   Order,
   OrderCustomerActivity,
@@ -37,6 +38,7 @@ import type {
   OrderStats,
   PaginationInfo,
 } from "@/types/order.types";
+import type { WeeklyExpense } from "@/types/weekly-expense.types";
 
 export default function OrdersPage() {
   const { data: session, isPending: isSessionLoading } = useSession();
@@ -55,7 +57,7 @@ export default function OrdersPage() {
   const defaultWeek = React.useMemo(() => getDefaultWeek(), []);
   const [filters, setFilters] = React.useState<OrderFilters>(() => ({
     page: 1,
-    page_size: 20,
+    page_size: DEFAULT_PAGE_SIZE,
     sort_by: "name",
     sort_order: "asc",
     date_from: defaultWeek.dateFrom,
@@ -64,6 +66,10 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isStatsLoading, setIsStatsLoading] = React.useState(true);
   const [isActivityLoading, setIsActivityLoading] = React.useState(true);
+  const [weeklyExpense, setWeeklyExpense] =
+    React.useState<WeeklyExpense | null>(null);
+  const [isWeeklyExpenseLoading, setIsWeeklyExpenseLoading] =
+    React.useState(true);
   const ordersRequestId = React.useRef(0);
   const statsRequestId = React.useRef(0);
   const activityRequestId = React.useRef(0);
@@ -72,6 +78,33 @@ export default function OrdersPage() {
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
 
   const isAuthenticated = !!session?.user;
+  const canViewWeeklyProfit = session?.user?.role !== "user";
+
+  const fetchWeeklyExpense = React.useCallback(async () => {
+    if (!filters.date_from || !canViewWeeklyProfit) {
+      setWeeklyExpense(null);
+      setIsWeeklyExpenseLoading(false);
+      return;
+    }
+
+    setIsWeeklyExpenseLoading(true);
+    setWeeklyExpense(null);
+    try {
+      const response = await getWeeklyExpense(filters.date_from);
+      setWeeklyExpense(response.data);
+    } catch (error) {
+      if (!(error instanceof Error && error.message.includes("401"))) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch weekly shopping cost",
+        );
+      }
+      setWeeklyExpense(null);
+    } finally {
+      setIsWeeklyExpenseLoading(false);
+    }
+  }, [canViewWeeklyProfit, filters.date_from]);
 
   // Derive selected orders from the selection state
   const selectedOrders = React.useMemo(
@@ -197,6 +230,12 @@ export default function OrdersPage() {
     fetchCustomerActivity();
   }, [isAuthenticated, fetchCustomerActivity, session?.user?.role]);
 
+  React.useEffect(() => {
+    if (!isAuthenticated || !canViewWeeklyProfit) return;
+
+    fetchWeeklyExpense();
+  }, [isAuthenticated, canViewWeeklyProfit, fetchWeeklyExpense]);
+
   // Clear selection when filters/page changes
   // biome-ignore lint/correctness/useExhaustiveDependencies: Intentionally clearing selection on filter change
   React.useEffect(() => {
@@ -274,6 +313,9 @@ export default function OrdersPage() {
               stats={stats}
               filters={filters}
               isLoading={isStatsLoading}
+              weeklyExpense={weeklyExpense}
+              isWeeklyExpenseLoading={isWeeklyExpenseLoading}
+              onWeeklyExpenseSaved={setWeeklyExpense}
             />
           )}
           {session?.user?.role !== "user" && (
