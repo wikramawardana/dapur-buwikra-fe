@@ -89,7 +89,7 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
       className="scroll-mt-20 border-y-4 border-black bg-blue-100 py-16"
     >
       <div className="container mx-auto max-w-6xl px-4">
-        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-8">
           <div>
             <p className="mb-2 text-sm font-black uppercase tracking-widest text-brut-blue">
               Published weekly menus
@@ -98,9 +98,6 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
               {content.weeklyMenuTitle}
             </h2>
           </div>
-          <p className="max-w-md font-medium text-gray-600">
-            Lihat menu yang sedang dan pernah kami siapkan setiap minggu.
-          </p>
         </div>
 
         {isLoading ? (

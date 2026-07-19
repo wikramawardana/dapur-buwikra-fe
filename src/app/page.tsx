@@ -1,4 +1,4 @@
-import { LayoutDashboard } from "lucide-react";
+import { Images, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { Hero } from "@/components/landing-page/hero";
 import { MenuSection } from "@/components/landing-page/menu-section";
@@ -19,8 +19,12 @@ function App() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/portfolio" className="font-bold hover:underline">
-              Portfolio
+            <Link
+              href="/portfolio"
+              className="flex items-center gap-2 border-2 border-black bg-yellow-300 px-3 py-2 font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-yellow-400 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:px-4"
+            >
+              <Images size={18} />
+              <span>Jejak Rasa</span>
             </Link>
             <Link
               href="/orders"

@@ -34,7 +34,7 @@ MENU MINGGUAN
 Menu belum tersedia
 
 ## Featured Title
-PORTOFOLIO MASAKAN
+JEJAK RASA DAPUR BU WIKRA
 
 ## Featured Empty Title
 SEGERA HADIR!

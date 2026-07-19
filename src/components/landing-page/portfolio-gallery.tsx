@@ -57,7 +57,7 @@ export function PortfolioGallery() {
   if (menus.length === 0) {
     return (
       <div className="border-4 border-dashed border-black bg-white px-6 py-16 text-center">
-        <p className="text-2xl font-black">Portfolio segera hadir.</p>
+        <p className="text-2xl font-black">Jejak rasa segera hadir.</p>
         <p className="mt-2 font-medium text-gray-500">
           Koleksi masakan sedang dipersiapkan.
         </p>
@@ -114,7 +114,7 @@ export function PortfolioGallery() {
                   {formatPortfolioDate(menu.portfolio_date)}
                 </p>
                 <h2 className="mt-2 line-clamp-3 text-lg font-black text-gray-700">
-                  {menu.description || "Portofolio masakan Dapur Bu Wikra"}
+                  {menu.description || "Jejak rasa Dapur Bu Wikra"}
                 </h2>
                 {menu.image_urls.length > 1 && (
                   <p className="mt-3 text-xs font-bold uppercase tracking-wide text-brut-blue">
@@ -136,7 +136,7 @@ export function PortfolioGallery() {
             type="button"
             onClick={() => setSelected(null)}
             className="absolute right-3 top-3 z-20 border-2 border-black bg-white p-2 shadow-[2px_2px_0_0_#000]"
-            aria-label="Close portfolio preview"
+            aria-label="Tutup pratinjau jejak rasa"
           >
             <X className="h-4 w-4" />
           </button>
@@ -144,7 +144,7 @@ export function PortfolioGallery() {
             {selectedImage ? (
               <img
                 src={selectedImage}
-                alt={selected?.title ?? "Portfolio"}
+                alt={selected?.title ?? "Jejak Rasa"}
                 className="max-h-[70vh] w-full object-contain"
               />
             ) : (
@@ -185,7 +185,7 @@ export function PortfolioGallery() {
                 {formatPortfolioDate(selected.portfolio_date)}
               </p>
               <p className="mt-2 whitespace-pre-line text-lg font-bold">
-                {selected.description || "Portofolio masakan Dapur Bu Wikra"}
+                {selected.description || "Jejak rasa Dapur Bu Wikra"}
               </p>
             </div>
           )}

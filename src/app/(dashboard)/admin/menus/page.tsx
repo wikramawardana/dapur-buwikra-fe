@@ -261,7 +261,7 @@ export default function MenusPage() {
     }
 
     if (formContentType === "portfolio" && !formPortfolioDate) {
-      toast.error("Please select the portfolio date");
+      toast.error("Please select the food date");
       return;
     }
 
@@ -446,7 +446,7 @@ export default function MenusPage() {
                 Food Content
               </CardTitle>
               <CardDescription>
-                Publish portfolio work and announce upcoming weekly menus
+                Publish Jejak Rasa and announce upcoming weekly menus
               </CardDescription>
             </div>
             <Button
@@ -467,7 +467,7 @@ export default function MenusPage() {
                   value="portfolio"
                   className="rounded-none px-4 py-2 font-bold data-[state=active]:bg-yellow-400 data-[state=active]:text-black"
                 >
-                  Portfolio ({portfolioCount})
+                  Jejak Rasa ({portfolioCount})
                 </TabsTrigger>
                 <TabsTrigger
                   value="weekly_menu"
@@ -508,8 +508,7 @@ export default function MenusPage() {
               </div>
             ) : visibleMenus.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No{" "}
-                {activeType === "portfolio" ? "portfolio work" : "weekly menus"}{" "}
+                No {activeType === "portfolio" ? "Jejak Rasa" : "weekly menus"}{" "}
                 yet. Click &quot;Create Content&quot; to add one.
               </div>
             ) : (
@@ -547,7 +546,7 @@ export default function MenusPage() {
                                   {formatPortfolioDate(menu.portfolio_date)}
                                 </p>
                                 <h3 className="mt-1 text-lg font-bold">
-                                  {menu.description || "Portfolio entry"}
+                                  {menu.description || "Jejak Rasa entry"}
                                 </h3>
                               </>
                             ) : (
@@ -732,7 +731,7 @@ export default function MenusPage() {
             <DialogDescription>
               {editingMenu
                 ? "Update the public content details."
-                : "Share portfolio work or announce a weekly menu."}
+                : "Share Jejak Rasa or announce a weekly menu."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -756,7 +755,7 @@ export default function MenusPage() {
                     value="portfolio"
                     className="rounded-none py-2 font-bold data-[state=active]:bg-yellow-400 data-[state=active]:text-black"
                   >
-                    Food Portfolio
+                    Jejak Rasa
                   </TabsTrigger>
                   <TabsTrigger
                     value="weekly_menu"
@@ -768,7 +767,7 @@ export default function MenusPage() {
               </Tabs>
               <p className="text-xs text-muted-foreground">
                 {formContentType === "portfolio"
-                  ? "A permanent example of food or catering work."
+                  ? "A permanent collection of dishes and cooking stories."
                   : "A dated announcement for an upcoming week."}
               </p>
             </div>
@@ -791,7 +790,7 @@ export default function MenusPage() {
 
             {formContentType === "portfolio" && (
               <div className="space-y-2">
-                <Label className="font-bold">Portfolio Date *</Label>
+                <Label className="font-bold">Tanggal Sajian *</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -801,7 +800,7 @@ export default function MenusPage() {
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formPortfolioDate
                         ? format(formPortfolioDate, "PPP")
-                        : "Pick the food/menu date"}
+                        : "Pilih tanggal sajian"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
@@ -813,8 +812,7 @@ export default function MenusPage() {
                   </PopoverContent>
                 </Popover>
                 <p className="text-xs text-muted-foreground">
-                  Use the date the food or menu belongs to, not the date it was
-                  uploaded.
+                  Gunakan tanggal sajian, bukan tanggal konten diunggah.
                 </p>
               </div>
             )}

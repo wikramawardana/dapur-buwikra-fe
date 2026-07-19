@@ -17,10 +17,10 @@ export default function PortfolioPage() {
             Dapur Bu Wikra
           </p>
           <h1 className="text-5xl font-black sm:text-7xl">
-            PORTOFOLIO MASAKAN
+            JEJAK RASA DAPUR BU WIKRA
           </h1>
           <p className="mt-4 text-lg font-medium text-gray-600">
-            Beberapa contoh masakan, nasi box, dan sajian yang pernah kami buat.
+            Kumpulan sajian dan cerita rasa yang pernah hadir dari dapur kami.
           </p>
         </div>
         <PortfolioGallery />

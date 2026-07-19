@@ -131,7 +131,7 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
                       {formatPortfolioDate(menu.portfolio_date)}
                     </p>
                     <p className="mt-1 line-clamp-2 text-sm font-bold text-gray-600">
-                      {menu.description || "Portofolio masakan Dapur Bu Wikra"}
+                      {menu.description || "Jejak rasa Dapur Bu Wikra"}
                     </p>
                   </div>
                 </button>
@@ -178,7 +178,7 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
                 {formatPortfolioDate(selected.portfolio_date)}
               </p>
               <p className="mt-1 text-sm font-bold text-white/80">
-                {selected.description || "Portofolio masakan Dapur Bu Wikra"}
+                {selected.description || "Jejak rasa Dapur Bu Wikra"}
               </p>
             </div>
           )}
