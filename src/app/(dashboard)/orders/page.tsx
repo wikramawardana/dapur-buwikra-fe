@@ -5,9 +5,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { BulkActionsBar } from "@/components/orders/bulk-actions-bar";
 import { CreateOrderDialog } from "@/components/orders/create-order-dialog";
-import { CustomerActivity } from "@/components/orders/customer-activity";
 import { ExportMarkdownButton } from "@/components/orders/export-markdown-button";
-import { OrderStatsCards } from "@/components/orders/order-stats-cards";
 import { OrdersFilters } from "@/components/orders/orders-filters";
 import { OrdersPagination } from "@/components/orders/orders-pagination";
 import { OrdersTable } from "@/components/orders/orders-table";
@@ -23,31 +21,13 @@ import { Spinner } from "@/components/ui/spinner";
 import { useSession } from "@/lib/auth-client";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { getDefaultWeek, getWeekValue } from "@/lib/week-utils";
-import {
-  getOrderCustomerActivity,
-  getOrders,
-  getOrdersCount,
-  getOrdersCountByDay,
-  getOrdersSum,
-} from "@/services/orders.service";
-import { getWeeklyExpenses } from "@/services/weekly-expense.service";
-import type {
-  Order,
-  OrderCustomerActivity,
-  OrderFilters,
-  OrderStats,
-  PaginationInfo,
-} from "@/types/order.types";
-import type { WeeklyExpense } from "@/types/weekly-expense.types";
+import { getOrders } from "@/services/orders.service";
+import type { Order, OrderFilters, PaginationInfo } from "@/types/order.types";
 
 export default function OrdersPage() {
   const { data: session, isPending: isSessionLoading } = useSession();
 
   const [orders, setOrders] = React.useState<Order[]>([]);
-  const [stats, setStats] = React.useState<OrderStats | null>(null);
-  const [customerActivity, setCustomerActivity] = React.useState<
-    OrderCustomerActivity[]
-  >([]);
   const [pagination, setPagination] = React.useState<PaginationInfo>({
     page: 1,
     page_size: DEFAULT_PAGE_SIZE,
@@ -64,48 +44,34 @@ export default function OrdersPage() {
     date_to: defaultWeek.dateTo,
   }));
   const [isLoading, setIsLoading] = React.useState(true);
-  const [isStatsLoading, setIsStatsLoading] = React.useState(true);
-  const [isActivityLoading, setIsActivityLoading] = React.useState(true);
-  const [weeklyExpenses, setWeeklyExpenses] = React.useState<WeeklyExpense[]>(
-    [],
-  );
-  const [isWeeklyExpenseLoading, setIsWeeklyExpenseLoading] =
-    React.useState(true);
   const ordersRequestId = React.useRef(0);
-  const statsRequestId = React.useRef(0);
-  const activityRequestId = React.useRef(0);
 
   // Row selection state for bulk actions
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
 
   const isAuthenticated = !!session?.user;
-  const canViewWeeklyProfit = session?.user?.role !== "user";
 
-  const fetchWeeklyExpense = React.useCallback(async () => {
-    if (!filters.date_from || !canViewWeeklyProfit) {
-      setWeeklyExpenses([]);
-      setIsWeeklyExpenseLoading(false);
-      return;
-    }
+  React.useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const dateFrom = searchParams.get("date_from");
+    const dateTo = searchParams.get("date_to");
+    const paymentStatus = searchParams.get("payment_status");
 
-    setIsWeeklyExpenseLoading(true);
-    setWeeklyExpenses([]);
-    try {
-      const response = await getWeeklyExpenses(filters.date_from);
-      setWeeklyExpenses(response.data);
-    } catch (error) {
-      if (!(error instanceof Error && error.message.includes("401"))) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch weekly shopping cost",
-        );
-      }
-      setWeeklyExpenses([]);
-    } finally {
-      setIsWeeklyExpenseLoading(false);
-    }
-  }, [canViewWeeklyProfit, filters.date_from]);
+    if (!dateFrom && !dateTo && !paymentStatus) return;
+
+    setFilters((current) => ({
+      ...current,
+      date_from: dateFrom || current.date_from,
+      date_to: dateTo || current.date_to,
+      payment_status:
+        paymentStatus === "paid" ||
+        paymentStatus === "unpaid" ||
+        paymentStatus === "partial"
+          ? paymentStatus
+          : current.payment_status,
+      page: 1,
+    }));
+  }, []);
 
   // Derive selected orders from the selection state
   const selectedOrders = React.useMemo(
@@ -138,104 +104,13 @@ export default function OrdersPage() {
     }
   }, [filters]);
 
-  const fetchStats = React.useCallback(async () => {
-    const requestId = ++statsRequestId.current;
-    setIsStatsLoading(true);
-    try {
-      // Get stats with the same filters (excluding pagination)
-      const statsFilters = { ...filters };
-      delete statsFilters.page;
-      delete statsFilters.page_size;
-
-      // Call all APIs in parallel
-      const [countResponse, sumResponse, countByDayResponse] =
-        await Promise.all([
-          getOrdersCount(statsFilters),
-          getOrdersSum(statsFilters),
-          getOrdersCountByDay(statsFilters),
-        ]);
-
-      if (requestId !== statsRequestId.current) return;
-
-      // Combine the results
-      setStats({
-        total_count: countResponse.data.total_count,
-        count_monday: countResponse.data.monday,
-        count_tuesday: countResponse.data.tuesday,
-        count_wednesday: countResponse.data.wednesday,
-        count_thursday: countResponse.data.thursday,
-        count_friday: countResponse.data.friday,
-        total_sum: sumResponse.data.total_amount,
-        paid_sum: sumResponse.data.paid_amount,
-        unpaid_sum: sumResponse.data.unpaid_amount,
-        count_by_day: countByDayResponse.data.total,
-        total_nasi: countByDayResponse.data.total_nasi,
-        total_kulit_kecil: countByDayResponse.data.total_kulit_kecil,
-        total_kulit_besar: countByDayResponse.data.total_kulit_besar,
-        days_breakdown: countByDayResponse.data.days,
-      });
-    } catch (error) {
-      if (requestId !== statsRequestId.current) return;
-      // Don't show toast for auth errors - let the redirect handle it
-      if (error instanceof Error && error.message.includes("401")) {
-        return;
-      }
-      toast.error(
-        error instanceof Error ? error.message : "Failed to fetch statistics",
-      );
-      setStats(null);
-    } finally {
-      if (requestId === statsRequestId.current) {
-        setIsStatsLoading(false);
-      }
-    }
-  }, [filters]);
-
-  const fetchCustomerActivity = React.useCallback(async () => {
-    const requestId = ++activityRequestId.current;
-    setIsActivityLoading(true);
-    try {
-      const response = await getOrderCustomerActivity();
-      if (requestId === activityRequestId.current) {
-        setCustomerActivity(response.data);
-      }
-    } catch (error) {
-      if (requestId !== activityRequestId.current) return;
-      if (!(error instanceof Error && error.message.includes("401"))) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch customer activity",
-        );
-      }
-      setCustomerActivity([]);
-    } finally {
-      if (requestId === activityRequestId.current) {
-        setIsActivityLoading(false);
-      }
-    }
-  }, []);
-
   // Fetch data when authenticated and when filters change
   // biome-ignore lint/correctness/useExhaustiveDependencies: Only react to filters changes, not callback identity changes
   React.useEffect(() => {
     if (!isAuthenticated) return;
 
     fetchOrders();
-    fetchStats();
   }, [isAuthenticated, filters]);
-
-  React.useEffect(() => {
-    if (!isAuthenticated || session?.user?.role === "user") return;
-
-    fetchCustomerActivity();
-  }, [isAuthenticated, fetchCustomerActivity, session?.user?.role]);
-
-  React.useEffect(() => {
-    if (!isAuthenticated || !canViewWeeklyProfit) return;
-
-    fetchWeeklyExpense();
-  }, [isAuthenticated, canViewWeeklyProfit, fetchWeeklyExpense]);
 
   // Clear selection when filters/page changes
   // biome-ignore lint/correctness/useExhaustiveDependencies: Intentionally clearing selection on filter change
@@ -270,8 +145,6 @@ export default function OrdersPage() {
 
   const handleBulkActionComplete = () => {
     fetchOrders();
-    fetchStats();
-    fetchCustomerActivity();
   };
 
   if (isSessionLoading || !session?.user) {
@@ -298,8 +171,6 @@ export default function OrdersPage() {
             <CreateOrderDialog
               onOrderCreated={() => {
                 fetchOrders();
-                fetchStats();
-                fetchCustomerActivity();
               }}
             />
           </div>
@@ -309,27 +180,12 @@ export default function OrdersPage() {
           />
         </CardHeader>
         <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
-          {session?.user?.role !== "user" && (
-            <OrderStatsCards
-              stats={stats}
-              filters={filters}
-              isLoading={isStatsLoading}
-              weeklyExpenses={weeklyExpenses}
-              isWeeklyExpenseLoading={isWeeklyExpenseLoading}
-            />
-          )}
-          {session?.user?.role !== "user" && (
-            <CustomerActivity
-              activities={customerActivity}
-              isLoading={isActivityLoading}
-            />
-          )}
           <OrdersFilters
             filters={filters}
             onFiltersChange={handleFiltersChange}
           />
           <div className="flex items-center justify-between gap-3">
-            {isLoading || isStatsLoading ? (
+            {isLoading ? (
               <div
                 className="flex items-center gap-2 text-xs font-medium text-muted-foreground"
                 role="status"
@@ -338,7 +194,10 @@ export default function OrdersPage() {
                 Updating results...
               </div>
             ) : (
-              <div />
+              <p className="text-xs font-medium text-muted-foreground">
+                {pagination.total_items} order
+                {pagination.total_items === 1 ? "" : "s"} found
+              </p>
             )}
             <ExportMarkdownButton filters={filters} disabled={isLoading} />
           </div>
@@ -354,13 +213,9 @@ export default function OrdersPage() {
             isLoading={isLoading}
             onOrderUpdated={() => {
               fetchOrders();
-              fetchStats();
-              fetchCustomerActivity();
             }}
             onOrderDeleted={() => {
               fetchOrders();
-              fetchStats();
-              fetchCustomerActivity();
             }}
             rowSelection={rowSelection}
             onRowSelectionChange={setRowSelection}

@@ -2,6 +2,7 @@ import { LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { Hero } from "@/components/landing-page/hero";
 import { MenuSection } from "@/components/landing-page/menu-section";
+import { WeeklyMenuSection } from "@/components/landing-page/weekly-menu-section";
 import { loadLandingContent } from "@/lib/landing-content";
 
 function App() {
@@ -17,18 +18,24 @@ function App() {
               {content.header.brand}
             </span>
           </div>
-          <Link
-            href="/orders"
-            className="flex items-center gap-2 px-4 py-2 font-bold bg-brut-blue text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
-          >
-            <LayoutDashboard size={18} />
-            <span className="hidden sm:inline">{content.header.cta}</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/portfolio" className="font-bold hover:underline">
+              Portfolio
+            </Link>
+            <Link
+              href="/orders"
+              className="flex items-center gap-2 px-4 py-2 font-bold bg-brut-blue text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+            >
+              <LayoutDashboard size={18} />
+              <span className="hidden sm:inline">{content.header.cta}</span>
+            </Link>
+          </div>
         </div>
       </nav>
 
       <main>
         <Hero content={content.hero} />
+        <WeeklyMenuSection content={content.hero} />
         <MenuSection content={content.featured} />
 
         {/* Availability Banner */}

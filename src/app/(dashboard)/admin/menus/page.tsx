@@ -50,9 +50,16 @@ import {
 } from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { getUploadUrl } from "@/lib/api.config";
 import { useSession } from "@/lib/auth-client";
+import {
+  formatPortfolioDate,
+  generateWeeklyMenuTitle,
+  getPortfolioDateValue,
+  getPortfolioSortTime,
+} from "@/lib/menu-utils";
 import {
   createMenu,
   deleteAllMenuImages,
@@ -62,18 +69,19 @@ import {
   updateMenu,
   uploadMenuImage,
 } from "@/services/menu.service";
-import type { Menu, MenuItem } from "@/types/menu.types";
+import type { Menu, MenuContentType } from "@/types/menu.types";
 
 export default function MenusPage() {
   const router = useRouter();
   const { data: session, isPending: isSessionLoading } = useSession();
   const [menus, setMenus] = React.useState<Menu[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [totalPages, setTotalPages] = React.useState(1);
-  const [totalItems, setTotalItems] = React.useState(0);
-  const PAGE_SIZE = 10;
+  const [activeType, setActiveType] =
+    React.useState<MenuContentType>("portfolio");
+  const [portfolioSort, setPortfolioSort] = React.useState<"newest" | "oldest">(
+    "newest",
+  );
+  const PAGE_SIZE = 100;
 
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
@@ -82,25 +90,35 @@ export default function MenusPage() {
   const [editingMenu, setEditingMenu] = React.useState<Menu | null>(null);
   const [deletingMenu, setDeletingMenu] = React.useState<Menu | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [updatingMenuIds, setUpdatingMenuIds] = React.useState<Set<string>>(
+    () => new Set(),
+  );
   const [_isUploadingImage, setIsUploadingImage] = React.useState(false);
   const imageInputRef = React.useRef<HTMLInputElement>(null);
 
   // Form state
-  const [formTitle, setFormTitle] = React.useState("");
   const [formDescription, setFormDescription] = React.useState("");
+  const [formContentType, setFormContentType] =
+    React.useState<MenuContentType>("portfolio");
   const [formStartDate, setFormStartDate] = React.useState<Date | undefined>();
   const [formEndDate, setFormEndDate] = React.useState<Date | undefined>();
-  const [formItems, setFormItems] = React.useState<MenuItem[]>([]);
+  const [formPortfolioDate, setFormPortfolioDate] = React.useState<
+    Date | undefined
+  >();
   const [formIsActive, setFormIsActive] = React.useState(true);
   const [formIsFeatured, setFormIsFeatured] = React.useState(false);
-  const [formImage, setFormImage] = React.useState<File | null>(null);
-  const [formImagePreview, setFormImagePreview] = React.useState<string | null>(
-    null,
+  const [formImages, setFormImages] = React.useState<File[]>([]);
+  const [formImagePreviews, setFormImagePreviews] = React.useState<string[]>(
+    [],
   );
   const [removeExistingImages, setRemoveExistingImages] = React.useState(false);
 
   const userRole = session?.user?.role;
   const canAccess = userRole === "admin" || userRole === "chef";
+  const generatedWeeklyTitle = React.useMemo(
+    () => generateWeeklyMenuTitle(formStartDate, formEndDate),
+    [formStartDate, formEndDate],
+  );
 
   // Check auth
   React.useEffect(() => {
@@ -110,84 +128,75 @@ export default function MenusPage() {
   }, [isSessionLoading, router, canAccess]);
 
   // Fetch data
-  const fetchMenus = React.useCallback(async (page = 1, append = false) => {
-    if (page === 1) {
-      setIsLoading(true);
-    } else {
-      setIsLoadingMore(true);
-    }
+  const fetchMenus = React.useCallback(async () => {
+    setIsLoading(true);
     try {
-      const response = await getMenus({ page, page_size: PAGE_SIZE });
-      const { data, pagination } = response.data;
-
-      if (append) {
-        setMenus((prev) => [...prev, ...(data || [])]);
-      } else {
-        setMenus(data || []);
-      }
-      setCurrentPage(pagination.page);
-      setTotalPages(pagination.total_pages);
-      setTotalItems(pagination.total_items);
+      const firstPage = await getMenus({ page: 1, page_size: PAGE_SIZE });
+      const remainingPages = Array.from(
+        { length: Math.max(0, firstPage.data.pagination.total_pages - 1) },
+        (_, index) => index + 2,
+      );
+      const remainingResponses = await Promise.all(
+        remainingPages.map((page) => getMenus({ page, page_size: PAGE_SIZE })),
+      );
+      setMenus([
+        ...(firstPage.data.data || []),
+        ...remainingResponses.flatMap((response) => response.data.data || []),
+      ]);
     } catch (_error) {
       toast.error("Failed to load menus");
-      if (!append) {
-        setMenus([]);
-      }
+      setMenus([]);
     } finally {
       setIsLoading(false);
-      setIsLoadingMore(false);
     }
   }, []);
 
-  const loadMore = () => {
-    if (currentPage < totalPages && !isLoadingMore) {
-      fetchMenus(currentPage + 1, true);
-    }
-  };
-
   // Refresh from page 1
   const refreshMenus = React.useCallback(() => {
-    setCurrentPage(1);
-    fetchMenus(1, false);
+    fetchMenus();
   }, [fetchMenus]);
 
   React.useEffect(() => {
     if (canAccess) {
-      fetchMenus(1, false);
+      fetchMenus();
     }
   }, [canAccess, fetchMenus]);
 
   const openCreateDialog = () => {
     setEditingMenu(null);
-    setFormTitle("");
+    setFormContentType(activeType);
     setFormDescription("");
     setFormStartDate(undefined);
     setFormEndDate(undefined);
-    setFormItems([{ name: "", description: "", price: 0 }]);
+    setFormPortfolioDate(undefined);
     setFormIsActive(true);
     setFormIsFeatured(false);
-    setFormImage(null);
-    setFormImagePreview(null);
+    setFormImages([]);
+    setFormImagePreviews([]);
     setRemoveExistingImages(false);
     setIsDialogOpen(true);
   };
 
   const openEditDialog = (menu: Menu) => {
     setEditingMenu(menu);
-    setFormTitle(menu.title);
+    setFormContentType(menu.content_type || "weekly_menu");
     setFormDescription(menu.description || "");
-    setFormStartDate(new Date(menu.start_date));
-    setFormEndDate(new Date(menu.end_date));
-    setFormItems(
-      menu.items.length > 0
-        ? menu.items
-        : [{ name: "", description: "", price: 0 }],
+    setFormStartDate(
+      menu.start_date ? new Date(`${menu.start_date}T00:00:00`) : undefined,
+    );
+    setFormEndDate(
+      menu.end_date ? new Date(`${menu.end_date}T00:00:00`) : undefined,
+    );
+    setFormPortfolioDate(
+      menu.content_type === "portfolio"
+        ? getPortfolioDateValue(menu.portfolio_date)
+        : undefined,
     );
     setFormIsActive(menu.is_active);
     setFormIsFeatured(menu.is_featured);
-    setFormImage(null);
-    setFormImagePreview(
-      menu.image_urls?.[0] ? getUploadUrl(menu.image_urls[0]) : null,
+    setFormImages([]);
+    setFormImagePreviews(
+      (menu.image_urls || []).map((imageUrl) => getUploadUrl(imageUrl)),
     );
     setRemoveExistingImages(false);
     setIsDialogOpen(true);
@@ -203,47 +212,23 @@ export default function MenusPage() {
     setIsPreviewOpen(true);
   };
 
-  const addMenuItem = () => {
-    setFormItems([...formItems, { name: "", description: "", price: 0 }]);
-  };
-
-  const updateMenuItem = (
-    index: number,
-    field: keyof MenuItem,
-    value: string | number,
-  ) => {
-    const newItems = [...formItems];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setFormItems(newItems);
-  };
-
-  const removeMenuItem = (index: number) => {
-    if (formItems.length > 1) {
-      setFormItems(formItems.filter((_, i) => i !== index));
-    }
-  };
-
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.type && !file.type.startsWith("image/")) {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      if (files.some((file) => file.type && !file.type.startsWith("image/"))) {
         toast.error("Please select an image file");
         return;
       }
 
-      setFormImage(file);
+      setFormImages(files);
       setRemoveExistingImages(Boolean(editingMenu?.image_urls?.length));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setFormImagePreviews(files.map((file) => URL.createObjectURL(file)));
     }
   };
 
   const clearSelectedImage = () => {
-    setFormImage(null);
-    setFormImagePreview(null);
+    setFormImages([]);
+    setFormImagePreviews([]);
     setRemoveExistingImages(Boolean(editingMenu?.image_urls?.length));
   };
 
@@ -255,14 +240,28 @@ export default function MenusPage() {
   };
 
   const handleSubmit = async () => {
-    if (!formTitle.trim() || !formStartDate || !formEndDate) {
-      toast.error("Please fill required fields (title, dates)");
+    if (formContentType === "weekly_menu" && (!formStartDate || !formEndDate)) {
+      toast.error("Please select the weekly menu dates");
       return;
     }
 
-    const validItems = formItems.filter((item) => item.name.trim());
-    if (validItems.length === 0) {
-      toast.error("Please add at least one menu item");
+    if (
+      formContentType === "weekly_menu" &&
+      formStartDate &&
+      formEndDate &&
+      formEndDate < formStartDate
+    ) {
+      toast.error("End date must be on or after start date");
+      return;
+    }
+
+    if (formContentType === "weekly_menu" && !generatedWeeklyTitle.trim()) {
+      toast.error("Please enter a title");
+      return;
+    }
+
+    if (formContentType === "portfolio" && !formPortfolioDate) {
+      toast.error("Please select the portfolio date");
       return;
     }
 
@@ -270,9 +269,20 @@ export default function MenusPage() {
     try {
       if (editingMenu) {
         await updateMenu(editingMenu.id, {
-          title: formTitle,
+          content_type: formContentType,
+          start_date:
+            formContentType === "weekly_menu" && formStartDate
+              ? format(formStartDate, "yyyy-MM-dd")
+              : undefined,
+          end_date:
+            formContentType === "weekly_menu" && formEndDate
+              ? format(formEndDate, "yyyy-MM-dd")
+              : undefined,
+          portfolio_date:
+            formContentType === "portfolio" && formPortfolioDate
+              ? format(formPortfolioDate, "yyyy-MM-dd")
+              : undefined,
           description: formDescription,
-          items: validItems,
           is_active: formIsActive,
           is_featured: formIsFeatured,
         });
@@ -281,24 +291,35 @@ export default function MenusPage() {
           await deleteAllMenuImages(editingMenu.id);
         }
 
-        if (formImage) {
-          await uploadMenuImage(editingMenu.id, formImage);
+        for (const image of formImages) {
+          await uploadMenuImage(editingMenu.id, image);
         }
         toast.success("Menu updated successfully");
       } else {
         // Create menu first
         const response = await createMenu({
-          title: formTitle,
+          content_type: formContentType,
           description: formDescription,
-          start_date: format(formStartDate, "yyyy-MM-dd"),
-          end_date: format(formEndDate, "yyyy-MM-dd"),
-          items: validItems,
+          start_date:
+            formContentType === "weekly_menu" && formStartDate
+              ? format(formStartDate, "yyyy-MM-dd")
+              : undefined,
+          end_date:
+            formContentType === "weekly_menu" && formEndDate
+              ? format(formEndDate, "yyyy-MM-dd")
+              : undefined,
+          portfolio_date:
+            formContentType === "portfolio" && formPortfolioDate
+              ? format(formPortfolioDate, "yyyy-MM-dd")
+              : undefined,
           is_active: formIsActive,
           is_featured: formIsFeatured,
         });
         // Upload image if selected
-        if (formImage && response.data?.id) {
-          await uploadMenuImage(response.data.id, formImage);
+        if (response.data?.id) {
+          for (const image of formImages) {
+            await uploadMenuImage(response.data.id, image);
+          }
         }
         toast.success("Menu created successfully");
       }
@@ -355,12 +376,32 @@ export default function MenusPage() {
   };
 
   const handleToggleActive = async (menu: Menu) => {
+    if (updatingMenuIds.has(menu.id)) return;
+
+    const nextIsActive = !menu.is_active;
+    setUpdatingMenuIds((current) => new Set(current).add(menu.id));
+    setMenus((current) =>
+      current.map((item) =>
+        item.id === menu.id ? { ...item, is_active: nextIsActive } : item,
+      ),
+    );
+
     try {
-      await updateMenu(menu.id, { is_active: !menu.is_active });
-      toast.success(`Menu ${menu.is_active ? "deactivated" : "activated"}`);
-      refreshMenus();
+      await updateMenu(menu.id, { is_active: nextIsActive });
+      toast.success(`Menu ${nextIsActive ? "activated" : "deactivated"}`);
     } catch (_error) {
+      setMenus((current) =>
+        current.map((item) =>
+          item.id === menu.id ? { ...item, is_active: menu.is_active } : item,
+        ),
+      );
       toast.error("Failed to update menu");
+    } finally {
+      setUpdatingMenuIds((current) => {
+        const next = new Set(current);
+        next.delete(menu.id);
+        return next;
+      });
     }
   };
 
@@ -376,6 +417,24 @@ export default function MenusPage() {
     return null;
   }
 
+  const visibleMenus = menus
+    .filter((menu) => (menu.content_type || "weekly_menu") === activeType)
+    .sort((a, b) => {
+      if (activeType === "weekly_menu") {
+        return (b.start_date ?? "").localeCompare(a.start_date ?? "");
+      }
+      const aTime = getPortfolioSortTime(a.portfolio_date);
+      const bTime = getPortfolioSortTime(b.portfolio_date);
+      if (aTime === null) return 1;
+      if (bTime === null) return -1;
+      const difference = bTime - aTime;
+      return portfolioSort === "newest" ? difference : -difference;
+    });
+  const portfolioCount = menus.filter(
+    (menu) => menu.content_type === "portfolio",
+  ).length;
+  const weeklyCount = menus.length - portfolioCount;
+
   return (
     <>
       <div className="flex flex-1 flex-col gap-4 p-4">
@@ -384,10 +443,10 @@ export default function MenusPage() {
             <div>
               <CardTitle className="text-2xl font-bold flex items-center gap-2">
                 <UtensilsCrossed className="h-6 w-6" />
-                Menu Management
+                Food Content
               </CardTitle>
               <CardDescription>
-                Create and manage weekly menus with images
+                Publish portfolio work and announce upcoming weekly menus
               </CardDescription>
             </div>
             <Button
@@ -395,21 +454,67 @@ export default function MenusPage() {
               className="gap-2 font-bold border-2 border-black dark:border-white bg-green-400 text-black hover:bg-green-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none"
             >
               <Plus className="h-4 w-4" />
-              Create Menu
+              Create Content
             </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-5">
+            <Tabs
+              value={activeType}
+              onValueChange={(value) => setActiveType(value as MenuContentType)}
+            >
+              <TabsList className="h-auto w-full justify-start rounded-none border-2 border-black bg-white p-1 dark:border-white dark:bg-black sm:w-auto">
+                <TabsTrigger
+                  value="portfolio"
+                  className="rounded-none px-4 py-2 font-bold data-[state=active]:bg-yellow-400 data-[state=active]:text-black"
+                >
+                  Portfolio ({portfolioCount})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="weekly_menu"
+                  className="rounded-none px-4 py-2 font-bold data-[state=active]:bg-blue-400 data-[state=active]:text-black"
+                >
+                  Weekly Menu ({weeklyCount})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            {activeType === "portfolio" && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                  Order:
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={portfolioSort === "newest" ? "default" : "outline"}
+                  onClick={() => setPortfolioSort("newest")}
+                  className="rounded-none border-2"
+                >
+                  Newest
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={portfolioSort === "oldest" ? "default" : "outline"}
+                  onClick={() => setPortfolioSort("oldest")}
+                  className="rounded-none border-2"
+                >
+                  Oldest
+                </Button>
+              </div>
+            )}
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Spinner className="h-8 w-8" />
               </div>
-            ) : menus.length === 0 ? (
+            ) : visibleMenus.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No menus yet. Click "Create Menu" to add one.
+                No{" "}
+                {activeType === "portfolio" ? "portfolio work" : "weekly menus"}{" "}
+                yet. Click &quot;Create Content&quot; to add one.
               </div>
             ) : (
               <div className="space-y-4">
-                {menus.map((menu) => (
+                {visibleMenus.map((menu) => (
                   <Card
                     key={menu.id}
                     className="border-2 border-black overflow-hidden hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-shadow cursor-pointer"
@@ -436,10 +541,27 @@ export default function MenusPage() {
                       <div className="flex-1 p-4">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <h3 className="font-bold text-lg">{menu.title}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              📅 {menu.start_date} → {menu.end_date}
-                            </p>
+                            {menu.content_type === "portfolio" ? (
+                              <>
+                                <p className="text-xs font-black uppercase tracking-wide text-amber-700">
+                                  {formatPortfolioDate(menu.portfolio_date)}
+                                </p>
+                                <h3 className="mt-1 text-lg font-bold">
+                                  {menu.description || "Portfolio entry"}
+                                </h3>
+                              </>
+                            ) : (
+                              <h3 className="font-bold text-lg">
+                                {menu.title}
+                              </h3>
+                            )}
+                            {menu.content_type === "weekly_menu" &&
+                              menu.start_date &&
+                              menu.end_date && (
+                                <p className="text-sm text-muted-foreground">
+                                  📅 {menu.start_date} → {menu.end_date}
+                                </p>
+                              )}
                           </div>
                           <div
                             className="flex items-center gap-2 flex-wrap justify-end"
@@ -448,7 +570,7 @@ export default function MenusPage() {
                           >
                             {menu.is_featured && (
                               <span className="px-2 py-1 text-xs font-bold uppercase border-2 border-black bg-yellow-300">
-                                ⭐ Featured
+                                ⭐ Homepage
                               </span>
                             )}
                             <span
@@ -458,33 +580,19 @@ export default function MenusPage() {
                             </span>
                             <Switch
                               checked={menu.is_active}
+                              disabled={updatingMenuIds.has(menu.id)}
                               onCheckedChange={() => handleToggleActive(menu)}
+                              aria-label={`${menu.is_active ? "Deactivate" : "Activate"} ${menu.title}`}
                             />
                           </div>
                         </div>
 
-                        {menu.description && (
-                          <p className="text-sm text-gray-600 mb-2 line-clamp-1">
-                            {menu.description}
-                          </p>
-                        )}
-
-                        {/* Menu Items Preview */}
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {menu.items.slice(0, 4).map((item, idx) => (
-                            <span
-                              key={idx}
-                              className="px-2 py-0.5 text-xs bg-amber-100 border border-amber-300 rounded"
-                            >
-                              {item.name}
-                            </span>
-                          ))}
-                          {menu.items.length > 4 && (
-                            <span className="px-2 py-0.5 text-xs bg-gray-100 border border-gray-300 rounded">
-                              +{menu.items.length - 4} more
-                            </span>
+                        {menu.content_type !== "portfolio" &&
+                          menu.description && (
+                            <p className="text-sm text-gray-600 mb-2 line-clamp-1">
+                              {menu.description}
+                            </p>
                           )}
-                        </div>
 
                         {/* Actions */}
                         <div
@@ -523,35 +631,6 @@ export default function MenusPage() {
                     </div>
                   </Card>
                 ))}
-
-                {/* Load More / Pagination Info */}
-                {menus.length > 0 && (
-                  <div className="flex flex-col items-center gap-3 pt-4">
-                    <p className="text-sm text-muted-foreground">
-                      Showing {menus.length} of {totalItems} menus
-                    </p>
-                    {currentPage < totalPages && (
-                      <Button
-                        onClick={loadMore}
-                        disabled={isLoadingMore}
-                        variant="outline"
-                        className="border-2 border-black rounded-none"
-                      >
-                        {isLoadingMore ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Loading...
-                          </>
-                        ) : (
-                          <>
-                            Load More ({totalPages - currentPage} pages
-                            remaining)
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                )}
               </div>
             )}
           </CardContent>
@@ -583,10 +662,20 @@ export default function MenusPage() {
               <div className="p-4 border-t-2 border-black">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h2 className="text-xl font-bold">{previewMenu.title}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      📅 {previewMenu.start_date} → {previewMenu.end_date}
-                    </p>
+                    {previewMenu.content_type === "portfolio" ? (
+                      <p className="text-sm font-black uppercase tracking-wide text-amber-700">
+                        {formatPortfolioDate(previewMenu.portfolio_date)}
+                      </p>
+                    ) : (
+                      <h2 className="text-xl font-bold">{previewMenu.title}</h2>
+                    )}
+                    {previewMenu.content_type === "weekly_menu" &&
+                      previewMenu.start_date &&
+                      previewMenu.end_date && (
+                        <p className="text-sm text-muted-foreground">
+                          📅 {previewMenu.start_date} → {previewMenu.end_date}
+                        </p>
+                      )}
                   </div>
                   <span
                     className={`px-2 py-1 text-xs font-bold uppercase border-2 border-black ${previewMenu.is_active ? "bg-green-200" : "bg-gray-200"}`}
@@ -612,7 +701,7 @@ export default function MenusPage() {
                     size="sm"
                   >
                     <Pencil className="h-4 w-4 mr-2" />
-                    Edit Menu
+                    Edit Content
                   </Button>
                   <Button
                     variant="destructive"
@@ -638,36 +727,113 @@ export default function MenusPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
-              {editingMenu ? "Edit Menu" : "Create New Menu"}
+              {editingMenu ? "Edit Content" : "Create Content"}
             </DialogTitle>
             <DialogDescription>
               {editingMenu
-                ? "Update the menu details."
-                : "Create a new weekly menu."}
+                ? "Update the public content details."
+                : "Share portfolio work or announce a weekly menu."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="font-bold">Title *</Label>
-              <Input
-                value={formTitle}
-                onChange={(e) => setFormTitle(e.target.value)}
-                placeholder="e.g., Menu Minggu 9-13 Desember"
-                className="h-12 border-2 border-black rounded-none"
-              />
+              <Label className="font-bold">Content Type *</Label>
+              <Tabs
+                value={formContentType}
+                onValueChange={(value) => {
+                  const nextType = value as MenuContentType;
+                  setFormContentType(nextType);
+                  if (nextType === "portfolio") {
+                    setFormStartDate(undefined);
+                    setFormEndDate(undefined);
+                  } else {
+                    setFormPortfolioDate(undefined);
+                  }
+                }}
+              >
+                <TabsList className="grid h-auto w-full grid-cols-2 rounded-none border-2 border-black bg-white p-1">
+                  <TabsTrigger
+                    value="portfolio"
+                    className="rounded-none py-2 font-bold data-[state=active]:bg-yellow-400 data-[state=active]:text-black"
+                  >
+                    Food Portfolio
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="weekly_menu"
+                    className="rounded-none py-2 font-bold data-[state=active]:bg-blue-400 data-[state=active]:text-black"
+                  >
+                    Weekly Menu
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <p className="text-xs text-muted-foreground">
+                {formContentType === "portfolio"
+                  ? "A permanent example of food or catering work."
+                  : "A dated announcement for an upcoming week."}
+              </p>
             </div>
+
+            {formContentType === "weekly_menu" && (
+              <div className="space-y-2">
+                <Label className="font-bold">Generated Title</Label>
+                <Input
+                  value={generatedWeeklyTitle}
+                  readOnly
+                  placeholder="Select the start and end dates below"
+                  className="h-12 border-2 border-black rounded-none bg-blue-50 font-bold text-blue-900"
+                />
+                <p className="text-xs text-muted-foreground">
+                  This title is generated automatically from the selected date
+                  range.
+                </p>
+              </div>
+            )}
+
+            {formContentType === "portfolio" && (
+              <div className="space-y-2">
+                <Label className="font-bold">Portfolio Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start h-12 border-2 border-black rounded-none"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formPortfolioDate
+                        ? format(formPortfolioDate, "PPP")
+                        : "Pick the food/menu date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={formPortfolioDate}
+                      onSelect={setFormPortfolioDate}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground">
+                  Use the date the food or menu belongs to, not the date it was
+                  uploaded.
+                </p>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label className="font-bold">Description</Label>
               <Textarea
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
-                placeholder="Menu description..."
+                placeholder={
+                  formContentType === "weekly_menu"
+                    ? "Add details or promotional wording here, e.g. 🔥 NEW!"
+                    : "Tell customers about this food or catering work..."
+                }
                 className="border-2 border-black rounded-none"
               />
             </div>
 
-            {!editingMenu && (
+            {formContentType === "weekly_menu" && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="font-bold">Start Date *</Label>
@@ -720,28 +886,33 @@ export default function MenusPage() {
 
             {/* Image Upload */}
             <div className="space-y-2">
-              <Label className="font-bold">Menu Image</Label>
+              <Label className="font-bold">Photo</Label>
               <input
                 ref={imageInputRef}
                 type="file"
                 accept="image/*,.heic,.heif"
+                multiple
                 className="sr-only"
                 onChange={handleImageSelect}
               />
-              {formImagePreview ? (
-                <div className="relative h-40 border-2 border-black rounded-none overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={formImagePreview}
-                    alt="Menu preview"
-                    className="w-full h-full object-cover"
-                  />
+              {formImagePreviews.length > 0 ? (
+                <div className="relative border-2 border-black p-2">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {formImagePreviews.map((preview, index) => (
+                      <img
+                        key={preview}
+                        src={preview}
+                        alt={`Content preview ${index + 1}`}
+                        className="aspect-square w-full border border-black object-cover"
+                      />
+                    ))}
+                  </div>
                   <Button
                     type="button"
                     variant="destructive"
                     size="sm"
                     onClick={clearSelectedImage}
-                    className="absolute top-2 right-2 border-2 border-black rounded-none"
+                    className="absolute right-4 top-4 border-2 border-black rounded-none"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -750,10 +921,10 @@ export default function MenusPage() {
                     variant="outline"
                     size="sm"
                     onClick={openImagePicker}
-                    className="absolute bottom-2 right-2 gap-2 border-2 border-black rounded-none bg-white text-black"
+                    className="mt-2 gap-2 border-2 border-black rounded-none bg-white text-black"
                   >
                     <ImagePlus className="h-4 w-4" />
-                    Change
+                    Replace photos
                   </Button>
                 </div>
               ) : (
@@ -764,13 +935,13 @@ export default function MenusPage() {
                 >
                   <ImagePlus className="h-8 w-8 mb-2 text-gray-400" />
                   <span className="text-sm text-gray-500">
-                    Tap to upload image
+                    Tap to upload one or more photos
                   </span>
                 </button>
               )}
-              {removeExistingImages && !formImage && (
+              {removeExistingImages && formImages.length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Current menu image will be removed when you save.
+                  Current photo will be removed when you save.
                 </p>
               )}
             </div>
@@ -780,79 +951,14 @@ export default function MenusPage() {
                 checked={formIsActive}
                 onCheckedChange={setFormIsActive}
               />
-              <Label>Active</Label>
+              <Label>Published</Label>
             </div>
             <div className="flex items-center gap-2">
               <Switch
                 checked={formIsFeatured}
                 onCheckedChange={setFormIsFeatured}
               />
-              <Label>⭐ Show on landing page (Featured)</Label>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="font-bold">Menu Items</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addMenuItem}
-                  className="border-2 border-black rounded-none"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Item
-                </Button>
-              </div>
-              {formItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex gap-2 items-start p-3 border-2 border-black/20 bg-gray-50"
-                >
-                  <div className="flex-1 space-y-2">
-                    <Input
-                      placeholder="Item name"
-                      value={item.name}
-                      onChange={(e) =>
-                        updateMenuItem(idx, "name", e.target.value)
-                      }
-                      className="border-2 border-black rounded-none"
-                    />
-                    <Input
-                      placeholder="Description (optional)"
-                      value={item.description || ""}
-                      onChange={(e) =>
-                        updateMenuItem(idx, "description", e.target.value)
-                      }
-                      className="border-2 border-black rounded-none"
-                    />
-                  </div>
-                  <Input
-                    type="number"
-                    placeholder="Price"
-                    value={item.price || ""}
-                    onChange={(e) =>
-                      updateMenuItem(
-                        idx,
-                        "price",
-                        parseFloat(e.target.value) || 0,
-                      )
-                    }
-                    className="w-28 border-2 border-black rounded-none"
-                  />
-                  {formItems.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => removeMenuItem(idx)}
-                      className="border-2 border-black rounded-none"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
+              <Label>Show on homepage</Label>
             </div>
           </div>
           <DialogFooter>

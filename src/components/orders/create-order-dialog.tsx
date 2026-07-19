@@ -1150,10 +1150,12 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
               {/* Menu title */}
               <div className="absolute -top-12 left-0 text-white">
                 <p className="font-bold text-lg">{previewMenu.title}</p>
-                <p className="text-sm text-white/70">
-                  {format(new Date(previewMenu.start_date), "MMM d")} -{" "}
-                  {format(new Date(previewMenu.end_date), "MMM d, yyyy")}
-                </p>
+                {previewMenu.start_date && previewMenu.end_date && (
+                  <p className="text-sm text-white/70">
+                    {format(new Date(previewMenu.start_date), "MMM d")} -{" "}
+                    {format(new Date(previewMenu.end_date), "MMM d, yyyy")}
+                  </p>
+                )}
               </div>
 
               {/* Image */}

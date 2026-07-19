@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/carousel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { getUploadUrl } from "@/lib/api.config";
+import { formatPortfolioDate, getPortfolioSortTime } from "@/lib/menu-utils";
 import { getFeaturedMenus } from "@/services/menu.service";
 import type { Menu } from "@/types/menu.types";
 
@@ -31,7 +32,19 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
 
   React.useEffect(() => {
     getFeaturedMenus()
-      .then(setMenus)
+      .then((records) =>
+        setMenus(
+          records
+            .filter((menu) => menu.content_type === "portfolio")
+            .sort((a, b) => {
+              const aTime = getPortfolioSortTime(a.portfolio_date);
+              const bTime = getPortfolioSortTime(b.portfolio_date);
+              if (aTime === null) return 1;
+              if (bTime === null) return -1;
+              return bTime - aTime;
+            }),
+        ),
+      )
       .catch(() => setMenus([]))
       .finally(() => setIsLoading(false));
   }, []);
@@ -114,20 +127,12 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
 
                   {/* Caption */}
                   <div className="bg-white px-3 py-2.5 border-t-4 border-black">
-                    <p className="font-black text-sm leading-tight line-clamp-1">
-                      {menu.title}
+                    <p className="text-[10px] font-black uppercase tracking-wide text-brut-blue">
+                      {formatPortfolioDate(menu.portfolio_date)}
                     </p>
-                    {menu.items.length > 0 && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                        {menu.items
-                          .slice(0, 3)
-                          .map((i) => i.name)
-                          .join(" · ")}
-                        {menu.items.length > 3
-                          ? ` · +${menu.items.length - 3}`
-                          : ""}
-                      </p>
-                    )}
+                    <p className="mt-1 line-clamp-2 text-sm font-bold text-gray-600">
+                      {menu.description || "Portofolio masakan Dapur Bu Wikra"}
+                    </p>
                   </div>
                 </button>
               </CarouselItem>
@@ -169,14 +174,12 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({
 
           {selected && (
             <div className="bg-black text-white px-4 py-3">
-              <p className="font-black text-base leading-tight">
-                {selected.title}
+              <p className="text-xs font-bold uppercase tracking-wide text-blue-300">
+                {formatPortfolioDate(selected.portfolio_date)}
               </p>
-              {selected.items.length > 0 && (
-                <p className="text-sm text-white/70 mt-1">
-                  {selected.items.map((i) => i.name).join(" · ")}
-                </p>
-              )}
+              <p className="mt-1 text-sm font-bold text-white/80">
+                {selected.description || "Portofolio masakan Dapur Bu Wikra"}
+              </p>
             </div>
           )}
         </DialogContent>

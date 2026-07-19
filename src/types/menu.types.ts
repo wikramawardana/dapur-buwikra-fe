@@ -4,10 +4,14 @@ export interface MenuItem {
   price: number;
 }
 
+export type MenuContentType = "portfolio" | "weekly_menu";
+
 export interface Menu {
   id: string;
-  start_date: string;
-  end_date: string;
+  content_type: MenuContentType;
+  start_date?: string | null;
+  end_date?: string | null;
+  portfolio_date?: string | null;
   title: string;
   description?: string;
   items: MenuItem[];
@@ -19,16 +23,21 @@ export interface Menu {
 }
 
 export interface CreateMenuPayload {
-  start_date: string;
-  end_date: string;
-  title: string;
+  content_type: MenuContentType;
+  start_date?: string;
+  end_date?: string;
+  portfolio_date?: string;
   description?: string;
-  items: MenuItem[];
+  items?: MenuItem[];
   is_active: boolean;
   is_featured: boolean;
 }
 
 export interface UpdateMenuPayload {
+  content_type?: MenuContentType;
+  start_date?: string;
+  end_date?: string;
+  portfolio_date?: string;
   title?: string;
   description?: string;
   items?: MenuItem[];

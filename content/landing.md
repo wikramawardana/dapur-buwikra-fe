@@ -28,13 +28,13 @@ Lihat Menu
 Area Kantor Only
 
 ## Weekly Menu Title
-Menu Minggu Ini
+MENU MINGGUAN
 
 ## Weekly Menu Empty
 Menu belum tersedia
 
 ## Featured Title
-MENU ANDALAN
+PORTOFOLIO MASAKAN
 
 ## Featured Empty Title
 SEGERA HADIR!

@@ -120,3 +120,11 @@ export async function getFeaturedMenus(): Promise<Menu[]> {
   const json = await res.json();
   return json?.data ?? [];
 }
+
+/** Fetch all published public content, including non-homepage portfolio work. */
+export async function getPublishedMenus(): Promise<Menu[]> {
+  const res = await fetch(`${API_BASE_URL}/public/menus`);
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json?.data ?? [];
+}
