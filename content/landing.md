@@ -28,7 +28,7 @@ Lihat Menu
 Area Kantor Only
 
 ## Weekly Menu Title
-MENU MINGGUAN
+MAKAN APA MINGGU INI?
 
 ## Weekly Menu Empty
 Menu belum tersedia

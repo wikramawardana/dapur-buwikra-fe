@@ -7,12 +7,26 @@ interface MenuSectionProps {
 }
 
 export const MenuSection: React.FC<MenuSectionProps> = ({ content }) => {
+  const titleHighlight = "JEJAK RASA";
+  const titleSupporting = content.title
+    .replace(new RegExp(`^${titleHighlight}\\s*`, "i"), "")
+    .trim();
+
   return (
     <section className="bg-white border-y-4 border-black py-20">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div>
-            <h2 className="text-5xl font-black mb-4">{content.title}</h2>
+            <h2 className="mb-4 flex flex-col items-start gap-3">
+              <span className="-rotate-1 border-4 border-black bg-yellow-300 px-4 py-2 text-5xl font-black leading-none shadow-[6px_6px_0_0_#000] sm:text-6xl">
+                {titleHighlight}
+              </span>
+              {titleSupporting && (
+                <span className="text-2xl font-black tracking-wide sm:text-3xl">
+                  {titleSupporting}
+                </span>
+              )}
+            </h2>
             {/* <p className="text-xl font-medium text-gray-600 max-w-lg">
               Dimasak dari jam 2 pagi dengan penuh kasih sayang (dan bumbu
               rahasia).
