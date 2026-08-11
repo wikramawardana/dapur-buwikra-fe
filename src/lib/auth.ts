@@ -2,18 +2,20 @@ import dns from "node:dns";
 import { betterAuth } from "better-auth";
 import { admin, genericOAuth } from "better-auth/plugins";
 import { Pool } from "pg";
+import { requireIsolatedAuthDatabase } from "./auth-database";
 
 dns.setDefaultResultOrder("ipv4first");
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const authServiceUrl = process.env.AUTH_URL || "http://localhost:3001";
+const databaseUrl = requireIsolatedAuthDatabase(process.env.DATABASE_URL);
 
 export const auth = betterAuth({
   baseURL: appUrl,
   basePath: "/api/auth",
   secret: process.env.BETTER_AUTH_SECRET,
   database: new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: databaseUrl,
   }),
   advanced: {
     cookiePrefix: "dapur-buwikra",
