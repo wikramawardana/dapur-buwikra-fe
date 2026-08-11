@@ -41,7 +41,7 @@ ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build with dummy server-side env vars (real values provided at runtime)
-RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dapur_auth" \
     BETTER_AUTH_SECRET="dummy" \
     GOOGLE_CLIENT_ID="dummy" \
     GOOGLE_CLIENT_SECRET="dummy" \
