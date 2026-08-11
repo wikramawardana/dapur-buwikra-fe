@@ -96,27 +96,36 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  const token = await getAuthToken();
+  let token = await getAuthToken();
 
   if (!token) {
     forceSignOutAndRedirect();
     throw new ApiError("No authentication token available", 401);
   }
 
-  const headers: HeadersInit = {
-    Authorization: `Bearer ${token}`,
-    ...options?.headers,
+  const request = (authToken: string) => {
+    const headers = new Headers(options?.headers);
+    headers.set("Authorization", `Bearer ${authToken}`);
+
+    if (!options?.skipContentType && !headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+
+    return fetch(url, { ...options, headers });
   };
 
-  if (!options?.skipContentType) {
-    (headers as Record<string, string>)["Content-Type"] = "application/json";
-  }
-
   try {
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    let response = await request(token);
+
+    // A just-rotated session can leave the five-second client token cache
+    // stale. Refresh once before treating the user as signed out.
+    if (response.status === 401) {
+      clearAuthTokenCache();
+      token = await getAuthToken();
+      if (token) {
+        response = await request(token);
+      }
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -124,7 +133,7 @@ export async function apiFetch<T>(
       // 401 means the session token is missing or invalid. A 403 means the
       // user is authenticated but lacks permission, so keep their session.
       if (response.status === 401) {
-        forceSignOutAndRedirect();
+        await forceSignOutAndRedirect();
       }
 
       throw new ApiError(

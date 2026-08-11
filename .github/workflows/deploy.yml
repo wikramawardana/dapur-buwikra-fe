@@ -144,5 +144,7 @@ jobs:
       - name: Wait for startup
         run: sleep 60
 
-      - name: Check app health
-        run: curl -fsSIL https://dapurbuwikra.biz.id
+      - name: Check app and auth path
+        run: |
+          curl -fsSIL https://dapurbuwikra.biz.id
+          curl -fsS https://dapurbuwikra.biz.id/api/auth/get-session

@@ -8,6 +8,7 @@ dns.setDefaultResultOrder("ipv4first");
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const authServiceUrl = process.env.AUTH_URL || "http://localhost:3001";
+const authInternalUrl = process.env.AUTH_INTERNAL_URL || authServiceUrl;
 const databaseUrl = requireIsolatedAuthDatabase(process.env.DATABASE_URL);
 
 export const auth = betterAuth({
@@ -21,10 +22,8 @@ export const auth = betterAuth({
     cookiePrefix: "dapur-buwikra",
   },
   account: {
-    // The state cookie set at sign-in start is a cross-origin flow (3001 → 3000 → 3001).
-    // The cookie is not reliably sent back on the return trip, so we skip
-    // the cookie comparison and rely on the DB verification record instead.
-    skipStateCookieCheck: true,
+    skipStateCookieCheck: false,
+    storeStateStrategy: "database",
   },
   emailAndPassword: {
     enabled: false,
@@ -36,7 +35,10 @@ export const auth = betterAuth({
           providerId: "auth",
           clientId: process.env.AUTH_CLIENT_ID || "dapur-buwikra",
           clientSecret: process.env.AUTH_CLIENT_SECRET!,
-          discoveryUrl: `${authServiceUrl}/api/auth/.well-known/openid-configuration`,
+          issuer: authServiceUrl,
+          authorizationUrl: `${authServiceUrl}/api/auth/oauth2/authorize`,
+          tokenUrl: `${authInternalUrl}/api/auth/oauth2/token`,
+          userInfoUrl: `${authInternalUrl}/api/auth/oauth2/userinfo`,
           scopes: ["openid", "profile", "email"],
           overrideUserInfo: true,
           mapProfileToUser: (profile: Record<string, unknown>) => {
@@ -62,8 +64,7 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24,
     updateAge: 60 * 60,
     cookieCache: {
-      enabled: true,
-      maxAge: 60 * 5,
+      enabled: false,
     },
   },
   trustedOrigins: [
