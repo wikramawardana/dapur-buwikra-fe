@@ -1,14 +1,11 @@
-import { ChefHat, Images, LayoutDashboard, Utensils } from "lucide-react";
+import { ChefHat, Images, Utensils } from "lucide-react";
 import Link from "next/link";
 import {
   CatalogSection,
-  DeliveryInfoSection,
   FaqSection,
   Hero,
   HowItWorksSection,
   MenuSection,
-  Testimonials,
-  ValuePropsSection,
   WeeklyMenuSection,
 } from "@/components/landing-page";
 import { loadLandingContent } from "@/lib/landing-content";
@@ -17,7 +14,7 @@ function App() {
   const content = loadLandingContent();
 
   return (
-    <div className="min-h-screen overflow-x-hidden font-sans text-brut-black selection:bg-brut-blue selection:text-white bg-[#fcfbf7]">
+    <div className="min-h-screen overflow-x-hidden font-sans text-brut-black selection:bg-yellow-300 selection:text-black bg-[#fcfbf7]">
       {/* Top Navbar */}
       <nav className="border-b-4 border-black bg-white sticky top-0 z-50">
         <div className="container mx-auto px-4 h-20 flex justify-between items-center max-w-6xl">
@@ -45,17 +42,10 @@ function App() {
             </Link>
             <Link
               href="/order"
-              className="flex items-center gap-2 border-2 border-black bg-yellow-300 px-3.5 py-2 font-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-yellow-400 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:px-4 text-xs sm:text-sm"
+              className="flex items-center gap-2 border-2 border-black bg-yellow-300 px-4 py-2 font-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-yellow-400 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:px-5 text-xs sm:text-sm"
             >
               <Utensils size={16} />
               <span>Pesan Katering</span>
-            </Link>
-            <Link
-              href="/orders"
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 font-bold bg-brut-blue text-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all text-xs sm:text-sm"
-            >
-              <LayoutDashboard size={16} />
-              <span className="hidden md:inline">{content.header.cta}</span>
             </Link>
           </div>
         </div>
@@ -65,28 +55,19 @@ function App() {
         {/* 1. Hero Section (Story Carousel: Cerita Kami) */}
         <Hero content={content.hero} />
 
-        {/* 2. Active Weekly Menu Section */}
+        {/* 2. Active Weekly Menu Section (Warm, appetizing, informative) */}
         <WeeklyMenuSection content={content.hero} />
 
-        {/* 3. New Volume 1: Katalog Bebas Micin (11-slide showcase) */}
+        {/* 3. Volume 1: Katalog Bebas Micin (11-slide showcase) */}
         <CatalogSection />
 
         {/* 4. How It Works: 3 Langkah Mudah Pesan */}
         <HowItWorksSection />
 
-        {/* 5. Value Props: Kenapa Dapur Bu Wikra? */}
-        <ValuePropsSection />
-
-        {/* 6. Service Coverage & Delivery Info */}
-        <DeliveryInfoSection />
-
-        {/* 7. Jejak Rasa Featured Gallery Collection */}
+        {/* 5. Jejak Rasa Featured Gallery Collection */}
         <MenuSection content={content.featured} />
 
-        {/* 8. Testimonials */}
-        <Testimonials />
-
-        {/* 9. FAQ Accordion */}
+        {/* 6. FAQ Accordion */}
         <FaqSection />
       </main>
 

@@ -1,11 +1,8 @@
 export { CatalogSection } from "./catalog-section";
-export { DeliveryInfoSection } from "./delivery-info-section";
 export { FaqSection } from "./faq-section";
 export { Hero } from "./hero";
 export { HowItWorksSection } from "./how-it-works";
 export { MenuSection } from "./menu-section";
 export { NeoCard } from "./neocard";
 export { StoryCarousel } from "./story-carousel";
-export { Testimonials } from "./testimonials";
-export { ValuePropsSection } from "./value-props";
 export { WeeklyMenuSection } from "./weekly-menu-section";

@@ -1,15 +1,7 @@
 "use client";
 
-import {
-  BookOpen,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Sparkles,
-  Utensils,
-} from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, Eye, Info } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import * as React from "react";
 import {
   Carousel,
@@ -33,7 +25,8 @@ const CATALOG_SLIDES = [
   {
     src: `${CATALOG_BASE_URL}/00-cover.jpeg`,
     title: "Volume 1: Katalog Bebas Micin",
-    subtitle: "Sajian istimewa berbalut kehangatan rumah, 100% Tanpa Micin",
+    subtitle:
+      "Sajian istimewa berbalut kehangatan rumah, diracik 100% Tanpa Micin",
     badge: "Cover",
   },
   {
@@ -132,34 +125,22 @@ export function CatalogSection() {
   return (
     <section
       id="catalog-section"
-      className="scroll-mt-16 bg-[#faf9f5] border-y-4 border-black py-16 sm:py-24 overflow-hidden"
+      className="scroll-mt-16 bg-[#faf9f5] border-b-4 border-black py-16 sm:py-24 overflow-hidden"
     >
       <div className="container mx-auto max-w-6xl px-4">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 bg-yellow-300 border-2 border-black px-3 py-1 text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-              <BookOpen className="h-4 w-4" />
-              Volume 1 • Edisi Perdana
-            </div>
-            <h2 className="text-4xl sm:text-6xl font-black text-black tracking-tight leading-tight">
-              Katalog Bebas Micin
-            </h2>
-            <p className="text-base sm:text-xl font-medium text-black/70 max-w-2xl">
-              Bukan sekadar kenyang, tapi juga tenang. Sajian istimewa berbalut
-              kehangatan rumah, diracik 100% tanpa MSG &amp; bahan pengawet.
-            </p>
+        <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
+          <div className="inline-flex items-center gap-2 bg-yellow-300 border-2 border-black px-3 py-1 text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <BookOpen className="h-4 w-4" />
+            Volume 1 • Edisi Perdana
           </div>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/order"
-              className="inline-flex items-center gap-2 border-3 border-black bg-yellow-300 hover:bg-yellow-400 px-5 py-3 text-sm sm:text-base font-black uppercase text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
-            >
-              <Utensils className="h-4 w-4" />
-              <span>Pesan Menu Ini</span>
-            </Link>
-          </div>
+          <h2 className="text-4xl sm:text-6xl font-black text-black tracking-tight leading-tight">
+            Katalog Bebas Micin
+          </h2>
+          <p className="text-base sm:text-lg font-medium text-black/70">
+            Bukan sekadar kenyang, tapi juga tenang. Sajian istimewa berbalut
+            kehangatan rumah, diracik 100% tanpa MSG &amp; bahan pengawet.
+          </p>
         </div>
 
         {/* Feature Highlights Pills */}
@@ -281,14 +262,11 @@ export function CatalogSection() {
                 </p>
               </div>
 
-              <div className="pt-2">
-                <Link
-                  href="/order"
-                  className="w-full flex items-center justify-center gap-2 border-2 border-black bg-black text-white hover:bg-brut-blue px-4 py-3 text-sm font-black uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
-                >
-                  <Sparkles className="h-4 w-4 text-yellow-300" />
-                  <span>Pesan Katering Mingguan</span>
-                </Link>
+              <div className="pt-1 flex items-center gap-2 text-xs font-bold text-black/70 bg-yellow-50 border border-black/20 p-2.5">
+                <Info className="h-4 w-4 text-black shrink-0" />
+                <span>
+                  Klik gambar untuk melihat detail katalog ukuran penuh.
+                </span>
               </div>
             </div>
 
@@ -377,15 +355,9 @@ export function CatalogSection() {
               </p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <span className="text-xs font-mono font-bold bg-white text-black px-2 py-1">
+              <span className="text-xs font-mono font-bold bg-white text-black px-2.5 py-1">
                 {lightboxIndex + 1} / {CATALOG_SLIDES.length}
               </span>
-              <Link
-                href="/order"
-                className="border-2 border-white bg-yellow-300 hover:bg-yellow-400 text-black px-3 py-1.5 text-xs font-black uppercase transition-colors"
-              >
-                Pesan Menu Ini
-              </Link>
             </div>
           </div>
         </DialogContent>

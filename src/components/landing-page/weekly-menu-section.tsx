@@ -1,6 +1,15 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Eye, Utensils } from "lucide-react";
+import {
+  CalendarDays,
+  ChefHat,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Eye,
+  Sparkles,
+  Utensils,
+} from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import {
@@ -72,6 +81,7 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
   const previewImage = previewImages[selectedImageIndex]
     ? getUploadUrl(previewImages[selectedImageIndex])
     : null;
+
   const newestMenuId = React.useMemo(
     () =>
       menus.reduce<Menu | null>((newest, menu) => {
@@ -87,30 +97,50 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
   return (
     <section
       id="weekly-menu-section"
-      className="scroll-mt-20 border-y-4 border-black bg-blue-100 py-16"
+      className="scroll-mt-20 border-b-4 border-black bg-[#fffdfa] py-16 sm:py-24"
     >
       <div className="container mx-auto max-w-6xl px-4">
-        <div className="mb-8">
-          <div>
-            <p className="mb-2 text-sm font-black uppercase tracking-widest text-brut-blue">
-              Published weekly menus
-            </p>
-            <h2 className="text-4xl font-black sm:text-5xl">
-              {content.weeklyMenuTitle}
-            </h2>
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+          <div className="inline-flex items-center gap-2 bg-yellow-300 border-2 border-black px-3 py-1 text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <Sparkles className="h-4 w-4" />
+            Pilihan Menu Terbit
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-black text-black tracking-tight leading-tight">
+            {content.weeklyMenuTitle || "Menu Katering Mingguan"}
+          </h2>
+          <p className="text-base sm:text-lg font-medium text-black/70 max-w-2xl mx-auto">
+            Jadwal menu berganti setiap minggu. Dimasak segar setiap subuh, 100%
+            bebas micin, dan siap diantar hangat ke kantor Anda.
+          </p>
+        </div>
+
+        {/* Informative Highlights */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10 text-xs sm:text-sm font-bold max-w-4xl mx-auto">
+          <div className="border-2 border-black bg-white p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 text-center">
+            <CalendarDays className="h-4 w-4 text-black" />
+            <span>Pilihan Hari Fleksibel</span>
+          </div>
+          <div className="border-2 border-black bg-white p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 text-center">
+            <ChefHat className="h-4 w-4 text-black" />
+            <span>Dimasak Subuh Tanpa Pengawet</span>
+          </div>
+          <div className="border-2 border-black bg-white p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 text-center">
+            <Clock className="h-4 w-4 text-black" />
+            <span>Tiba Sebelum Makan Siang (11:30)</span>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="h-72 animate-pulse border-4 border-black bg-white/60" />
+          <div className="h-80 animate-pulse border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]" />
         ) : menus.length === 0 ? (
-          <div className="border-4 border-dashed border-black bg-white px-6 py-14 text-center">
+          <div className="border-4 border-dashed border-black bg-white px-6 py-14 text-center max-w-2xl mx-auto shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
             <p className="text-xl font-black">{content.weeklyMenuEmpty}</p>
           </div>
         ) : (
           <Carousel
             opts={{ align: "start", loop: menus.length > 2 }}
-            className="mx-8 sm:mx-10"
+            className="mx-4 sm:mx-10"
           >
             <CarouselContent className="-ml-5 py-2">
               {menus.map((menu) => {
@@ -120,51 +150,69 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
                 const orderLink = menu.start_date
                   ? `/order/${menu.start_date}`
                   : "/order";
+                const isNewest = menu.id === newestMenuId;
 
                 return (
                   <CarouselItem
                     key={menu.id}
                     className="basis-full pl-5 md:basis-1/2"
                   >
-                    <article className="flex h-full flex-col overflow-hidden border-4 border-black bg-white shadow-[6px_6px_0_0_#000]">
+                    <article className="flex h-full flex-col overflow-hidden border-4 border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all">
+                      {/* Card Header Tag */}
+                      <div className="bg-yellow-300 border-b-4 border-black px-4 py-2.5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="bg-black text-white px-2 py-0.5 text-xs font-black uppercase tracking-wider">
+                            {isNewest ? "Menu Aktif" : "Arsip Menu"}
+                          </span>
+                          {menu.start_date && menu.end_date && (
+                            <span className="text-xs font-black text-black">
+                              {formatDateRange(menu.start_date, menu.end_date)}
+                            </span>
+                          )}
+                        </div>
+                        {isNewest && (
+                          <span className="text-xs font-black bg-red-500 text-white px-2 py-0.5 border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] animate-pulse">
+                            🔥 NEW
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Image Preview Container */}
                       <button
                         type="button"
                         onClick={() => openPreview(menu)}
-                        className="group relative flex h-64 w-full items-center justify-center bg-gray-100 sm:h-80 cursor-pointer"
-                        aria-label={`Preview ${menu.title}`}
+                        className="group relative flex h-64 sm:h-72 w-full items-center justify-center bg-gray-50 border-b-4 border-black cursor-pointer overflow-hidden"
+                        aria-label={`Preview brosur ${menu.title}`}
                       >
                         {imageUrl ? (
                           <img
                             src={imageUrl}
                             alt={menu.title}
-                            className="h-full w-full object-contain p-2"
+                            className="h-full w-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-6xl">
                             🍱
                           </div>
                         )}
-                        <span className="absolute bottom-3 right-3 flex items-center gap-2 border-2 border-black bg-white px-3 py-2 text-xs font-black uppercase shadow-[3px_3px_0_0_#000] transition-transform group-hover:-translate-y-0.5">
-                          <Eye className="h-4 w-4" /> Preview
+                        <span className="absolute bottom-3 right-3 flex items-center gap-1.5 border-2 border-black bg-white px-3 py-1.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] opacity-90 group-hover:opacity-100 transition-opacity">
+                          <Eye className="h-3.5 w-3.5" /> Buka Brosur
                         </span>
-                        {menu.id === newestMenuId && (
-                          <span className="absolute left-3 top-3 border-2 border-black bg-yellow-400 px-3 py-1.5 text-xs font-black uppercase shadow-[3px_3px_0_0_#000]">
-                            🔥 New!
-                          </span>
-                        )}
                       </button>
-                      <div className="flex-1 flex flex-col justify-between border-t-4 border-black p-5">
+
+                      {/* Card Content & Action Bar */}
+                      <div className="flex-1 flex flex-col justify-between p-5 space-y-4">
                         <div>
-                          {menu.start_date && menu.end_date && (
-                            <p className="mb-2 text-xs font-black uppercase tracking-wide text-brut-blue">
-                              {formatDateRange(menu.start_date, menu.end_date)}
-                            </p>
-                          )}
-                          <p className="line-clamp-3 whitespace-pre-line text-base sm:text-lg font-bold text-gray-800">
-                            {menu.description || "Menu mingguan Dapur Bu Wikra"}
+                          <h3 className="text-xl font-black text-black mb-2 line-clamp-1">
+                            {menu.title}
+                          </h3>
+                          <p className="line-clamp-3 whitespace-pre-line text-sm sm:text-base font-medium text-black/70 leading-relaxed bg-[#faf9f5] border-2 border-black/10 p-3">
+                            {menu.description ||
+                              "Menu mingguan lezat rumahan Dapur Bu Wikra, dimasak fresh tanpa bahan pengawet."}
                           </p>
                         </div>
-                        <div className="mt-4 pt-4 border-t-2 border-black/10 flex items-center justify-between gap-3">
+
+                        <div className="pt-3 border-t-2 border-black/10 flex items-center justify-between gap-3">
                           <button
                             type="button"
                             onClick={() => openPreview(menu)}
@@ -174,9 +222,9 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
                           </button>
                           <Link
                             href={orderLink}
-                            className="inline-flex items-center gap-1.5 border-2 border-black bg-yellow-300 px-3 py-2 text-xs sm:text-sm font-black uppercase text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
+                            className="inline-flex items-center gap-2 border-2 border-black bg-yellow-300 px-4 py-2.5 text-xs sm:text-sm font-black uppercase text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
                           >
-                            <Utensils className="h-3.5 w-3.5" />
+                            <Utensils className="h-4 w-4" />
                             <span>Pesan Menu Ini</span>
                           </Link>
                         </div>
@@ -188,14 +236,15 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
             </CarouselContent>
             {menus.length > 1 && (
               <>
-                <CarouselPrevious className="-left-9 h-10 w-10 rounded-none border-2 border-black bg-white shadow-[3px_3px_0_0_#000] sm:-left-11" />
-                <CarouselNext className="-right-9 h-10 w-10 rounded-none border-2 border-black bg-white shadow-[3px_3px_0_0_#000] sm:-right-11" />
+                <CarouselPrevious className="-left-6 sm:-left-11 h-10 w-10 sm:h-12 sm:w-12 rounded-none border-3 border-black bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-300 transition-colors" />
+                <CarouselNext className="-right-6 sm:-right-11 h-10 w-10 sm:h-12 sm:w-12 rounded-none border-3 border-black bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-300 transition-colors" />
               </>
             )}
           </Carousel>
         )}
       </div>
 
+      {/* Lightbox / Modal Image Preview */}
       <Dialog
         open={Boolean(selectedMenu)}
         onOpenChange={(open) => !open && setSelectedMenu(null)}
@@ -207,12 +256,12 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
           <DialogDescription className="sr-only">
             Full-size weekly menu image preview
           </DialogDescription>
-          <div className="relative flex min-h-72 items-center justify-center bg-gray-100">
+          <div className="relative flex min-h-72 items-center justify-center bg-gray-950 p-2 sm:p-4">
             {previewImage ? (
               <img
                 src={previewImage}
                 alt={selectedMenu?.title ?? "Weekly menu"}
-                className="h-auto max-h-[84vh] w-auto max-w-full object-contain"
+                className="h-auto max-h-[82vh] w-auto max-w-full object-contain"
               />
             ) : (
               <span className="text-7xl">🍱</span>
@@ -226,7 +275,7 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
                       index === 0 ? previewImages.length - 1 : index - 1,
                     )
                   }
-                  className="absolute left-3 top-1/2 -translate-y-1/2 border-2 border-black bg-white p-2 shadow-[3px_3px_0_0_#000]"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 border-2 border-black bg-white p-2 shadow-[3px_3px_0_0_#000] hover:bg-yellow-300 transition-colors cursor-pointer"
                   aria-label="Previous image"
                 >
                   <ChevronLeft />
@@ -238,7 +287,7 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
                       (index) => (index + 1) % previewImages.length,
                     )
                   }
-                  className="absolute right-3 top-1/2 -translate-y-1/2 border-2 border-black bg-white p-2 shadow-[3px_3px_0_0_#000]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 border-2 border-black bg-white p-2 shadow-[3px_3px_0_0_#000] hover:bg-yellow-300 transition-colors cursor-pointer"
                   aria-label="Next image"
                 >
                   <ChevronRight />
@@ -250,15 +299,18 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
             <div className="border-t-4 border-black bg-black p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex-1">
                 {selectedMenu.start_date && selectedMenu.end_date && (
-                  <p className="mb-1 text-xs font-bold uppercase tracking-wide text-blue-300">
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wide text-yellow-300">
+                    Periode:{" "}
                     {formatDateRange(
                       selectedMenu.start_date,
                       selectedMenu.end_date,
                     )}
                   </p>
                 )}
-                <p className="whitespace-pre-line text-lg font-bold text-white">
-                  {selectedMenu.description || "Menu mingguan Dapur Bu Wikra"}
+                <p className="whitespace-pre-line text-base sm:text-lg font-bold text-white">
+                  {selectedMenu.description ||
+                    selectedMenu.title ||
+                    "Menu mingguan Dapur Bu Wikra"}
                 </p>
               </div>
               <Link
