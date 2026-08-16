@@ -32,7 +32,7 @@ const STEPS = [
 
 export function HowItWorksSection() {
   return (
-    <section className="bg-white border-b-4 border-black py-16 sm:py-24">
+    <section className="bg-[#fef3c7] border-b-4 border-black py-16 sm:py-24">
       <div className="container mx-auto max-w-6xl px-4">
         <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
           <div className="inline-flex items-center gap-2 bg-yellow-300 border-2 border-black px-3 py-1 text-xs font-black uppercase tracking-wider shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">

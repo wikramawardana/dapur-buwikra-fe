@@ -125,7 +125,7 @@ export function CatalogSection() {
   return (
     <section
       id="catalog-section"
-      className="scroll-mt-16 bg-[#faf9f5] border-b-4 border-black py-16 sm:py-24 overflow-hidden"
+      className="scroll-mt-16 bg-[#f0faf2] border-b-4 border-black py-16 sm:py-24 overflow-hidden"
     >
       <div className="container mx-auto max-w-6xl px-4">
         {/* Section Header */}

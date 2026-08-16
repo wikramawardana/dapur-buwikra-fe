@@ -13,7 +13,7 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ content }) => {
     .trim();
 
   return (
-    <section className="bg-white border-y-4 border-black py-20">
+    <section className="bg-[#fffbeb] border-b-4 border-black py-20">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div>

@@ -97,7 +97,7 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
   return (
     <section
       id="weekly-menu-section"
-      className="scroll-mt-20 border-b-4 border-black bg-[#fffdfa] py-16 sm:py-24"
+      className="scroll-mt-20 border-b-4 border-black bg-[#fff4e6] py-16 sm:py-24"
     >
       <div className="container mx-auto max-w-6xl px-4">
         {/* Section Header */}

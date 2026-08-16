@@ -44,7 +44,7 @@ const FAQS = [
 
 export function FaqSection() {
   return (
-    <section className="bg-[#faf9f5] border-b-4 border-black py-16 sm:py-24">
+    <section className="bg-[#fff8eb] border-b-4 border-black py-16 sm:py-24">
       <div className="container mx-auto max-w-4xl px-4">
         {/* Section Header */}
         <div className="text-center mb-12 space-y-3">
