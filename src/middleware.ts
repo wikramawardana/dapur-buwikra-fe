@@ -39,7 +39,10 @@ function isPublicRoute(pathname: string): boolean {
   if (
     pathname === "/" ||
     pathname === "/qris" ||
-    pathname === "/payment/qris"
+    pathname === "/payment/qris" ||
+    pathname === "/portfolio" ||
+    pathname === "/order" ||
+    pathname.startsWith("/order/")
   ) {
     return true;
   }

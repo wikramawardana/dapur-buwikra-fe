@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Utensils } from "lucide-react";
+import Link from "next/link";
 import * as React from "react";
 import {
   Carousel,
@@ -116,6 +117,10 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
                 const imageUrl = menu.image_urls?.[0]
                   ? getUploadUrl(menu.image_urls[0])
                   : null;
+                const orderLink = menu.start_date
+                  ? `/order?week=${menu.start_date}`
+                  : "/order";
+
                 return (
                   <CarouselItem
                     key={menu.id}
@@ -125,7 +130,7 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
                       <button
                         type="button"
                         onClick={() => openPreview(menu)}
-                        className="group relative flex h-64 w-full items-center justify-center bg-gray-100 sm:h-80"
+                        className="group relative flex h-64 w-full items-center justify-center bg-gray-100 sm:h-80 cursor-pointer"
                         aria-label={`Preview ${menu.title}`}
                       >
                         {imageUrl ? (
@@ -148,15 +153,33 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
                           </span>
                         )}
                       </button>
-                      <div className="flex-1 border-t-4 border-black p-5">
-                        {menu.start_date && menu.end_date && (
-                          <p className="mb-2 text-xs font-black uppercase tracking-wide text-brut-blue">
-                            {formatDateRange(menu.start_date, menu.end_date)}
+                      <div className="flex-1 flex flex-col justify-between border-t-4 border-black p-5">
+                        <div>
+                          {menu.start_date && menu.end_date && (
+                            <p className="mb-2 text-xs font-black uppercase tracking-wide text-brut-blue">
+                              {formatDateRange(menu.start_date, menu.end_date)}
+                            </p>
+                          )}
+                          <p className="line-clamp-3 whitespace-pre-line text-base sm:text-lg font-bold text-gray-800">
+                            {menu.description || "Menu mingguan Dapur Bu Wikra"}
                           </p>
-                        )}
-                        <p className="line-clamp-4 whitespace-pre-line text-lg font-bold text-gray-700">
-                          {menu.description || "Menu mingguan Dapur Bu Wikra"}
-                        </p>
+                        </div>
+                        <div className="mt-4 pt-4 border-t-2 border-black/10 flex items-center justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => openPreview(menu)}
+                            className="text-xs font-black uppercase underline hover:text-brut-blue cursor-pointer"
+                          >
+                            Lihat Foto
+                          </button>
+                          <Link
+                            href={orderLink}
+                            className="inline-flex items-center gap-1.5 border-2 border-black bg-yellow-300 px-3 py-2 text-xs sm:text-sm font-black uppercase text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-400 hover:translate-x-[1px] hover:translate-y-[1px] transition-all"
+                          >
+                            <Utensils className="h-3.5 w-3.5" />
+                            <span>Pesan Menu Ini</span>
+                          </Link>
+                        </div>
                       </div>
                     </article>
                   </CarouselItem>
@@ -224,18 +247,31 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
             )}
           </div>
           {selectedMenu && (
-            <div className="border-t-4 border-black bg-black p-5 text-white">
-              {selectedMenu.start_date && selectedMenu.end_date && (
-                <p className="mb-1 text-xs font-bold uppercase tracking-wide text-blue-300">
-                  {formatDateRange(
-                    selectedMenu.start_date,
-                    selectedMenu.end_date,
-                  )}
+            <div className="border-t-4 border-black bg-black p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex-1">
+                {selectedMenu.start_date && selectedMenu.end_date && (
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wide text-blue-300">
+                    {formatDateRange(
+                      selectedMenu.start_date,
+                      selectedMenu.end_date,
+                    )}
+                  </p>
+                )}
+                <p className="whitespace-pre-line text-lg font-bold text-white">
+                  {selectedMenu.description || "Menu mingguan Dapur Bu Wikra"}
                 </p>
-              )}
-              <p className="whitespace-pre-line text-lg font-bold text-white">
-                {selectedMenu.description || "Menu mingguan Dapur Bu Wikra"}
-              </p>
+              </div>
+              <Link
+                href={
+                  selectedMenu.start_date
+                    ? `/order?week=${selectedMenu.start_date}`
+                    : "/order"
+                }
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border-2 border-white bg-yellow-300 px-5 py-3 text-sm font-black uppercase text-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:bg-yellow-400 hover:translate-x-[1px] hover:translate-y-[1px] transition-all shrink-0"
+              >
+                <Utensils className="h-4 w-4" />
+                <span>Pesan Menu Ini</span>
+              </Link>
             </div>
           )}
         </DialogContent>

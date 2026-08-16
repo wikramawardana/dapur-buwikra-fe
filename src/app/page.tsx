@@ -1,4 +1,4 @@
-import { Images, LayoutDashboard } from "lucide-react";
+import { Images, LayoutDashboard, Utensils } from "lucide-react";
 import Link from "next/link";
 import { Hero } from "@/components/landing-page/hero";
 import { MenuSection } from "@/components/landing-page/menu-section";
@@ -18,20 +18,27 @@ function App() {
               {content.header.brand}
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/portfolio"
-              className="flex items-center gap-2 border-2 border-black bg-yellow-300 px-3 py-2 font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-yellow-400 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:px-4"
+              className="flex items-center gap-2 border-2 border-black bg-white px-3 py-2 font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-yellow-100 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:px-4"
             >
               <Images size={18} />
-              <span>Jejak Rasa</span>
+              <span className="hidden sm:inline">Jejak Rasa</span>
+            </Link>
+            <Link
+              href="/order"
+              className="flex items-center gap-2 border-2 border-black bg-yellow-300 px-3 py-2 font-black text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-yellow-400 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] sm:px-4"
+            >
+              <Utensils size={18} />
+              <span>Pesan Katering</span>
             </Link>
             <Link
               href="/orders"
-              className="flex items-center gap-2 px-4 py-2 font-bold bg-brut-blue text-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 font-bold bg-brut-blue text-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
             >
               <LayoutDashboard size={18} />
-              <span className="hidden sm:inline">{content.header.cta}</span>
+              <span className="hidden md:inline">{content.header.cta}</span>
             </Link>
           </div>
         </div>
