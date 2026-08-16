@@ -3,11 +3,14 @@
 import { format } from "date-fns";
 import {
   CalendarIcon,
+  Copy,
+  ExternalLink,
   Eye,
   ImagePlus,
   Loader2,
   Pencil,
   Plus,
+  Share2,
   Trash2,
   UtensilsCrossed,
 } from "lucide-react";
@@ -405,6 +408,26 @@ export default function MenusPage() {
     }
   };
 
+  const handleCopyOrderLink = (startDate: string) => {
+    const url = `${window.location.origin}/order/${startDate}`;
+    navigator.clipboard.writeText(url);
+    toast.success("Link order berhasil disalin!");
+  };
+
+  const handleShareOrderWhatsApp = (menu: Menu) => {
+    if (!menu.start_date) return;
+    const url = `${window.location.origin}/order/${menu.start_date}`;
+    const dateRange =
+      menu.start_date && menu.end_date
+        ? `${menu.start_date} s/d ${menu.end_date}`
+        : menu.start_date;
+    const text = `Halo! Menu katering Dapur Bu Wikra periode ${dateRange} sudah dibuka ya 🍱✨\n\nSilakan cek menu dan pesan lewat link ini:\n${url}\n\nTerima kasih! 🙏`;
+    window.open(
+      `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
+      "_blank",
+    );
+  };
+
   if (isSessionLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -595,36 +618,85 @@ export default function MenusPage() {
 
                         {/* Actions */}
                         <div
-                          className="flex gap-2"
+                          className="flex flex-wrap gap-2 pt-2 border-t border-black/10 items-center justify-between"
                           role="presentation"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openPreviewDialog(menu)}
-                            className="border-2 border-black rounded-none"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Preview
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openEditDialog(menu)}
-                            className="border-2 border-black rounded-none"
-                          >
-                            <Pencil className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => openDeleteDialog(menu)}
-                            className="border-2 border-black rounded-none"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex flex-wrap gap-2">
+                            {menu.content_type === "weekly_menu" &&
+                              menu.start_date && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleCopyOrderLink(menu.start_date!)
+                                    }
+                                    className="border-2 border-black rounded-none bg-yellow-300 hover:bg-yellow-400 font-bold text-xs"
+                                    title="Salin link formulir pemesanan"
+                                  >
+                                    <Copy className="h-3.5 w-3.5 mr-1" />
+                                    Salin Link
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleShareOrderWhatsApp(menu)
+                                    }
+                                    className="border-2 border-black rounded-none bg-green-300 hover:bg-green-400 font-bold text-xs"
+                                    title="Bagikan menu via WhatsApp"
+                                  >
+                                    <Share2 className="h-3.5 w-3.5 mr-1" />
+                                    Share WA
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      window.open(
+                                        `/order/${menu.start_date}`,
+                                        "_blank",
+                                      )
+                                    }
+                                    className="border-2 border-black rounded-none bg-blue-100 hover:bg-blue-200 font-bold text-xs"
+                                    title="Buka form pemesanan pelanggan di tab baru"
+                                  >
+                                    <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                                    Buka Form
+                                  </Button>
+                                </>
+                              )}
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openPreviewDialog(menu)}
+                              className="border-2 border-black rounded-none"
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Preview
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditDialog(menu)}
+                              className="border-2 border-black rounded-none"
+                            >
+                              <Pencil className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => openDeleteDialog(menu)}
+                              className="border-2 border-black rounded-none"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -690,30 +762,72 @@ export default function MenusPage() {
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => {
-                      setIsPreviewOpen(false);
-                      openEditDialog(previewMenu);
-                    }}
-                    className="flex-1 border-2 border-black bg-black text-white rounded-none"
-                    size="sm"
-                  >
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit Content
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      setIsPreviewOpen(false);
-                      openDeleteDialog(previewMenu);
-                    }}
-                    className="border-2 border-black rounded-none"
-                    size="sm"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
+                <div className="space-y-3">
+                  {previewMenu.content_type === "weekly_menu" &&
+                    previewMenu.start_date && (
+                      <div className="flex flex-wrap gap-2 pt-2 border-t border-black/10">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            handleCopyOrderLink(previewMenu.start_date!)
+                          }
+                          className="flex-1 border-2 border-black rounded-none bg-yellow-300 hover:bg-yellow-400 font-bold text-xs"
+                        >
+                          <Copy className="h-4 w-4 mr-1.5" />
+                          Salin Link Form
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleShareOrderWhatsApp(previewMenu)}
+                          className="flex-1 border-2 border-black rounded-none bg-green-300 hover:bg-green-400 font-bold text-xs"
+                        >
+                          <Share2 className="h-4 w-4 mr-1.5" />
+                          Bagikan ke WA
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            window.open(
+                              `/order/${previewMenu.start_date}`,
+                              "_blank",
+                            )
+                          }
+                          className="border-2 border-black rounded-none bg-blue-100 hover:bg-blue-200 font-bold text-xs"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1.5" />
+                          Buka Form
+                        </Button>
+                      </div>
+                    )}
+
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        setIsPreviewOpen(false);
+                        openEditDialog(previewMenu);
+                      }}
+                      className="flex-1 border-2 border-black bg-black text-white rounded-none"
+                      size="sm"
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Edit Content
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        setIsPreviewOpen(false);
+                        openDeleteDialog(previewMenu);
+                      }}
+                      className="border-2 border-black rounded-none"
+                      size="sm"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               </div>
             </>

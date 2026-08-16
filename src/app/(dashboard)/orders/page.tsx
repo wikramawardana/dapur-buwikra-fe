@@ -1,6 +1,7 @@
 "use client";
 
 import type { RowSelectionState } from "@tanstack/react-table";
+import { Copy, ExternalLink, Share2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import { BulkActionsBar } from "@/components/orders/bulk-actions-bar";
@@ -10,6 +11,7 @@ import { OrdersFilters } from "@/components/orders/orders-filters";
 import { OrdersPagination } from "@/components/orders/orders-pagination";
 import { OrdersTable } from "@/components/orders/orders-table";
 import { WeekSelector } from "@/components/orders/week-selector";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -174,10 +176,66 @@ export default function OrdersPage() {
               }}
             />
           </div>
-          <WeekSelector
-            value={getWeekValue(filters.date_from || defaultWeek.dateFrom)}
-            onChange={handleWeekChange}
-          />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <WeekSelector
+              value={getWeekValue(filters.date_from || defaultWeek.dateFrom)}
+              onChange={handleWeekChange}
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const weekStart = filters.date_from || defaultWeek.dateFrom;
+                  const url = `${window.location.origin}/order/${weekStart}`;
+                  navigator.clipboard.writeText(url);
+                  toast.success(
+                    `Link order minggu (${weekStart}) berhasil disalin!`,
+                  );
+                }}
+                className="h-9 px-3 text-xs font-bold border-2 border-black rounded-none bg-yellow-300 hover:bg-yellow-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                title="Salin link form order untuk minggu yang sedang dipilih"
+              >
+                <Copy className="h-3.5 w-3.5 mr-1.5" />
+                Salin Link Order
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const weekStart = filters.date_from || defaultWeek.dateFrom;
+                  const weekEnd = filters.date_to || defaultWeek.dateTo;
+                  const url = `${window.location.origin}/order/${weekStart}`;
+                  const text = `Halo! Menu katering Dapur Bu Wikra periode ${weekStart} s/d ${weekEnd} sudah dibuka ya 🍱✨\n\nYuk cek menu dan pesan lewat link ini:\n${url}\n\nTerima kasih! 🙏`;
+                  window.open(
+                    `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
+                    "_blank",
+                  );
+                }}
+                className="h-9 px-3 text-xs font-bold border-2 border-black rounded-none bg-green-300 hover:bg-green-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                title="Bagikan via WhatsApp"
+              >
+                <Share2 className="h-3.5 w-3.5 mr-1.5" />
+                Share WA
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const weekStart = filters.date_from || defaultWeek.dateFrom;
+                  window.open(`/order/${weekStart}`, "_blank");
+                }}
+                className="h-9 px-3 text-xs font-bold border-2 border-black rounded-none bg-blue-100 hover:bg-blue-200 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                title="Buka form di tab baru"
+              >
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                Buka Form
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
           <OrdersFilters

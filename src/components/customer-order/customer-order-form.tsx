@@ -14,6 +14,7 @@ import {
   History,
   Info,
   Loader2,
+  LogOut,
   MapPin,
   Minus,
   Plus,
@@ -59,6 +60,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { authClient } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
 import { createOrder } from "@/services/orders.service";
 import { getActivePickupPoints } from "@/services/pickup-point.service";
@@ -585,9 +587,27 @@ export function CustomerOrderForm({
                     <FormLabel className="text-sm font-black uppercase tracking-wide text-black">
                       Email Akun *
                     </FormLabel>
-                    <span className="text-xs font-bold text-green-700 bg-green-100 border border-green-700 px-2 py-0.5">
-                      ✓ Terhubung
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-green-700 bg-green-100 border border-green-700 px-2 py-0.5">
+                        ✓ Terhubung
+                      </span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await authClient.signOut();
+                            window.location.reload();
+                          } catch (err) {
+                            console.error("Sign out error:", err);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-800 hover:underline cursor-pointer border border-red-300 bg-red-50 px-2 py-0.5 transition-colors"
+                        title="Ganti ke akun Google lain"
+                      >
+                        <LogOut className="h-3 w-3" />
+                        <span>Ganti Akun</span>
+                      </button>
+                    </div>
                   </div>
                   <FormControl>
                     <Input

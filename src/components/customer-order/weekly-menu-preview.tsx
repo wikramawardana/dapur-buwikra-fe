@@ -4,11 +4,14 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Copy,
   Eye,
   ImageIcon,
+  Share2,
   Sparkles,
 } from "lucide-react";
 import * as React from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -130,25 +133,62 @@ export function WeeklyMenuPreview({
           </h2>
         </div>
 
-        {/* Week Switcher Dropdown */}
-        <div className="w-full sm:w-auto min-w-[240px]">
-          <Select value={currentWeekStart} onValueChange={onWeekChange}>
-            <SelectTrigger className="h-11 bg-white font-bold text-sm border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-              <CalendarDays className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Pilih Minggu" />
-            </SelectTrigger>
-            <SelectContent className="border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              {weekOptions.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="font-medium text-sm py-2 cursor-pointer focus:bg-yellow-100"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Week Switcher & Share Actions */}
+        <div className="w-full sm:w-auto flex flex-wrap sm:flex-nowrap items-center gap-2">
+          <div className="w-full sm:w-auto min-w-[200px] flex-1">
+            <Select value={currentWeekStart} onValueChange={onWeekChange}>
+              <SelectTrigger className="h-11 bg-white font-bold text-sm border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                <CalendarDays className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Pilih Minggu" />
+              </SelectTrigger>
+              <SelectContent className="border-2 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                {weekOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="font-medium text-sm py-2 cursor-pointer focus:bg-yellow-100"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const url =
+                typeof window !== "undefined"
+                  ? `${window.location.origin}/order/${currentWeekStart}`
+                  : `https://dapurbuwikra.biz.id/order/${currentWeekStart}`;
+              navigator.clipboard.writeText(url);
+              toast.success("Link order berhasil disalin!");
+            }}
+            className="h-11 px-3 bg-white hover:bg-yellow-100 border-2 border-black font-black text-xs uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+            title="Salin Link Menu"
+          >
+            <Copy className="h-4 w-4" />
+            <span className="hidden sm:inline">Salin Link</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const url =
+                typeof window !== "undefined"
+                  ? `${window.location.origin}/order/${currentWeekStart}`
+                  : `https://dapurbuwikra.biz.id/order/${currentWeekStart}`;
+              const text = `Halo! Menu katering Dapur Bu Wikra periode ${formatDateRange(currentWeekStart, currentWeekEnd)} sudah dibuka ya 🍱✨\n\nYuk cek menu dan pesan lewat link ini:\n${url}\n\nTerima kasih! 🙏`;
+              window.open(
+                `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
+                "_blank",
+              );
+            }}
+            className="h-11 px-3 bg-green-400 hover:bg-green-500 border-2 border-black font-black text-xs uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+            title="Bagikan ke WhatsApp"
+          >
+            <Share2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Share WA</span>
+          </button>
         </div>
       </div>
 

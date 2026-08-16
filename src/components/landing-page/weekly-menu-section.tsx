@@ -118,7 +118,7 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
                   ? getUploadUrl(menu.image_urls[0])
                   : null;
                 const orderLink = menu.start_date
-                  ? `/order?week=${menu.start_date}`
+                  ? `/order/${menu.start_date}`
                   : "/order";
 
                 return (
@@ -264,7 +264,7 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
               <Link
                 href={
                   selectedMenu.start_date
-                    ? `/order?week=${selectedMenu.start_date}`
+                    ? `/order/${selectedMenu.start_date}`
                     : "/order"
                 }
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border-2 border-white bg-yellow-300 px-5 py-3 text-sm font-black uppercase text-black shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:bg-yellow-400 hover:translate-x-[1px] hover:translate-y-[1px] transition-all shrink-0"
