@@ -8,9 +8,13 @@ export interface LandingContent {
     titleBefore: string;
     titleHighlight: string;
     titleAfter: string;
+    description: string;
     primaryCta: string;
     secondaryCta: string;
     weeklyMenuTitle: string;
+    weeklyMenuFeature1: string;
+    weeklyMenuFeature2: string;
+    weeklyMenuFeature3: string;
     weeklyMenuEmpty: string;
   };
   featured: {

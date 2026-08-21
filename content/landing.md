@@ -21,6 +21,9 @@ BIASA
 ## Hero Title After
 .
 
+## Hero Description
+Dapur Bu Wikra: Teman Makan Enak Setiap Hari.
+
 ## Primary CTA
 Lihat Menu
 
@@ -29,6 +32,15 @@ Area Kantor Only
 
 ## Weekly Menu Title
 MAKAN APA MINGGU INI?
+
+## Weekly Menu Feature 1
+Pilihan Hari Suka-Suka
+
+## Weekly Menu Feature 2
+Kejutan Rasa Baru Setiap Hari
+
+## Weekly Menu Feature 3
+Jaminan Tiba Sebelum Jam Makan Siang (11.30)
 
 ## Weekly Menu Empty
 Menu belum tersedia

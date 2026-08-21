@@ -55,9 +55,13 @@ export function loadLandingContent(): LandingContent {
       titleBefore: required(sections, "heroTitleBefore"),
       titleHighlight: required(sections, "heroTitleHighlight"),
       titleAfter: required(sections, "heroTitleAfter"),
+      description: required(sections, "heroDescription"),
       primaryCta: required(sections, "primaryCta"),
       secondaryCta: required(sections, "secondaryCta"),
       weeklyMenuTitle: required(sections, "weeklyMenuTitle"),
+      weeklyMenuFeature1: required(sections, "weeklyMenuFeature1"),
+      weeklyMenuFeature2: required(sections, "weeklyMenuFeature2"),
+      weeklyMenuFeature3: required(sections, "weeklyMenuFeature3"),
       weeklyMenuEmpty: required(sections, "weeklyMenuEmpty"),
     },
     featured: {

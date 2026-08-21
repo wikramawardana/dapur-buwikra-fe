@@ -31,8 +31,7 @@ export const Hero: React.FC<HeroProps> = ({ content }) => {
             </h1>
 
             <p className="text-base sm:text-xl font-bold text-black/75 max-w-lg leading-relaxed">
-              Makan siang kantor lezat rumahan, dimasak segar setiap subuh tanpa
-              MSG, siap antar hangat ke meja kerja Anda.
+              {content.description}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2">

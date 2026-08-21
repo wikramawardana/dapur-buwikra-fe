@@ -2,7 +2,6 @@
 
 import {
   CalendarDays,
-  ChefHat,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -119,15 +118,15 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10 text-xs sm:text-sm font-bold max-w-4xl mx-auto">
           <div className="border-2 border-black bg-white p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 text-center">
             <CalendarDays className="h-4 w-4 text-black" />
-            <span>Pilihan Hari Fleksibel</span>
+            <span>{content.weeklyMenuFeature1}</span>
           </div>
           <div className="border-2 border-black bg-white p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 text-center">
-            <ChefHat className="h-4 w-4 text-black" />
-            <span>Dimasak Subuh Tanpa Pengawet</span>
+            <Sparkles className="h-4 w-4 text-black" />
+            <span>{content.weeklyMenuFeature2}</span>
           </div>
           <div className="border-2 border-black bg-white p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2 text-center">
             <Clock className="h-4 w-4 text-black" />
-            <span>Tiba Sebelum Makan Siang (11:30)</span>
+            <span>{content.weeklyMenuFeature3}</span>
           </div>
         </div>
 

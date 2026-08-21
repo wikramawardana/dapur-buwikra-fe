@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, ChevronLeft, ChevronRight, Eye, Info } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import Image from "next/image";
 import * as React from "react";
 import {
@@ -143,158 +143,77 @@ export function CatalogSection() {
           </p>
         </div>
 
-        {/* Feature Highlights Pills */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10 text-xs sm:text-sm font-bold">
-          <div className="border-2 border-black bg-white p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
-            <span className="text-xl">🌱</span>
-            <span>100% Bebas Micin &amp; Kaldu Alami</span>
-          </div>
-          <div className="border-2 border-black bg-white p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
-            <span className="text-xl">🍳</span>
-            <span>Dimasak Fresh Tiap Subuh</span>
-          </div>
-          <div className="border-2 border-black bg-white p-3 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
-            <span className="text-xl">🍱</span>
-            <span>Porsi Lengkap &amp; Mengenyangkan</span>
-          </div>
-        </div>
-
         {/* Main Showcase Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          {/* Left: Interactive Carousel Display */}
-          <div className="lg:col-span-8">
-            <div className="relative border-4 border-black bg-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-              <Carousel
-                setApi={setApi}
-                opts={{ loop: true }}
-                className="w-full"
-              >
-                <CarouselContent className="ml-0">
-                  {CATALOG_SLIDES.map((slide, index) => (
-                    <CarouselItem key={slide.src} className="pl-0 relative">
-                      <button
-                        type="button"
-                        onClick={() => openLightbox(index)}
-                        className="w-full aspect-[16/9] relative bg-neutral-900 flex items-center justify-center cursor-pointer group"
-                        aria-label={`Buka tampilan penuh slide ${index + 1}`}
-                      >
-                        <Image
-                          src={slide.src}
-                          alt={slide.title}
-                          fill
-                          priority={index === 0}
-                          sizes="(max-width: 1024px) 100vw, 768px"
-                          className="object-contain"
-                        />
-                        <span className="absolute bottom-4 right-4 flex items-center gap-2 border-2 border-black bg-white px-3 py-1.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] opacity-90 group-hover:opacity-100 transition-opacity">
-                          <Eye className="h-3.5 w-3.5" /> Lihat Ukuran Penuh
-                        </span>
-                      </button>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-
-                <CarouselPrevious className="left-4 h-10 w-10 sm:h-12 sm:w-12 rounded-none border-3 border-black bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-300 hover:text-black transition-colors" />
-                <CarouselNext className="right-4 h-10 w-10 sm:h-12 sm:w-12 rounded-none border-3 border-black bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-300 hover:text-black transition-colors" />
-              </Carousel>
-
-              {/* Bottom Carousel Controller Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t-4 border-black bg-white px-4 sm:px-6 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="bg-black text-white px-2 py-0.5 text-xs font-black uppercase">
-                    {currentSlide.badge}
-                  </span>
-                  <span className="text-xs sm:text-sm font-bold text-black truncate max-w-[200px] sm:max-w-xs">
-                    {currentSlide.title}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {/* Jump Dots */}
-                  <div
-                    className="flex gap-1 overflow-x-auto max-w-[160px] sm:max-w-none"
-                    role="group"
-                    aria-label="Pilih halaman katalog"
-                  >
-                    {CATALOG_SLIDES.map((slide, index) => (
-                      <button
-                        key={slide.src}
-                        type="button"
-                        onClick={() => api?.scrollTo(index)}
-                        className={cn(
-                          "h-3 w-3 sm:h-3.5 sm:w-3.5 border-2 border-black transition-all cursor-pointer",
-                          current === index
-                            ? "bg-yellow-400 scale-110 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
-                            : "bg-white hover:bg-gray-200",
-                        )}
-                        aria-label={`Slide ${index + 1}`}
+        <div className="max-w-4xl mx-auto">
+          <div className="relative border-4 border-black bg-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+            <Carousel setApi={setApi} opts={{ loop: true }} className="w-full">
+              <CarouselContent className="ml-0">
+                {CATALOG_SLIDES.map((slide, index) => (
+                  <CarouselItem key={slide.src} className="pl-0 relative">
+                    <button
+                      type="button"
+                      onClick={() => openLightbox(index)}
+                      className="w-full aspect-[16/9] relative bg-neutral-900 flex items-center justify-center cursor-pointer group"
+                      aria-label={`Buka tampilan penuh slide ${index + 1}`}
+                    >
+                      <Image
+                        src={slide.src}
+                        alt={slide.title}
+                        fill
+                        priority={index === 0}
+                        sizes="(max-width: 1024px) 100vw, 896px"
+                        className="object-contain"
                       />
-                    ))}
-                  </div>
+                      <span className="absolute bottom-4 right-4 flex items-center gap-2 border-2 border-black bg-white px-3 py-1.5 text-xs font-black uppercase text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] opacity-90 group-hover:opacity-100 transition-opacity">
+                        <Eye className="h-3.5 w-3.5" /> Lihat Ukuran Penuh
+                      </span>
+                    </button>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
 
-                  <p className="font-mono text-xs sm:text-sm font-black bg-gray-100 border border-black px-2 py-0.5 shrink-0">
-                    {String(current + 1).padStart(2, "0")} /{" "}
-                    {String(CATALOG_SLIDES.length).padStart(2, "0")}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+              <CarouselPrevious className="left-4 h-10 w-10 sm:h-12 sm:w-12 rounded-none border-3 border-black bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-300 hover:text-black transition-colors" />
+              <CarouselNext className="right-4 h-10 w-10 sm:h-12 sm:w-12 rounded-none border-3 border-black bg-white text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-300 hover:text-black transition-colors" />
+            </Carousel>
 
-          {/* Right: Slide Info & Quick Selection List */}
-          <div className="lg:col-span-4 space-y-4">
-            <div className="border-4 border-black bg-white p-5 sm:p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] space-y-4">
-              <div className="flex items-center justify-between gap-2 border-b-2 border-black pb-3">
-                <span className="bg-yellow-300 border-2 border-black px-2.5 py-0.5 text-xs font-black uppercase tracking-wider">
+            {/* Bottom Carousel Controller Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t-4 border-black bg-white px-4 sm:px-6 py-3">
+              <div className="flex items-center gap-2">
+                <span className="bg-black text-white px-2 py-0.5 text-xs font-black uppercase">
                   {currentSlide.badge}
                 </span>
-                <span className="text-xs font-bold text-black/60">
-                  Slide {current + 1} dari {CATALOG_SLIDES.length}
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-xl sm:text-2xl font-black text-black">
+                <span className="text-xs sm:text-sm font-bold text-black truncate max-w-[200px] sm:max-w-xs">
                   {currentSlide.title}
-                </h3>
-                <p className="text-sm sm:text-base font-medium text-black/80 leading-relaxed bg-gray-50 border-2 border-black/20 p-3">
-                  {currentSlide.subtitle}
-                </p>
-              </div>
-
-              <div className="pt-1 flex items-center gap-2 text-xs font-bold text-black/70 bg-yellow-50 border border-black/20 p-2.5">
-                <Info className="h-4 w-4 text-black shrink-0" />
-                <span>
-                  Klik gambar untuk melihat detail katalog ukuran penuh.
                 </span>
               </div>
-            </div>
 
-            {/* Quick Slide Navigation Mini-Grid */}
-            <div className="border-3 border-black bg-white p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <p className="text-xs font-black uppercase tracking-wide text-black/60 mb-2">
-                Daftar Hidangan Katalog:
-              </p>
-              <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
-                {CATALOG_SLIDES.slice(2, 10).map((dish, i) => {
-                  const actualIndex = i + 2;
-                  const isSelected = current === actualIndex;
-                  return (
+              <div className="flex items-center gap-3">
+                {/* Jump Dots */}
+                <div
+                  className="flex gap-1 overflow-x-auto max-w-[160px] sm:max-w-none"
+                  role="group"
+                  aria-label="Pilih halaman katalog"
+                >
+                  {CATALOG_SLIDES.map((slide, index) => (
                     <button
-                      key={dish.src}
+                      key={slide.src}
                       type="button"
-                      onClick={() => api?.scrollTo(actualIndex)}
+                      onClick={() => api?.scrollTo(index)}
                       className={cn(
-                        "text-left px-2 py-1.5 border truncate cursor-pointer transition-colors",
-                        isSelected
-                          ? "bg-yellow-300 border-black font-black"
-                          : "bg-gray-50 border-gray-300 hover:bg-yellow-100 text-black/80",
+                        "h-3 w-3 sm:h-3.5 sm:w-3.5 border-2 border-black transition-all cursor-pointer",
+                        current === index
+                          ? "bg-yellow-400 scale-110 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+                          : "bg-white hover:bg-gray-200",
                       )}
-                    >
-                      {dish.title}
-                    </button>
-                  );
-                })}
+                      aria-label={`Slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+
+                <p className="font-mono text-xs sm:text-sm font-black bg-gray-100 border border-black px-2 py-0.5 shrink-0">
+                  {String(current + 1).padStart(2, "0")} /{" "}
+                  {String(CATALOG_SLIDES.length).padStart(2, "0")}
+                </p>
               </div>
             </div>
           </div>
