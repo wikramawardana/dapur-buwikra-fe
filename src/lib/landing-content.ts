@@ -42,6 +42,14 @@ function required(sections: Record<string, string>, key: string): string {
   return value;
 }
 
+function optional(
+  sections: Record<string, string>,
+  key: string,
+  fallback = "",
+): string {
+  return sections[key] ?? fallback;
+}
+
 export function loadLandingContent(): LandingContent {
   const sections = parseSections(readFileSync(CONTENT_PATH, "utf8"));
 
@@ -54,7 +62,7 @@ export function loadLandingContent(): LandingContent {
       badge: required(sections, "heroBadge"),
       titleBefore: required(sections, "heroTitleBefore"),
       titleHighlight: required(sections, "heroTitleHighlight"),
-      titleAfter: required(sections, "heroTitleAfter"),
+      titleAfter: optional(sections, "heroTitleAfter", ""),
       description: required(sections, "heroDescription"),
       primaryCta: required(sections, "primaryCta"),
       secondaryCta: required(sections, "secondaryCta"),

@@ -26,8 +26,12 @@ export const Hero: React.FC<HeroProps> = ({ content }) => {
               <span className="bg-yellow-300 px-2 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] underline decoration-4 decoration-black underline-offset-4 inline-block transform rotate-1">
                 {content.titleHighlight}
               </span>
-              <br />
-              {content.titleAfter}
+              {content.titleAfter ? (
+                <>
+                  <br />
+                  {content.titleAfter}
+                </>
+              ) : null}
             </h1>
 
             <p className="text-base sm:text-xl font-bold text-black/75 max-w-lg leading-relaxed">

@@ -19,7 +19,6 @@ BUKAN CATERING
 BIASA
 
 ## Hero Title After
-.
 
 ## Hero Description
 Dapur Bu Wikra: Teman Makan Enak Setiap Hari.

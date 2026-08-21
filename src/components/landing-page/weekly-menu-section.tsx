@@ -108,10 +108,6 @@ export function WeeklyMenuSection({ content }: WeeklyMenuSectionProps) {
           <h2 className="text-3xl sm:text-5xl font-black text-black tracking-tight leading-tight">
             {content.weeklyMenuTitle || "Menu Katering Mingguan"}
           </h2>
-          <p className="text-base sm:text-lg font-medium text-black/70 max-w-2xl mx-auto">
-            Jadwal menu berganti setiap minggu. Dimasak segar setiap subuh, 100%
-            bebas micin, dan siap diantar hangat ke kantor Anda.
-          </p>
         </div>
 
         {/* Informative Highlights */}

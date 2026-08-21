@@ -55,19 +55,19 @@ function App() {
         {/* 1. Hero Section (Story Carousel: Cerita Kami) */}
         <Hero content={content.hero} />
 
-        {/* 2. Active Weekly Menu Section (Warm appetizing apricot/terracotta theme) */}
+        {/* 2. Active Weekly Menu Section (MAKAN APA MINGGU INI?) */}
         <WeeklyMenuSection content={content.hero} />
 
-        {/* 3. Volume 1: Katalog Bebas Micin (Fresh herbal sage theme) */}
-        <CatalogSection />
-
-        {/* 4. How It Works: 3 Langkah Mudah Pesan (Warm turmeric golden theme) */}
-        <HowItWorksSection />
-
-        {/* 5. Jejak Rasa Featured Gallery Collection (Warm sunny cream) */}
+        {/* 3. Jejak Rasa Featured Gallery Collection */}
         <MenuSection content={content.featured} />
 
-        {/* 6. FAQ Accordion (Cozy honey cream) */}
+        {/* 4. Volume 1: Katalog Bebas Micin */}
+        <CatalogSection />
+
+        {/* 5. How It Works: 3 Langkah Mudah Pesan */}
+        <HowItWorksSection />
+
+        {/* 6. FAQ Accordion */}
         <FaqSection />
       </main>
 
