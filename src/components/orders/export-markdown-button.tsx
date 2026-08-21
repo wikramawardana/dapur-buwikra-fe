@@ -5,6 +5,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DAYS_OF_WEEK } from "@/lib/constants";
+import { normalizeDayName } from "@/lib/week-utils";
 import { getOrders } from "@/services/orders.service";
 import type { Order, OrderFilters } from "@/types/order.types";
 
@@ -56,7 +57,7 @@ function ordersToMarkdown(
     // Each order now has day_orders with items per day
     if (order.day_orders && order.day_orders.length > 0) {
       for (const dayOrder of order.day_orders) {
-        const day = dayOrder.day;
+        const day = normalizeDayName(dayOrder.day);
         if (DAYS_OF_WEEK.includes(day as (typeof DAYS_OF_WEEK)[number])) {
           // Format items for this day
           const itemsSummary = dayOrder.items

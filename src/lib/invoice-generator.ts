@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import QRCode from "qrcode";
 import { formatCurrency } from "./format";
+import { formatDayDisplay } from "./week-utils";
 
 // ── Types ──────────────────────────────────────────────────────────────
 interface OrderMenuItem {
@@ -461,7 +462,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
 
     drawText(
       ctx,
-      `${dayOrder.day.toUpperCase()} — ${format(new Date(dayOrder.date), "dd MMM yyyy")}`,
+      `${formatDayDisplay(dayOrder.day).toUpperCase()} — ${format(new Date(dayOrder.date), "dd MMM yyyy")}`,
       cardPad + 16,
       y + 9,
       {
@@ -545,10 +546,16 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
     );
     ctx.fillStyle = GREY_LIGHT;
     ctx.fillRect(cardPad, y, cardW, 34);
-    drawText(ctx, `Subtotal ${dayOrder.day}`, cardPad + 16, y + 9, {
-      font: 'bold 13px "Inter", Arial, sans-serif',
-      color: GREY_DARK,
-    });
+    drawText(
+      ctx,
+      `Subtotal ${formatDayDisplay(dayOrder.day)}`,
+      cardPad + 16,
+      y + 9,
+      {
+        font: 'bold 12px "Inter", Arial, sans-serif',
+        color: GREY_DARK,
+      },
+    );
     drawText(ctx, formatCurrency(dayTotal), cardPad + cardW - 12, y + 9, {
       font: 'bold 14px "Inter", Arial, sans-serif',
       color: BLACK,

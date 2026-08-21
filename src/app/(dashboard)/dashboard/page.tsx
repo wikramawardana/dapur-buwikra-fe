@@ -65,6 +65,26 @@ export default function DashboardPage() {
   const [showMoney, setShowMoney] = React.useState(false);
   const requestId = React.useRef(0);
 
+  React.useEffect(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const dateFrom =
+        searchParams.get("date_from") ||
+        sessionStorage.getItem("selected_week_from");
+      const dateTo =
+        searchParams.get("date_to") ||
+        sessionStorage.getItem("selected_week_to");
+
+      if (dateFrom && dateTo) {
+        setFilters((current) => ({
+          ...current,
+          date_from: dateFrom,
+          date_to: dateTo,
+        }));
+      }
+    } catch {}
+  }, []);
+
   const fetchOverview = React.useCallback(async () => {
     if (!canAccessOverview || !filters.date_from) return;
 
@@ -175,6 +195,10 @@ export default function DashboardPage() {
 
   const handleWeekChange = (dateFrom: string, dateTo: string) => {
     setFilters({ date_from: dateFrom, date_to: dateTo });
+    try {
+      sessionStorage.setItem("selected_week_from", dateFrom);
+      sessionStorage.setItem("selected_week_to", dateTo);
+    } catch {}
   };
 
   const ordersForWeek = `/orders?date_from=${filters.date_from}&date_to=${filters.date_to}`;

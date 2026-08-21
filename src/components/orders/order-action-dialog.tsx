@@ -67,6 +67,7 @@ import { useSession } from "@/lib/auth-client";
 import { DAY_PAYMENT_STATUSES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import { generateInvoiceImage } from "@/lib/invoice-generator";
+import { formatDayDisplay } from "@/lib/week-utils";
 import {
   acceptOrder,
   cancelOrder,
@@ -744,7 +745,9 @@ export function OrderActionDialog({
                       >
                         <div className="flex justify-between items-center mb-3 pb-2 border-b border-black/20 dark:border-white/20">
                           <div>
-                            <p className="font-bold text-lg">{dayOrder.day}</p>
+                            <p className="font-bold text-lg">
+                              {formatDayDisplay(dayOrder.day)}
+                            </p>
                             <p className="text-sm text-muted-foreground">
                               {dayOrder.date}
                             </p>

@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { formatDayDisplay } from "@/lib/week-utils";
 import type { Order } from "@/types/order.types";
 import { OrderActionDialog } from "./order-action-dialog";
 import { StatusBadge } from "./status-badge";
@@ -167,7 +168,8 @@ export function OrdersTable({
                   {order.day_orders.map((dayOrder, idx) => (
                     <div key={idx}>
                       <p className="font-semibold text-sm">
-                        {dayOrder.day} — {formatDate(dayOrder.date)}
+                        {formatDayDisplay(dayOrder.day)} —{" "}
+                        {formatDate(dayOrder.date)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {dayOrder.items
@@ -386,7 +388,8 @@ export function OrdersTable({
                           {order.day_orders?.map((dayOrder, idx) => (
                             <div key={idx}>
                               <p className="font-semibold text-sm">
-                                {dayOrder.day} — {formatDate(dayOrder.date)}
+                                {formatDayDisplay(dayOrder.day)} —{" "}
+                                {formatDate(dayOrder.date)}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {dayOrder.items

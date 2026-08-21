@@ -54,25 +54,31 @@ export default function OrdersPage() {
   const isAuthenticated = !!session?.user;
 
   React.useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const dateFrom = searchParams.get("date_from");
-    const dateTo = searchParams.get("date_to");
-    const paymentStatus = searchParams.get("payment_status");
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const dateFrom =
+        searchParams.get("date_from") ||
+        sessionStorage.getItem("selected_week_from");
+      const dateTo =
+        searchParams.get("date_to") ||
+        sessionStorage.getItem("selected_week_to");
+      const paymentStatus = searchParams.get("payment_status");
 
-    if (!dateFrom && !dateTo && !paymentStatus) return;
+      if (!dateFrom && !dateTo && !paymentStatus) return;
 
-    setFilters((current) => ({
-      ...current,
-      date_from: dateFrom || current.date_from,
-      date_to: dateTo || current.date_to,
-      payment_status:
-        paymentStatus === "paid" ||
-        paymentStatus === "unpaid" ||
-        paymentStatus === "partial"
-          ? paymentStatus
-          : current.payment_status,
-      page: 1,
-    }));
+      setFilters((current) => ({
+        ...current,
+        date_from: dateFrom || current.date_from,
+        date_to: dateTo || current.date_to,
+        payment_status:
+          paymentStatus === "paid" ||
+          paymentStatus === "unpaid" ||
+          paymentStatus === "partial"
+            ? paymentStatus
+            : current.payment_status,
+        page: 1,
+      }));
+    } catch {}
   }, []);
 
   // Derive selected orders from the selection state
@@ -127,6 +133,10 @@ export default function OrdersPage() {
       date_to: dateTo,
       page: 1,
     }));
+    try {
+      sessionStorage.setItem("selected_week_from", dateFrom);
+      sessionStorage.setItem("selected_week_to", dateTo);
+    } catch {}
   };
 
   const handleFiltersChange = (newFilters: OrderFilters) => {

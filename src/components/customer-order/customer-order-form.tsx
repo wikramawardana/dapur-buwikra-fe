@@ -358,7 +358,7 @@ export function CustomerOrderForm({
       .sort()
       .map((dateKey) => {
         const matched = weekDays.find((d) => d.dateKey === dateKey);
-        const dayName = matched ? matched.dayName : "Day";
+        const dayName = matched ? format(matched.rawDate, "EEEE") : "Day";
         const items = values.dayOrders[dateKey] || [];
         return {
           day: dayName,

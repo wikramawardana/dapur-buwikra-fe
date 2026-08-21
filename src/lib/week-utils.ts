@@ -91,3 +91,61 @@ export function generateWeekOptions(): WeekOption[] {
 
   return options;
 }
+
+export function normalizeDayName(day: string): string {
+  const lower = day.trim().toLowerCase();
+  switch (lower) {
+    case "senin":
+    case "monday":
+      return "Monday";
+    case "selasa":
+    case "tuesday":
+      return "Tuesday";
+    case "rabu":
+    case "wednesday":
+      return "Wednesday";
+    case "kamis":
+    case "thursday":
+      return "Thursday";
+    case "jumat":
+    case "jum'at":
+    case "friday":
+      return "Friday";
+    case "sabtu":
+    case "saturday":
+      return "Saturday";
+    case "minggu":
+    case "sunday":
+      return "Sunday";
+    default:
+      return day;
+  }
+}
+
+export function formatDayDisplay(
+  day: string,
+  locale: "id" | "en" = "id",
+): string {
+  const normalized = normalizeDayName(day);
+  if (locale === "id") {
+    switch (normalized) {
+      case "Monday":
+        return "Senin";
+      case "Tuesday":
+        return "Selasa";
+      case "Wednesday":
+        return "Rabu";
+      case "Thursday":
+        return "Kamis";
+      case "Friday":
+        return "Jumat";
+      case "Saturday":
+        return "Sabtu";
+      case "Sunday":
+        return "Minggu";
+      default:
+        return day;
+    }
+  }
+  return normalized;
+}
