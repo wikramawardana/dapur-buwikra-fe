@@ -24,7 +24,7 @@ const STEPS = [
     step: "03",
     title: "Diantar Fresh ke Kantor",
     description:
-      "Masakan hangat dimasak subuh dan tiba di pantry atau meja kantor Anda sebelum jam 11:45 WIB. Siap disantap saat jam makan siang!",
+      "Masakan hangat dimasak subuh dan tiba di pantry atau meja kantor Anda sebelum jam 11:30 WIB. Siap disantap saat jam makan siang!",
     icon: Utensils,
     badgeColor: "bg-blue-300",
   },
