@@ -5,15 +5,19 @@ import {
   CalendarIcon,
   CheckCheck,
   ChevronsUpDown,
+  Copy,
+  Download,
   Eye,
   ImageIcon,
   Loader2,
+  MessageSquare,
   Minus,
   MoreHorizontal,
   Pencil,
   Plus,
   QrCode,
   RotateCcw,
+  Share2,
   Trash2,
 } from "lucide-react";
 import * as React from "react";
@@ -70,6 +74,7 @@ import { useSession } from "@/lib/auth-client";
 import { DAY_PAYMENT_STATUSES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import { generateInvoiceImage } from "@/lib/invoice-generator";
+import { generateOrderWhatsAppMessage } from "@/lib/order-message";
 import { calculateOrderPayable } from "@/lib/qris";
 import { formatDayDisplay } from "@/lib/week-utils";
 import {
@@ -167,6 +172,13 @@ export function OrderActionDialog({
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [isCopyingInvoice, setIsCopyingInvoice] = React.useState(false);
   const [invoiceCopied, setInvoiceCopied] = React.useState(false);
+  const [invoicePreviewOpen, setInvoicePreviewOpen] = React.useState(false);
+  const [invoiceImageUrl, setInvoiceImageUrl] = React.useState<string | null>(
+    null,
+  );
+  const [isGeneratingInvoicePreview, setIsGeneratingInvoicePreview] =
+    React.useState(false);
+  const [messageCopied, setMessageCopied] = React.useState(false);
 
   // Workflow action states
   const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
@@ -530,6 +542,40 @@ export function OrderActionDialog({
     } finally {
       setIsCopyingInvoice(false);
     }
+  };
+
+  const handleWatchInvoice = async () => {
+    setIsGeneratingInvoicePreview(true);
+    try {
+      const blob = await generateInvoiceImage(order);
+      const url = URL.createObjectURL(blob);
+      setInvoiceImageUrl(url);
+      setInvoicePreviewOpen(true);
+    } catch (error) {
+      console.error("Invoice generation error:", error);
+      toast.error("Gagal membuat preview invoice");
+    } finally {
+      setIsGeneratingInvoicePreview(false);
+    }
+  };
+
+  const handleCopyWhatsAppMessage = () => {
+    const { text } = generateOrderWhatsAppMessage(order);
+    navigator.clipboard.writeText(text);
+    setMessageCopied(true);
+    toast.success("Rincian pesanan & link QRIS berhasil disalin!");
+    setTimeout(() => setMessageCopied(false), 2000);
+  };
+
+  const handleSendWhatsApp = () => {
+    const { waUrl } = generateOrderWhatsAppMessage(order);
+    window.open(waUrl, "_blank");
+  };
+
+  const handleCopyQrisLinkOnly = () => {
+    const { url } = generateOrderWhatsAppMessage(order);
+    navigator.clipboard.writeText(url);
+    toast.success("Link QRIS dinamis berhasil disalin!");
   };
 
   const [isCheckingShopeePayment, setIsCheckingShopeePayment] =
@@ -1203,22 +1249,17 @@ export function OrderActionDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleCopyInvoice}
-                disabled={isCopyingInvoice}
-                className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
+                onClick={handleWatchInvoice}
+                disabled={isGeneratingInvoicePreview}
+                className="h-12 px-5 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black hover:bg-muted"
+                title="Lihat preview invoice pesanan"
               >
-                {isCopyingInvoice ? (
+                {isGeneratingInvoicePreview ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : invoiceCopied ? (
-                  <CheckCheck className="mr-2 h-4 w-4" />
                 ) : (
-                  <ImageIcon className="mr-2 h-4 w-4" />
+                  <Eye className="mr-2 h-4 w-4 text-blue-600" />
                 )}
-                {isCopyingInvoice
-                  ? "Generating..."
-                  : invoiceCopied
-                    ? "Copied!"
-                    : "Copy Invoice"}
+                Lihat Invoice
               </Button>
             )}
             {isViewMode && displayPaymentTotals.unpaid > 0 && (
@@ -1229,7 +1270,7 @@ export function OrderActionDialog({
                   onClick={handleCheckShopeePayment}
                   disabled={isCheckingShopeePayment}
                   className="h-12 px-4 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-emerald-400 hover:bg-emerald-500 text-black"
-                  title="Periksa mutasi pembayaran ShopeePay"
+                  title="Periksa mutasi pembayaran ShopeePay secara realtime"
                 >
                   {isCheckingShopeePayment ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1238,27 +1279,58 @@ export function OrderActionDialog({
                   )}
                   {isCheckingShopeePayment ? "Mengecek..." : "Cek Bayar"}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    const { finalAmount } = calculateOrderPayable(
-                      displayPaymentTotals.unpaid,
-                      order.id,
-                      true,
-                    );
-                    const url = `${window.location.origin}/payment/qris?order_id=${order.id}&amount=${finalAmount}&name=${encodeURIComponent(order.name)}`;
-                    navigator.clipboard.writeText(url);
-                    toast.success(
-                      "Link pembayaran QRIS dinamis berhasil disalin!",
-                    );
-                  }}
-                  className="h-12 px-4 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-yellow-300 hover:bg-yellow-400 text-black"
-                  title="Salin Link Pembayaran QRIS Dinamis"
-                >
-                  <QrCode className="mr-2 h-4 w-4" />
-                  Link QRIS
-                </Button>
+
+                {/* Tagih via WhatsApp & QRIS Action */}
+                <div className="flex items-center">
+                  <Button
+                    type="button"
+                    onClick={handleCopyWhatsAppMessage}
+                    className="h-12 px-4 text-base font-bold border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] bg-yellow-300 hover:bg-yellow-400 text-black border-r-0"
+                    title="Salin rincian pesanan dan link QRIS untuk dikirim ke customer via WhatsApp"
+                  >
+                    {messageCopied ? (
+                      <CheckCheck className="mr-2 h-4 w-4 text-emerald-700" />
+                    ) : (
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                    )}
+                    {messageCopied ? "Tersalin!" : "Salin Pesan WA"}
+                  </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        className="h-12 px-2.5 border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] bg-yellow-400 hover:bg-yellow-500 text-black"
+                        title="Opsi pengiriman tagihan"
+                      >
+                        <ChevronsUpDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-60">
+                      <DropdownMenuItem
+                        onClick={handleSendWhatsApp}
+                        className="cursor-pointer font-medium text-xs flex items-center gap-2 py-2"
+                      >
+                        <Share2 className="h-4 w-4 text-emerald-600" />
+                        Kirim Langsung ke WhatsApp
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleCopyWhatsAppMessage}
+                        className="cursor-pointer font-medium text-xs flex items-center gap-2 py-2"
+                      >
+                        <Copy className="h-4 w-4 text-blue-600" />
+                        Salin Pesan Tagihan (Lengkap)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleCopyQrisLinkOnly}
+                        className="cursor-pointer font-medium text-xs flex items-center gap-2 py-2"
+                      >
+                        <QrCode className="h-4 w-4 text-orange-600" />
+                        Salin Hanya Link QRIS
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </>
             )}
             <Button
@@ -1383,6 +1455,85 @@ export function OrderActionDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Invoice Preview Dialog */}
+      <Dialog open={invoicePreviewOpen} onOpenChange={setInvoicePreviewOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-4 sm:p-6 border-2 border-black dark:border-white rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg font-black uppercase">
+              <Eye className="w-5 h-5 text-blue-600" />
+              Invoice Pesanan - {order.name}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Preview invoice visual pesanan Dapur Bu Wikra (termasuk rincian
+              menu dan QRIS dinamis)
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-auto my-3 border-2 border-dashed border-gray-300 dark:border-gray-700 bg-muted/20 p-2 flex items-center justify-center min-h-[300px]">
+            {invoiceImageUrl ? (
+              <img
+                src={invoiceImageUrl}
+                alt={`Invoice ${order.name}`}
+                className="max-h-[60vh] object-contain rounded shadow-sm"
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-8 h-8 animate-spin" />
+                <span className="text-xs">Membuat gambar invoice...</span>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex flex-wrap items-center justify-between gap-2 sm:gap-0">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCopyInvoice}
+                disabled={isCopyingInvoice}
+                className="h-10 px-4 text-xs font-bold border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white hover:bg-gray-100"
+              >
+                {isCopyingInvoice ? (
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                ) : invoiceCopied ? (
+                  <CheckCheck className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
+                ) : (
+                  <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
+                )}
+                {invoiceCopied ? "Tersalin!" : "Salin Gambar"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (!invoiceImageUrl) return;
+                  const a = document.createElement("a");
+                  a.href = invoiceImageUrl;
+                  a.download = `invoice-${order.name}-${order.id}.png`;
+                  a.click();
+                  toast.success("Invoice berhasil diunduh!");
+                }}
+                className="h-10 px-4 text-xs font-bold border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white hover:bg-gray-100"
+              >
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                Unduh PNG
+              </Button>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setInvoicePreviewOpen(false)}
+              className="h-10 px-4 text-xs font-bold border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-gray-200 hover:bg-gray-300 text-black"
+            >
+              Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
