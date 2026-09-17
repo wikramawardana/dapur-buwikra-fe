@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import QRCode from "qrcode";
 import { formatCurrency } from "./format";
+import { calculateOrderPayable, generateDynamicQRIS } from "./qris";
 import { formatDayDisplay } from "./week-utils";
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -35,14 +36,6 @@ interface PaymentTotals {
   paid: number;
   unpaid: number;
 }
-
-// ── Constants ──────────────────────────────────────────────────────────
-// Static merchant QRIS embedded in the invoice. Must be browser-readable
-// (NEXT_PUBLIC_) since this runs on the client. Keep in sync with the
-// server-side QRIS_SOURCE_URL used by the /qris page.
-const QRIS_SOURCE_URL =
-  process.env.NEXT_PUBLIC_QRIS_SOURCE_URL ||
-  "https://static.wikra.cloud/payment/qris-dapurbuwikra.png";
 
 const W = 600; // canvas width
 const PAD = 32;
@@ -744,28 +737,29 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
     y += 24;
 
     // QR Code box — sized large so the QR is easily scannable without
-    // zooming. The source is a full QRIS card, so the actual code is only a
-    // fraction of the image; a bigger box keeps it comfortably scannable.
+    // zooming. Dynamic QRIS contains the exact unpaid amount so the customer
+    // pays the exact bill without having to type the amount.
     const qrBoxSize = 320;
     const qrBoxX = cardPad + (cardW - qrBoxSize - 16) / 2;
 
-    // Fallback page URL (used only if the static QRIS image fails to load)
-    const paymentUrl = `${window.location.origin}/payment/qris`;
+    // Calculate unique payable amount for QRIS and fallback URL
+    const { finalAmount: invoicePayable } = calculateOrderPayable(
+      paymentTotals.unpaid,
+      order.id,
+      true,
+    );
+
+    // Fallback page URL (used if QR generation fails)
+    const paymentUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/payment/qris?order_id=${order.id}&amount=${invoicePayable}&name=${encodeURIComponent(order.name)}`
+        : `/payment/qris?order_id=${order.id}&amount=${invoicePayable}`;
 
     try {
-      // Embed the real static QRIS image directly so customers scan once and
-      // pay. The QRIS is static and never expires. Requires the source to
-      // return CORS headers (loadImage sets crossOrigin="anonymous"), else
-      // the canvas is tainted and toBlob() throws.
-      //
-      // The `cors=1` query param sidesteps any CDN object that was cached
-      // WITHOUT the Access-Control-Allow-Origin header (before CORS was
-      // enabled on the bucket). It maps to a distinct cache key that fills
-      // from a fresh origin request, which does return the CORS header.
-      const qrSrc = QRIS_SOURCE_URL.includes("?")
-        ? `${QRIS_SOURCE_URL}&cors=1`
-        : `${QRIS_SOURCE_URL}?cors=1`;
-      const qrImage = await loadImage(qrSrc);
+      // Embed dynamic QRIS with exact unique unpaid amount so customer scans and pays immediately.
+      const dynamicPayload = generateDynamicQRIS(invoicePayable);
+      const qrDataUrl = await generateQRDataUrl(dynamicPayload);
+      const qrImage = await loadImage(qrDataUrl);
 
       drawBrutBox(ctx, qrBoxX, y, qrBoxSize + 16, qrBoxSize + 16, {
         fill: WHITE,
@@ -777,7 +771,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
       ctx.drawImage(qrImage, qrBoxX + 8, y + 8, qrBoxSize, qrBoxSize);
     } catch {
       // Fallback: encode the payment page URL as a QR so the invoice still
-      // leads somewhere payable if the static QRIS image can't be embedded.
+      // leads somewhere payable if dynamic QRIS can't be rendered.
       try {
         const qrDataUrl = await generateQRDataUrl(paymentUrl);
         const qrImage = await loadImage(qrDataUrl);
@@ -814,7 +808,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
     });
     drawText(
       ctx,
-      "Buka aplikasi pembayaran → Scan QRIS → Bayar",
+      `Scan QRIS → Nominal otomatis: ${formatCurrency(invoicePayable)}`,
       cardPad + cardW / 2,
       y + 15,
       {

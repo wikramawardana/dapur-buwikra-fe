@@ -12,6 +12,8 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  QrCode,
+  RotateCcw,
   Trash2,
 } from "lucide-react";
 import * as React from "react";
@@ -63,10 +65,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { getAuthToken } from "@/lib/api.config";
 import { useSession } from "@/lib/auth-client";
 import { DAY_PAYMENT_STATUSES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import { generateInvoiceImage } from "@/lib/invoice-generator";
+import { calculateOrderPayable } from "@/lib/qris";
 import { formatDayDisplay } from "@/lib/week-utils";
 import {
   acceptOrder,
@@ -525,6 +529,57 @@ export function OrderActionDialog({
       toast.error("Failed to generate invoice");
     } finally {
       setIsCopyingInvoice(false);
+    }
+  };
+
+  const [isCheckingShopeePayment, setIsCheckingShopeePayment] =
+    React.useState(false);
+
+  const handleCheckShopeePayment = async () => {
+    if (!displayPaymentTotals.unpaid) return;
+    setIsCheckingShopeePayment(true);
+    try {
+      const { finalAmount } = calculateOrderPayable(
+        displayPaymentTotals.unpaid,
+        order.id,
+        true,
+      );
+      const token = await getAuthToken();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const res = await fetch("/api/payment/check", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          amount: finalAmount,
+          orderId: order.id,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.paid) {
+        toast.success(
+          `Pembayaran ${formatCurrency(finalAmount)} terverifikasi via ${data.transaction?.issuer || "ShopeePay"}!`,
+        );
+        onOrderUpdated?.();
+        handleCloseDialog();
+      } else if (data.tokenExpired) {
+        toast.warning("Sesi ShopeePay partner perlu diperbarui di server.");
+      } else {
+        toast.info(
+          `Belum ada pembayaran masuk sebesar ${formatCurrency(finalAmount)} di ShopeePay.`,
+        );
+      }
+    } catch (err) {
+      console.error("Check payment error:", err);
+      toast.error("Gagal memeriksa mutasi pembayaran");
+    } finally {
+      setIsCheckingShopeePayment(false);
     }
   };
 
@@ -1165,6 +1220,46 @@ export function OrderActionDialog({
                     ? "Copied!"
                     : "Copy Invoice"}
               </Button>
+            )}
+            {isViewMode && displayPaymentTotals.unpaid > 0 && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCheckShopeePayment}
+                  disabled={isCheckingShopeePayment}
+                  className="h-12 px-4 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-emerald-400 hover:bg-emerald-500 text-black"
+                  title="Periksa mutasi pembayaran ShopeePay"
+                >
+                  {isCheckingShopeePayment ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                  )}
+                  {isCheckingShopeePayment ? "Mengecek..." : "Cek Bayar"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const { finalAmount } = calculateOrderPayable(
+                      displayPaymentTotals.unpaid,
+                      order.id,
+                      true,
+                    );
+                    const url = `${window.location.origin}/payment/qris?order_id=${order.id}&amount=${finalAmount}&name=${encodeURIComponent(order.name)}`;
+                    navigator.clipboard.writeText(url);
+                    toast.success(
+                      "Link pembayaran QRIS dinamis berhasil disalin!",
+                    );
+                  }}
+                  className="h-12 px-4 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-yellow-300 hover:bg-yellow-400 text-black"
+                  title="Salin Link Pembayaran QRIS Dinamis"
+                >
+                  <QrCode className="mr-2 h-4 w-4" />
+                  Link QRIS
+                </Button>
+              </>
             )}
             <Button
               type="button"

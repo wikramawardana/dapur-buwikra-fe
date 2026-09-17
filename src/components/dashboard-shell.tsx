@@ -9,6 +9,7 @@ import {
   PanelLeft,
   Receipt,
   ShoppingCart,
+  Smartphone,
   UtensilsCrossed,
 } from "lucide-react";
 import Link from "next/link";
@@ -78,6 +79,13 @@ const adminMenuItems = [
     title: "Pickup Points",
     href: "/admin/pickup-points",
     icon: MapPin,
+    roles: ["admin"],
+    group: "admin" as const,
+  },
+  {
+    title: "ShopeePay Partner",
+    href: "/admin/shopeepay",
+    icon: Smartphone,
     roles: ["admin"],
     group: "admin" as const,
   },

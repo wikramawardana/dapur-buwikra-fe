@@ -520,11 +520,13 @@ export function CustomerOrderForm({
             </Link>
 
             <Link
-              href="/payment/qris"
+              href={`/payment/qris?order_id=${submittedOrder.id}&amount=${submittedOrder.total_price}&name=${encodeURIComponent(submittedOrder.name)}`}
               className="w-full sm:w-auto flex items-center justify-center gap-2 h-12 px-6 font-black bg-yellow-300 hover:bg-yellow-400 text-black border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
               <CreditCard className="h-4 w-4" />
-              <span>Bayar via QRIS</span>
+              <span>
+                Bayar via QRIS ({formatCurrency(submittedOrder.total_price)})
+              </span>
             </Link>
 
             <Button
