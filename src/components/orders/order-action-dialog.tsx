@@ -588,7 +588,7 @@ export function OrderActionDialog({
       const { finalAmount } = calculateOrderPayable(
         displayPaymentTotals.unpaid,
         order.id,
-        true,
+        false,
       );
       const token = await getAuthToken();
       const headers: Record<string, string> = {

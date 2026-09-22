@@ -180,7 +180,7 @@ export function getUniqueOrderCode(orderId?: string): number {
 export function calculateOrderPayable(
   baseAmount: number,
   orderId?: string,
-  useUniqueCode = true,
+  useUniqueCode = false,
 ): { finalAmount: number; uniqueCode: number } {
   if (!useUniqueCode || !orderId || baseAmount <= 0) {
     return { finalAmount: baseAmount, uniqueCode: 0 };

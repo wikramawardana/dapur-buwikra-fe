@@ -38,7 +38,7 @@ export function generateOrderWhatsAppMessage(
   const { finalAmount, uniqueCode } = calculateOrderPayable(
     unpaidTotal,
     order.id,
-    true,
+    false,
   );
 
   const qrisUrl = `${origin}/payment/qris?order_id=${encodeURIComponent(
@@ -95,15 +95,14 @@ Berikut rincian pesanan Anda:
 ${itemsContent}${dropOffContent}${notesContent}
 ───────────────────────
 💰 *Total Tagihan:* *${formatCurrency(finalAmount)}*
-_(Termasuk kode verifikasi otomatis: Rp ${uniqueCode})_
 
 📲 *Link Pembayaran QRIS Dinamis:*
 ${qrisUrl}
 
 💡 *Petunjuk Pembayaran:*
 1. Klik link di atas & scan QRIS menggunakan BCA / Mandiri / SeaBank / GoPay / ShopeePay / Bank apa saja.
-2. Nominal akan langsung terisi otomatis sebesar *${formatCurrency(finalAmount)}*.
-3. Setelah berhasil, pesanan otomatis *LUNAS* secara realtime tanpa perlu kirim bukti transfer!
+2. Nominal akan langsung terisi otomatis sebesar *${formatCurrency(finalAmount)}* (tanpa perlu ketik manual).
+3. Setelah transfer berhasil, silakan kirim bukti transfer atau konfirmasi ke WhatsApp ini agar pesanan segera diproses.
 
 Terima kasih banyak & selamat menikmati makanannya! 🙏😊`;
 

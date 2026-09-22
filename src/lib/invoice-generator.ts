@@ -746,7 +746,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
     const { finalAmount: invoicePayable } = calculateOrderPayable(
       paymentTotals.unpaid,
       order.id,
-      true,
+      false,
     );
 
     // Fallback page URL (used if QR generation fails)

@@ -54,7 +54,7 @@ export function DynamicQrisView({
 
   const initialPayable = React.useMemo(() => {
     if (parsedQueryAmount && parsedQueryAmount > 0) {
-      return calculateOrderPayable(parsedQueryAmount, queryOrderId, true);
+      return calculateOrderPayable(parsedQueryAmount, queryOrderId, false);
     }
     return { finalAmount: 0, uniqueCode: 0 };
   }, [parsedQueryAmount, queryOrderId]);
