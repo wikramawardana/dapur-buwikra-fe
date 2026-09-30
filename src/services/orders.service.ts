@@ -68,6 +68,14 @@ export async function updateOrder(
   });
 }
 
+export async function requestPaymentReview(
+  id: string,
+): Promise<SingleOrderResponse> {
+  return apiFetch<SingleOrderResponse>(`/orders/${id}/payment-review`, {
+    method: "POST",
+  });
+}
+
 /**
  * Delete an order
  */

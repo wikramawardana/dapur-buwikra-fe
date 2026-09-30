@@ -117,6 +117,9 @@ export function CustomerOrderForm({
   const [isLoadingPickupPoints, setIsLoadingPickupPoints] =
     React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [duplicateOrderMessage, setDuplicateOrderMessage] = React.useState<
+    string | null
+  >(null);
   const [submittedOrder, setSubmittedOrder] = React.useState<Order | null>(
     null,
   );
@@ -374,6 +377,7 @@ export function CustomerOrderForm({
     }
 
     setIsSubmitting(true);
+    setDuplicateOrderMessage(null);
     try {
       const payload: CreateOrderPayload = {
         name: values.name.trim(),
@@ -388,6 +392,12 @@ export function CustomerOrderForm({
       toast.success("Pesanan berhasil dikirim!");
     } catch (error) {
       console.error("Order submission error:", error);
+      if (
+        error instanceof Error &&
+        error.message.includes("Pesanan yang sama sudah ada")
+      ) {
+        setDuplicateOrderMessage(error.message);
+      }
       toast.error(
         error instanceof Error
           ? error.message
@@ -1018,6 +1028,14 @@ export function CustomerOrderForm({
         </div>
 
         {/* Step 5: Sticky Summary & Submit Bar */}
+        {duplicateOrderMessage && (
+          <div className="border-2 border-amber-700 bg-amber-50 p-4 text-sm font-bold text-amber-950">
+            <p>{duplicateOrderMessage}</p>
+            <Link href="/orders" className="mt-2 inline-block underline">
+              Lihat dan ubah pesanan saya
+            </Link>
+          </div>
+        )}
         <div className="border-4 border-black bg-yellow-300 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-1 text-center md:text-left">

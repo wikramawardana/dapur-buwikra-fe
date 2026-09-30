@@ -20,6 +20,7 @@ import {
   Share2,
   Trash2,
 } from "lucide-react";
+import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
 import {
@@ -190,6 +191,14 @@ export function OrderActionDialog({
   // Check if user is admin
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
+  const canEditOwnOrder =
+    !!session?.user &&
+    !isAdmin &&
+    session.user.role !== "chef" &&
+    session.user.email?.toLowerCase() === order.email?.toLowerCase() &&
+    order.status === "pending" &&
+    order.payment_status === "unpaid" &&
+    !order.payment_review_requested_at;
 
   // Edit form state
   const [editName, setEditName] = React.useState(order.name);
@@ -391,8 +400,14 @@ export function OrderActionDialog({
     try {
       const response = await updateOrder(order.id, {
         name: editName,
-        email: editEmail || undefined,
-        day_orders: validDayOrders,
+        email: isAdmin ? editEmail || undefined : undefined,
+        day_orders: isAdmin
+          ? validDayOrders
+          : validDayOrders.map((day) => ({
+              day: day.day,
+              date: day.date,
+              items: day.items,
+            })),
         notes: editNotes,
         drop_off_location: editDropOffLocation || undefined,
       });
@@ -608,12 +623,10 @@ export function OrderActionDialog({
       });
 
       const data = await res.json();
-      if (data.success && data.paid) {
-        toast.success(
-          `Pembayaran ${formatCurrency(finalAmount)} terverifikasi via ${data.transaction?.issuer || "ShopeePay"}!`,
+      if (data.success && data.matched) {
+        toast.info(
+          `Ada transaksi ${formatCurrency(finalAmount)} via ${data.transaction?.issuer || "ShopeePay"}. Cocokkan ID dan bukti pembayaran sebelum menandai lunas.`,
         );
-        onOrderUpdated?.();
-        handleCloseDialog();
       } else if (data.tokenExpired) {
         toast.warning("Sesi ShopeePay partner perlu diperbarui di server.");
       } else {
@@ -670,7 +683,7 @@ export function OrderActionDialog({
             <Eye className="mr-2 h-4 w-4" />
             View Detail
           </DropdownMenuItem>
-          {isAdmin && (
+          {(isAdmin || canEditOwnOrder) && (
             <DropdownMenuItem
               onClick={() => handleOpenDialog("edit")}
               className="cursor-pointer font-medium"
@@ -701,7 +714,9 @@ export function OrderActionDialog({
             <DialogDescription className="text-base font-medium text-black/70 dark:text-white/70">
               {isViewMode
                 ? "View the order details below."
-                : "Update customer info, items, payment status, and notes."}
+                : isAdmin
+                  ? "Update customer info, items, payment status, and notes."
+                  : "Ubah pesanan sebelum diterima dapur. Status pembayaran hanya dapat diubah admin."}
             </DialogDescription>
           </DialogHeader>
 
@@ -736,6 +751,7 @@ export function OrderActionDialog({
                       type="email"
                       value={editEmail}
                       onChange={(e) => setEditEmail(e.target.value)}
+                      disabled={!isAdmin}
                       placeholder="customer@email.com"
                       className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium"
                     />
@@ -863,7 +879,7 @@ export function OrderActionDialog({
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            {isViewMode ? (
+                            {isViewMode || !isAdmin ? (
                               <StatusBadge
                                 status={resolveDayPaymentStatus(
                                   dayOrder,
@@ -1108,6 +1124,13 @@ export function OrderActionDialog({
               <Label className="text-base font-bold uppercase tracking-wide">
                 Payment Summary
               </Label>
+              {order.payment_review_requested_at &&
+                order.payment_status !== "paid" && (
+                  <p className="border-2 border-amber-700 bg-amber-100 p-3 text-sm font-bold text-amber-950">
+                    Pelanggan sudah melaporkan pembayaran. Menunggu verifikasi
+                    manual admin.
+                  </p>
+                )}
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="border-2 border-black bg-green-100 p-3 dark:border-white dark:bg-green-950">
                   <p className="text-xs font-bold uppercase text-green-700 dark:text-green-300">
@@ -1133,7 +1156,7 @@ export function OrderActionDialog({
                   />
                 </div>
               </div>
-              {!isViewMode && (
+              {!isViewMode && isAdmin && (
                 <div className="flex flex-wrap gap-2 pt-1">
                   <Button
                     type="button"
@@ -1262,7 +1285,23 @@ export function OrderActionDialog({
                 Lihat Invoice
               </Button>
             )}
-            {isViewMode && displayPaymentTotals.unpaid > 0 && (
+            {isViewMode &&
+              !isAdmin &&
+              displayPaymentTotals.unpaid > 0 &&
+              !["cancelled", "rejected"].includes(order.status) && (
+                <Button
+                  asChild
+                  className="h-12 rounded-none border-2 border-black bg-yellow-300 font-bold text-black hover:bg-yellow-400"
+                >
+                  <Link
+                    href={`/payment/qris?order_id=${encodeURIComponent(order.id)}`}
+                  >
+                    <QrCode className="mr-2 h-4 w-4" />
+                    Bayar via QRIS
+                  </Link>
+                </Button>
+              )}
+            {isViewMode && isAdmin && displayPaymentTotals.unpaid > 0 && (
               <>
                 <Button
                   type="button"

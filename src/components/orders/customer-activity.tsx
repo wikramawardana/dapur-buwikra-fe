@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2, UserPlus } from "lucide-react";
+import { BellRing, Pencil, Trash2, UserPlus } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -59,11 +59,13 @@ export function CustomerActivity({
                   created: "added",
                   updated: "updated",
                   deleted: "deleted",
+                  payment_review_requested: "requested payment review for",
                 }[activity.action];
                 const ActionIcon = {
                   created: UserPlus,
                   updated: Pencil,
                   deleted: Trash2,
+                  payment_review_requested: BellRing,
                 }[activity.action];
 
                 return (

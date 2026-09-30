@@ -26,6 +26,7 @@ export interface Order {
   rejection_reason: string | null;
   created_by?: OrderCreatedBy | null;
   payment_status: PaymentStatus;
+  payment_review_requested_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -82,7 +83,7 @@ export interface OrderCustomersResponse {
 }
 
 export interface OrderCustomerActivity {
-  action: "created" | "updated" | "deleted";
+  action: "created" | "updated" | "deleted" | "payment_review_requested";
   customer_name: string;
   customer_email: string;
   performed_by: OrderCreatedBy;

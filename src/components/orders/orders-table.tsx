@@ -44,6 +44,7 @@ interface OrdersTableProps {
   onOrderDeleted?: () => void;
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: (selection: RowSelectionState) => void;
+  canSelect?: boolean;
 }
 
 // Helper to calculate total from day_orders
@@ -86,6 +87,7 @@ export function OrdersTable({
   onOrderDeleted,
   rowSelection = {},
   onRowSelectionChange,
+  canSelect = true,
 }: OrdersTableProps) {
   const isMobile = useIsMobile();
 
@@ -262,11 +264,17 @@ export function OrdersTable({
         accessorKey: "payment_status",
         header: () => <div className="text-left font-semibold">Payment</div>,
         cell: ({ row }) => (
-          <div className="flex justify-left">
+          <div className="flex flex-col items-start gap-1">
             <StatusBadge
               status={row.getValue("payment_status")}
               type="payment"
             />
+            {row.original.payment_review_requested_at &&
+              row.original.payment_status !== "paid" && (
+                <span className="text-xs font-bold text-amber-800">
+                  Menunggu verifikasi
+                </span>
+              )}
           </div>
         ),
       },
@@ -289,12 +297,14 @@ export function OrdersTable({
 
   const table = useReactTable({
     data: orders,
-    columns,
+    columns: canSelect
+      ? columns
+      : columns.filter((column) => column.id !== "select"),
     getCoreRowModel: getCoreRowModel(),
     state: {
       rowSelection,
     },
-    enableRowSelection: true,
+    enableRowSelection: canSelect,
     onRowSelectionChange: (updater) => {
       if (!onRowSelectionChange) return;
       const newSelection =
@@ -341,20 +351,22 @@ export function OrdersTable({
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={(checked) => {
-                        if (!onRowSelectionChange) return;
-                        const newSelection = { ...rowSelection };
-                        if (checked) {
-                          newSelection[order.id] = true;
-                        } else {
-                          delete newSelection[order.id];
-                        }
-                        onRowSelectionChange(newSelection);
-                      }}
-                      aria-label={`Select ${order.name}`}
-                    />
+                    {canSelect && (
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={(checked) => {
+                          if (!onRowSelectionChange) return;
+                          const newSelection = { ...rowSelection };
+                          if (checked) {
+                            newSelection[order.id] = true;
+                          } else {
+                            delete newSelection[order.id];
+                          }
+                          onRowSelectionChange(newSelection);
+                        }}
+                        aria-label={`Select ${order.name}`}
+                      />
+                    )}
                     <div className="min-w-0">
                       <h3 className="truncate font-bold text-black">
                         {order.name}
@@ -433,6 +445,12 @@ export function OrdersTable({
                         status={order.payment_status}
                         type="payment"
                       />
+                      {order.payment_review_requested_at &&
+                        order.payment_status !== "paid" && (
+                          <span className="text-xs font-bold text-amber-800">
+                            Menunggu verifikasi
+                          </span>
+                        )}
                     </div>
                   </div>
                 </div>

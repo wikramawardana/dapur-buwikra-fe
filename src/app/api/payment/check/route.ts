@@ -1,22 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import {
   getEffectiveShopeeToken,
-  linkTransactionToOrder,
   parseShopeeAmount,
   upsertShopeeTransactions,
 } from "@/lib/shopee-db";
-
-// Keep track of claimed transactions in-memory to prevent double-claiming (cleaned every 24 hours)
-const claimedTransactions = new Map<string, number>();
-
-function cleanExpiredClaims() {
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-  for (const [txId, timestamp] of claimedTransactions.entries()) {
-    if (timestamp < cutoff) {
-      claimedTransactions.delete(txId);
-    }
-  }
-}
 
 interface ShopeeTransactionItem {
   transactionId?: string;
@@ -47,7 +35,13 @@ interface ShopeeDetailResponse {
 
 export async function POST(request: NextRequest) {
   try {
-    cleanExpiredClaims();
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (session?.user?.role !== "admin" && session?.user?.role !== "chef") {
+      return NextResponse.json(
+        { success: false, error: "Forbidden" },
+        { status: 403 },
+      );
+    }
 
     const token = await getEffectiveShopeeToken();
     if (!token) {
@@ -63,8 +57,6 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}));
     const amount = Number(body.amount);
-    const orderId = body.orderId as string | undefined;
-    const customerName = body.customerName as string | undefined;
     const clientStartTime = Number(body.startTime);
 
     if (!amount || amount <= 0 || Number.isNaN(amount)) {
@@ -188,7 +180,8 @@ export async function POST(request: NextRequest) {
       console.warn("Error persisting ShopeePay transactions to DB:", dbErr);
     }
 
-    // Look for matching un-claimed transaction
+    // A matching amount is a lead for manual verification, not proof that
+    // this specific order was paid.
     const matchedTx = transactions.find((tx) => {
       if (tx.status !== 3) return false;
 
@@ -197,22 +190,17 @@ export async function POST(request: NextRequest) {
       const txId = tx.transactionId || tx.displayTransactionId;
 
       if (!txId) return false;
-      if (claimedTransactions.has(txId)) return false;
-
       return txAmount === targetAmount;
     });
 
     if (!matchedTx) {
       return NextResponse.json({
         success: true,
-        paid: false,
+        matched: false,
       });
     }
 
     const matchedId = matchedTx.transactionId || matchedTx.displayTransactionId;
-    if (matchedId) {
-      claimedTransactions.set(matchedId, Date.now());
-    }
 
     // Try to resolve payment issuer (e.g. Seabank, BCA, GoPay, OVO, Dana)
     let issuer = "QRIS / ShopeePay";
@@ -249,40 +237,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Link transaction to order in local database
-    if (matchedId) {
-      try {
-        await linkTransactionToOrder(matchedId, orderId || "", customerName);
-      } catch (linkErr) {
-        console.warn("Error linking transaction in DB:", linkErr);
-      }
-    }
-
-    // If orderId was provided and request has Authorization, update order in backend
-    const authHeader = request.headers.get("authorization");
-    const backendUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
-
-    if (orderId && authHeader) {
-      try {
-        await fetch(`${backendUrl}/orders/${orderId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: authHeader,
-          },
-          body: JSON.stringify({
-            payment_status: "paid",
-          }),
-        });
-      } catch (err) {
-        console.warn("Auto-update order payment status warning:", err);
-      }
-    }
-
     return NextResponse.json({
       success: true,
-      paid: true,
+      matched: true,
       transaction: {
         transactionId: matchedId,
         amount: targetAmount,

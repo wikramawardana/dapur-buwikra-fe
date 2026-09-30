@@ -2,6 +2,7 @@
 
 import type { RowSelectionState } from "@tanstack/react-table";
 import { Copy, ExternalLink, Share2 } from "lucide-react";
+import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
 import { BulkActionsBar } from "@/components/orders/bulk-actions-bar";
@@ -52,6 +53,8 @@ export default function OrdersPage() {
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
 
   const isAuthenticated = !!session?.user;
+  const isStaff =
+    session?.user?.role === "admin" || session?.user?.role === "chef";
 
   React.useEffect(() => {
     try {
@@ -91,7 +94,17 @@ export default function OrdersPage() {
     const requestId = ++ordersRequestId.current;
     setIsLoading(true);
     try {
-      const response = await getOrders(filters);
+      const response = await getOrders(
+        isStaff
+          ? filters
+          : {
+              ...filters,
+              date_from: undefined,
+              date_to: undefined,
+              sort_by: "created_at",
+              sort_order: "desc",
+            },
+      );
       if (requestId !== ordersRequestId.current) return;
       setOrders(response.data.data);
       setPagination(response.data.pagination);
@@ -110,7 +123,7 @@ export default function OrdersPage() {
         setIsLoading(false);
       }
     }
-  }, [filters]);
+  }, [filters, isStaff]);
 
   // Fetch data when authenticated and when filters change
   // biome-ignore lint/correctness/useExhaustiveDependencies: Only react to filters changes, not callback identity changes
@@ -174,84 +187,95 @@ export default function OrdersPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <CardTitle className="text-xl font-bold sm:text-2xl">
-                Orders Management
+                {isStaff ? "Orders Management" : "Pesanan Saya"}
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">
-                Manage and track all customer orders
+                {isStaff
+                  ? "Manage and track all customer orders"
+                  : "Lihat status pembayaran dan ubah pesanan yang masih menunggu konfirmasi dapur."}
               </CardDescription>
             </div>
-            <CreateOrderDialog
-              onOrderCreated={() => {
-                fetchOrders();
-              }}
-            />
+            {isStaff ? (
+              <CreateOrderDialog onOrderCreated={() => fetchOrders()} />
+            ) : (
+              <Button
+                asChild
+                className="rounded-none border-2 border-black bg-yellow-300 font-bold text-black hover:bg-yellow-400"
+              >
+                <Link href="/order">Buat Pesanan</Link>
+              </Button>
+            )}
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <WeekSelector
-              value={getWeekValue(filters.date_from || defaultWeek.dateFrom)}
-              onChange={handleWeekChange}
-            />
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const weekStart = filters.date_from || defaultWeek.dateFrom;
-                  const url = `${window.location.origin}/order/${weekStart}`;
-                  navigator.clipboard.writeText(url);
-                  toast.success(
-                    `Link order minggu (${weekStart}) berhasil disalin!`,
-                  );
-                }}
-                className="h-9 px-3 text-xs font-bold border-2 border-black rounded-none bg-yellow-300 hover:bg-yellow-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                title="Salin link form order untuk minggu yang sedang dipilih"
-              >
-                <Copy className="h-3.5 w-3.5 mr-1.5" />
-                Salin Link Order
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const weekStart = filters.date_from || defaultWeek.dateFrom;
-                  const weekEnd = filters.date_to || defaultWeek.dateTo;
-                  const url = `${window.location.origin}/order/${weekStart}`;
-                  const text = `Halo! Menu katering Dapur Bu Wikra periode ${weekStart} s/d ${weekEnd} sudah dibuka ya 🍱✨\n\nYuk cek menu dan pesan lewat link ini:\n${url}\n\nTerima kasih! 🙏`;
-                  window.open(
-                    `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
-                    "_blank",
-                  );
-                }}
-                className="h-9 px-3 text-xs font-bold border-2 border-black rounded-none bg-green-300 hover:bg-green-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                title="Bagikan via WhatsApp"
-              >
-                <Share2 className="h-3.5 w-3.5 mr-1.5" />
-                Share WA
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const weekStart = filters.date_from || defaultWeek.dateFrom;
-                  window.open(`/order/${weekStart}`, "_blank");
-                }}
-                className="h-9 px-3 text-xs font-bold border-2 border-black rounded-none bg-blue-100 hover:bg-blue-200 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                title="Buka form di tab baru"
-              >
-                <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                Buka Form
-              </Button>
+          {isStaff && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <WeekSelector
+                value={getWeekValue(filters.date_from || defaultWeek.dateFrom)}
+                onChange={handleWeekChange}
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const weekStart = filters.date_from || defaultWeek.dateFrom;
+                    const url = `${window.location.origin}/order/${weekStart}`;
+                    navigator.clipboard.writeText(url);
+                    toast.success(
+                      `Link order minggu (${weekStart}) berhasil disalin!`,
+                    );
+                  }}
+                  className="h-9 px-3 text-xs font-bold border-2 border-black rounded-none bg-yellow-300 hover:bg-yellow-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                  title="Salin link form order untuk minggu yang sedang dipilih"
+                >
+                  <Copy className="h-3.5 w-3.5 mr-1.5" />
+                  Salin Link Order
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const weekStart = filters.date_from || defaultWeek.dateFrom;
+                    const weekEnd = filters.date_to || defaultWeek.dateTo;
+                    const url = `${window.location.origin}/order/${weekStart}`;
+                    const text = `Halo! Menu katering Dapur Bu Wikra periode ${weekStart} s/d ${weekEnd} sudah dibuka ya 🍱✨\n\nYuk cek menu dan pesan lewat link ini:\n${url}\n\nTerima kasih! 🙏`;
+                    window.open(
+                      `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
+                      "_blank",
+                    );
+                  }}
+                  className="h-9 px-3 text-xs font-bold border-2 border-black rounded-none bg-green-300 hover:bg-green-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                  title="Bagikan via WhatsApp"
+                >
+                  <Share2 className="h-3.5 w-3.5 mr-1.5" />
+                  Share WA
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const weekStart = filters.date_from || defaultWeek.dateFrom;
+                    window.open(`/order/${weekStart}`, "_blank");
+                  }}
+                  className="h-9 px-3 text-xs font-bold border-2 border-black rounded-none bg-blue-100 hover:bg-blue-200 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                  title="Buka form di tab baru"
+                >
+                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                  Buka Form
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
-          <OrdersFilters
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-          />
+          {isStaff && (
+            <OrdersFilters
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+            />
+          )}
           <div className="flex items-center justify-between gap-3">
             {isLoading ? (
               <div
@@ -267,9 +291,11 @@ export default function OrdersPage() {
                 {pagination.total_items === 1 ? "" : "s"} found
               </p>
             )}
-            <ExportMarkdownButton filters={filters} disabled={isLoading} />
+            {isStaff && (
+              <ExportMarkdownButton filters={filters} disabled={isLoading} />
+            )}
           </div>
-          {session?.user?.role !== "user" && (
+          {isStaff && (
             <BulkActionsBar
               selectedOrders={selectedOrders}
               onActionComplete={handleBulkActionComplete}
@@ -278,6 +304,7 @@ export default function OrdersPage() {
           )}
           <OrdersTable
             orders={orders}
+            canSelect={isStaff}
             isLoading={isLoading}
             onOrderUpdated={() => {
               fetchOrders();
