@@ -152,8 +152,8 @@ export default function DashboardPage() {
   }, [canAccessOverview, filters.date_from, filters.date_to]);
 
   React.useEffect(() => {
-    if (session?.user && canAccessOverview) fetchOverview();
-  }, [session?.user, canAccessOverview, fetchOverview]);
+    if (canAccessOverview) fetchOverview();
+  }, [canAccessOverview, fetchOverview]);
 
   if (isPending || !session?.user) {
     return (

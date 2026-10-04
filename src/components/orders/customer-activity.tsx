@@ -33,7 +33,7 @@ export function CustomerActivity({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {isLoading && activities.length === 0 ? (
           <div className="space-y-3">
             {[1, 2, 3].map((item) => (
               <div className="flex gap-3" key={item}>
@@ -50,7 +50,10 @@ export function CustomerActivity({
             No tracked customer activity yet.
           </p>
         ) : (
-          <ScrollArea className="h-64 pr-3">
+          <ScrollArea
+            className={`h-64 pr-3 transition-opacity ${isLoading ? "opacity-60" : ""}`}
+            aria-busy={isLoading}
+          >
             <div className="space-y-1">
               {activities.map((activity) => {
                 const creator =
