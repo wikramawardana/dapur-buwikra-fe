@@ -17,6 +17,7 @@ import {
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
+import { MenuGeneratorDialog } from "@/components/admin/menu-generator-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -472,13 +473,16 @@ export default function MenusPage() {
                 Publish Jejak Rasa and announce upcoming weekly menus
               </CardDescription>
             </div>
-            <Button
-              onClick={openCreateDialog}
-              className="gap-2 font-bold border-2 border-black dark:border-white bg-green-400 text-black hover:bg-green-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none"
-            >
-              <Plus className="h-4 w-4" />
-              Create Content
-            </Button>
+            <div className="flex items-center gap-3">
+              <MenuGeneratorDialog onMenuCreated={refreshMenus} />
+              <Button
+                onClick={openCreateDialog}
+                className="gap-2 font-bold border-2 border-black dark:border-white bg-green-400 text-black hover:bg-green-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none"
+              >
+                <Plus className="h-4 w-4" />
+                Create Content
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-5">
             <Tabs

@@ -69,7 +69,7 @@ export async function middleware(request: NextRequest) {
   const startedAt = Date.now();
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/api/v1")) {
+  if (pathname.startsWith("/api/")) {
     return logRequest(
       request,
       NextResponse.next(),
