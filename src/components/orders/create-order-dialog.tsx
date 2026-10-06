@@ -60,6 +60,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { getUploadUrl } from "@/lib/api.config";
 import { authClient, useSession } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
+import {
+  getOfficePriceList,
+  getPackageDisplayName,
+  repriceDayOrders,
+} from "@/lib/office-pricing";
 import { getMenuByDate } from "@/services/menu.service";
 import { createOrder, getOrderCustomers } from "@/services/orders.service";
 import { getActivePickupPoints } from "@/services/pickup-point.service";
@@ -221,6 +226,10 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
 
   const selectedDates = form.watch("selectedDates");
   const dayOrders = form.watch("dayOrders");
+  const selectedLocation = form.watch("drop_off_location") || "";
+  const officeItems = canChooseCustomer
+    ? priceListItems
+    : getOfficePriceList(priceListItems, selectedLocation);
   const watchedName = form.watch("name");
   const watchedEmail = form.watch("email");
   const totalPrice = calculateTotalPrice(dayOrders || {});
@@ -516,6 +525,31 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   };
 
   const onSubmit = async (data: OrderFormValues) => {
+    if (
+      !canChooseCustomer &&
+      !pickupPoints.includes(data.drop_off_location || "")
+    ) {
+      form.setError("drop_off_location", {
+        message: "Pilih lokasi pengantaran terlebih dahulu",
+      });
+      return;
+    }
+    if (
+      !canChooseCustomer &&
+      data.selectedDates.some((date) =>
+        (data.dayOrders[getDateKey(date)] || []).some(
+          (item) =>
+            !officeItems.some(
+              (available) =>
+                available.name === item.name &&
+                available.price === item.unit_price,
+            ),
+        ),
+      )
+    ) {
+      toast.error("Pilih ulang menu untuk lokasi pengantaran Anda.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       // Convert form data to API payload
@@ -576,10 +610,10 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   };
 
   // Group price list items by category (with defensive check)
-  const mainItems = (priceListItems || [])
+  const mainItems = officeItems
     .filter((item) => item.category === "main")
     .sort((a, b) => a.price - b.price);
-  const addonItems = (priceListItems || [])
+  const addonItems = officeItems
     .filter((item) => item.category === "addon")
     .sort((a, b) => a.price - b.price);
 
@@ -775,6 +809,58 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
               </div>
             </div>
 
+            {/* Delivery location determines the customer price list. */}
+            <FormField
+              control={form.control}
+              name="drop_off_location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-bold uppercase tracking-wide">
+                    {canChooseCustomer
+                      ? "Drop Off Location (Optional)"
+                      : "Lokasi Pengantaran *"}
+                  </FormLabel>
+                  <Select
+                    onValueChange={(location) => {
+                      if (!canChooseCustomer) {
+                        form.setValue(
+                          "dayOrders",
+                          repriceDayOrders(
+                            form.getValues("dayOrders"),
+                            priceListItems,
+                            location,
+                          ),
+                        );
+                      }
+                      field.onChange(location);
+                    }}
+                    value={field.value}
+                    disabled={isLoadingPickupPoints}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium">
+                        <SelectValue
+                          placeholder={
+                            isLoadingPickupPoints
+                              ? "Loading pickup points..."
+                              : "Select drop off location..."
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {pickupPoints.map((point) => (
+                        <SelectItem key={point} value={point}>
+                          {point}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Section 2: Date Selection */}
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
@@ -904,7 +990,9 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                   >
                                     <div className="flex-1">
                                       <p className="font-medium text-sm">
-                                        {item.name}
+                                        {canChooseCustomer
+                                          ? item.name
+                                          : getPackageDisplayName(item.name)}
                                       </p>
                                       <p className="text-xs text-muted-foreground">
                                         {formatCurrency(item.unit_price)} each
@@ -984,7 +1072,11 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                             }
                                           >
                                             <span className="flex-1">
-                                              {item.name}
+                                              {canChooseCustomer
+                                                ? item.name
+                                                : getPackageDisplayName(
+                                                    item.name,
+                                                  )}
                                             </span>
                                             <span className="text-sm text-muted-foreground">
                                               {formatCurrency(item.price)}
@@ -1003,7 +1095,11 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                             }
                                           >
                                             <span className="flex-1">
-                                              {item.name}
+                                              {canChooseCustomer
+                                                ? item.name
+                                                : getPackageDisplayName(
+                                                    item.name,
+                                                  )}
                                             </span>
                                             <span className="text-sm text-muted-foreground">
                                               {formatCurrency(item.price)}
@@ -1026,42 +1122,6 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
 
             {/* Section 4: Drop Off Location & Notes */}
             <div className="space-y-3 sm:space-y-4">
-              <FormField
-                control={form.control}
-                name="drop_off_location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base font-bold uppercase tracking-wide">
-                      Drop Off Location (Optional)
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={isLoadingPickupPoints}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium">
-                          <SelectValue
-                            placeholder={
-                              isLoadingPickupPoints
-                                ? "Loading pickup points..."
-                                : "Select drop off location..."
-                            }
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {pickupPoints.map((point) => (
-                          <SelectItem key={point} value={point}>
-                            {point}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="notes"

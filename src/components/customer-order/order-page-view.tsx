@@ -12,7 +12,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import { CustomerLoginGate } from "@/components/customer-order/customer-login-gate";
@@ -33,6 +33,13 @@ interface OrderPageViewProps {
 
 export function OrderPageView({ initialWeek }: OrderPageViewProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedLocation = searchParams.get("location") || "";
+  const [selectedLocation, setSelectedLocation] =
+    React.useState(requestedLocation);
+  const locationQuery = selectedLocation
+    ? `?${new URLSearchParams({ location: selectedLocation }).toString()}`
+    : "";
   const { data: session, isPending: isSessionLoading } = useSession();
 
   const defaultWeek = React.useMemo(() => getDefaultWeek(), []);
@@ -57,7 +64,7 @@ export function OrderPageView({ initialWeek }: OrderPageViewProps) {
 
   // Handle changing week from dropdown
   const handleWeekChange = (selectedWeekStart: string) => {
-    router.push(`/order/${selectedWeekStart}`);
+    router.push(`/order/${selectedWeekStart}${locationQuery}`);
   };
 
   const handleSignOut = async () => {
@@ -72,8 +79,8 @@ export function OrderPageView({ initialWeek }: OrderPageViewProps) {
   const handleCopyLink = () => {
     const url =
       typeof window !== "undefined"
-        ? `${window.location.origin}/order/${currentWeekStart}`
-        : `https://dapurbuwikra.biz.id/order/${currentWeekStart}`;
+        ? `${window.location.origin}/order/${currentWeekStart}${locationQuery}`
+        : `https://dapurbuwikra.biz.id/order/${currentWeekStart}${locationQuery}`;
     navigator.clipboard.writeText(url);
     toast.success("Link formulir pesanan minggu ini berhasil disalin!");
   };
@@ -81,8 +88,8 @@ export function OrderPageView({ initialWeek }: OrderPageViewProps) {
   const handleShareWhatsApp = () => {
     const url =
       typeof window !== "undefined"
-        ? `${window.location.origin}/order/${currentWeekStart}`
-        : `https://dapurbuwikra.biz.id/order/${currentWeekStart}`;
+        ? `${window.location.origin}/order/${currentWeekStart}${locationQuery}`
+        : `https://dapurbuwikra.biz.id/order/${currentWeekStart}${locationQuery}`;
     const text = `Halo! Menu katering Dapur Bu Wikra periode ${currentWeekStart} s/d ${currentWeekEnd} sudah dibuka ya 🍱✨\n\nYuk cek menu dan isi pesanan Anda lewat link ini:\n${url}\n\nTerima kasih! 🙏`;
     window.open(
       `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
@@ -90,7 +97,7 @@ export function OrderPageView({ initialWeek }: OrderPageViewProps) {
     );
   };
 
-  const currentCallbackUrl = `/order/${currentWeekStart}`;
+  const currentCallbackUrl = `/order/${currentWeekStart}${locationQuery}`;
 
   return (
     <div className="min-h-screen bg-[#f7f5f0] font-sans text-black selection:bg-brut-blue selection:text-white pb-20">
@@ -226,6 +233,8 @@ export function OrderPageView({ initialWeek }: OrderPageViewProps) {
           <CustomerLoginGate callbackUrl={currentCallbackUrl} />
         ) : (
           <CustomerOrderForm
+            initialLocation={selectedLocation}
+            onLocationChange={setSelectedLocation}
             user={{
               name: session.user.name,
               email: session.user.email,

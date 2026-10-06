@@ -40,6 +40,9 @@ jobs:
       - name: Type check
         run: pnpm exec tsc --noEmit
 
+      - name: Check office pricing
+        run: pnpm test:office-pricing
+
   build:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest

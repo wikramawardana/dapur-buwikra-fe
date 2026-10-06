@@ -62,6 +62,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { authClient } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
+import {
+  getOfficePriceList,
+  getPackageDisplayName,
+  repriceDayOrders,
+  resolvePickupLocation,
+} from "@/lib/office-pricing";
 import { createOrder } from "@/services/orders.service";
 import { getActivePickupPoints } from "@/services/pickup-point.service";
 import { getActivePriceList } from "@/services/pricelist.service";
@@ -83,12 +89,16 @@ const orderFormSchema = z.object({
     ),
   ),
   notes: z.string().optional(),
-  drop_off_location: z.string().optional(),
+  drop_off_location: z
+    .string()
+    .min(1, "Pilih lokasi pengantaran terlebih dahulu"),
 });
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
 
 interface CustomerOrderFormProps {
+  initialLocation?: string;
+  onLocationChange?: (location: string) => void;
   user: {
     name?: string | null;
     email?: string | null;
@@ -105,6 +115,8 @@ interface WeekDayItem {
 }
 
 export function CustomerOrderForm({
+  initialLocation = "",
+  onLocationChange,
   user,
   weekStartDate,
   weekEndDate: _weekEndDate,
@@ -215,22 +227,49 @@ export function CustomerOrderForm({
 
   const selectedDates = form.watch("selectedDates") || [];
   const dayOrders = form.watch("dayOrders") || {};
+  const selectedLocation = form.watch("drop_off_location");
+  const officeItems = React.useMemo(
+    () => getOfficePriceList(priceListItems, selectedLocation),
+    [priceListItems, selectedLocation],
+  );
+
+  React.useEffect(() => {
+    const location = resolvePickupLocation(initialLocation, pickupPoints);
+    if (location && !form.getValues("drop_off_location")) {
+      form.setValue("drop_off_location", location, { shouldValidate: true });
+    }
+  }, [initialLocation, pickupPoints, form]);
+
+  const handleLocationChange = (location: string) => {
+    const currentOrders = form.getValues("dayOrders");
+    form.setValue(
+      "dayOrders",
+      repriceDayOrders(currentOrders, priceListItems, location),
+    );
+    form.setValue("drop_off_location", location, { shouldValidate: true });
+    onLocationChange?.(location);
+    if (Object.values(currentOrders).some((items) => items.length > 0)) {
+      toast.info(
+        "Pilihan menu dan harga disesuaikan dengan lokasi pengantaran.",
+      );
+    }
+  };
 
   // Group price list items into categories
   const mainItems = React.useMemo(
     () =>
-      (priceListItems || [])
+      officeItems
         .filter((item) => item.category === "main")
         .sort((a, b) => a.price - b.price),
-    [priceListItems],
+    [officeItems],
   );
 
   const addonItems = React.useMemo(
     () =>
-      (priceListItems || [])
+      officeItems
         .filter((item) => item.category === "addon")
         .sort((a, b) => a.price - b.price),
-    [priceListItems],
+    [officeItems],
   );
 
   // Toggle selection for a specific date
@@ -356,6 +395,33 @@ export function CustomerOrderForm({
 
   // Form Submit
   const onSubmit = async (values: OrderFormValues) => {
+    if (!pickupPoints.includes(values.drop_off_location)) {
+      form.setError("drop_off_location", {
+        message: "Pilih lokasi pengantaran yang tersedia",
+      });
+      return;
+    }
+    const availableItems = getOfficePriceList(
+      priceListItems,
+      values.drop_off_location,
+    );
+    if (
+      selectedDates.some((date) =>
+        (values.dayOrders[date] || []).some(
+          (item) =>
+            !availableItems.some(
+              (available) =>
+                available.name === item.name &&
+                available.price === item.unit_price,
+            ),
+        ),
+      )
+    ) {
+      toast.error(
+        "Pilihan menu berubah. Silakan pilih ulang menu untuk lokasi Anda.",
+      );
+      return;
+    }
     // Validate that at least one day has items
     const dayOrdersPayload: DayOrder[] = selectedDates
       .sort()
@@ -417,7 +483,7 @@ export function CustomerOrderForm({
       selectedDates: weekDays.map((d) => d.dateKey),
       dayOrders: {},
       notes: "",
-      drop_off_location: "",
+      drop_off_location: selectedLocation,
     });
   };
 
@@ -490,7 +556,7 @@ export function CustomerOrderForm({
                     {dayOrder.items.map((item, idx) => (
                       <li key={idx} className="flex justify-between">
                         <span>
-                          {item.qty}x {item.name}
+                          {item.qty}x {getPackageDisplayName(item.name)}
                         </span>
                         <span>
                           {formatCurrency(item.qty * item.unit_price)}
@@ -645,10 +711,10 @@ export function CustomerOrderForm({
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
                   <FormLabel className="text-sm font-black uppercase tracking-wide text-black">
-                    Lokasi Pengantaran / Drop-off Point
+                    Lokasi Pengantaran / Drop-off Point *
                   </FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={handleLocationChange}
                     value={field.value}
                     disabled={isLoadingPickupPoints}
                   >
@@ -676,6 +742,9 @@ export function CustomerOrderForm({
                     </SelectContent>
                   </Select>
                   <FormMessage className="font-bold text-red-600" />
+                  <p className="text-xs font-medium text-black/70">
+                    Menu dan harga otomatis mengikuti lokasi pengantaran Anda.
+                  </p>
                 </FormItem>
               )}
             />
@@ -787,7 +856,12 @@ export function CustomerOrderForm({
               </span>
             </div>
 
-            {isLoadingPriceList ? (
+            {!selectedLocation ? (
+              <div className="border-2 border-black bg-yellow-100 p-4 text-sm font-bold">
+                Pilih lokasi pengantaran di atas untuk melihat paket dan harga
+                yang sesuai.
+              </div>
+            ) : isLoadingPriceList ? (
               <div className="py-12 flex flex-col items-center justify-center gap-2">
                 <Loader2 className="h-8 w-8 animate-spin text-black" />
                 <span className="font-bold text-sm">Memuat daftar menu...</span>
@@ -845,7 +919,7 @@ export function CustomerOrderForm({
                                 >
                                   <div className="min-w-0 pr-2">
                                     <p className="font-bold text-sm text-black truncate">
-                                      {item.name}
+                                      {getPackageDisplayName(item.name)}
                                     </p>
                                     <p className="text-xs font-semibold text-black/60">
                                       {formatCurrency(item.unit_price)} ×{" "}
@@ -942,7 +1016,7 @@ export function CustomerOrderForm({
                                           className="cursor-pointer font-bold text-xs py-2 hover:bg-yellow-100"
                                         >
                                           <span className="flex-1">
-                                            {item.name}
+                                            {getPackageDisplayName(item.name)}
                                           </span>
                                           <span className="text-black font-mono">
                                             {formatCurrency(item.price)}
@@ -962,7 +1036,7 @@ export function CustomerOrderForm({
                                           className="cursor-pointer font-bold text-xs py-2 hover:bg-yellow-100"
                                         >
                                           <span className="flex-1">
-                                            {item.name}
+                                            {getPackageDisplayName(item.name)}
                                           </span>
                                           <span className="text-black font-mono">
                                             {formatCurrency(item.price)}

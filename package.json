@@ -10,6 +10,7 @@
     "lint:fix": "biome check --write",
     "format": "biome format --write",
     "typecheck": "tsc --noEmit",
+    "test:office-pricing": "node --test tests/office-pricing.test.mjs",
     "prepare": "husky"
   },
   "lint-staged": {
