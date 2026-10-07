@@ -9,31 +9,42 @@ export const DAYS_OF_WEEK = [
 // MENU_ITEMS removed - now fetched from /price-list/active API
 
 export const ORDER_STATUSES = [
-  { value: "pending", label: "Pending" },
-  { value: "accepted", label: "Accepted" },
-  { value: "rejected", label: "Rejected" },
-  { value: "inprogress", label: "In Progress" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
+  { value: "pending", label: "Menunggu" },
+  { value: "accepted", label: "Diterima" },
+  { value: "rejected", label: "Ditolak" },
+  { value: "inprogress", label: "Diproses" },
+  { value: "completed", label: "Selesai" },
+  { value: "cancelled", label: "Dibatalkan" },
 ] as const;
 
 export const PAYMENT_STATUSES = [
-  { value: "paid", label: "Paid" },
-  { value: "partial", label: "Partially Paid" },
-  { value: "unpaid", label: "Unpaid" },
+  { value: "paid", label: "Lunas" },
+  { value: "partial", label: "Sebagian dibayar" },
+  { value: "unpaid", label: "Belum lunas" },
 ] as const;
 
 export const DAY_PAYMENT_STATUSES = [
-  { value: "paid", label: "Paid" },
-  { value: "unpaid", label: "Unpaid" },
+  { value: "paid", label: "Lunas" },
+  { value: "unpaid", label: "Belum lunas" },
 ] as const;
 
 export const DEFAULT_PAGE_SIZE = 100;
 export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 export const SORT_OPTIONS = [
-  { value: "date", label: "Date" },
-  { value: "name", label: "Name" },
-  { value: "total_price", label: "Total Price" },
-  { value: "created_at", label: "Created At" },
+  { value: "date", label: "Tanggal" },
+  { value: "name", label: "Nama" },
+  { value: "total_price", label: "Total harga" },
+  { value: "created_at", label: "Waktu dibuat" },
 ] as const;
+
+export function formatRoleDisplay(role: string | null | undefined): string {
+  return (
+    (
+      { admin: "Admin", chef: "Koki", user: "Pengguna" } as Record<
+        string,
+        string
+      >
+    )[role || ""] ?? "Belum memiliki peran"
+  );
+}

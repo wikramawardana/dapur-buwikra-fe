@@ -5,7 +5,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DAYS_OF_WEEK } from "@/lib/constants";
-import { normalizeDayName } from "@/lib/week-utils";
+import { formatDayDisplay, normalizeDayName } from "@/lib/week-utils";
 import { getOrders } from "@/services/orders.service";
 import type { Order, OrderFilters } from "@/types/order.types";
 
@@ -26,7 +26,7 @@ function ordersToMarkdown(
   dayFilter?: string | string[],
 ): string {
   if (orders.length === 0) {
-    return "No orders to export.";
+    return "Tidak ada pesanan untuk diekspor.";
   }
 
   const lines: string[] = [];
@@ -85,14 +85,14 @@ function ordersToMarkdown(
   }
 
   // Header info
-  lines.push(`Total User Order: ${uniqueOrderIds.size}`);
-  lines.push(`Total Order by Day: ${totalOrderByDay}`);
+  lines.push(`Total pesanan pelanggan: ${uniqueOrderIds.size}`);
+  lines.push(`Total pesanan per hari: ${totalOrderByDay}`);
   lines.push("");
 
   // Build output for each day
   for (const day of daysToShow) {
     const dayOrders = ordersByDay[day];
-    lines.push(`${day} (${itemQtyByDay[day]}) :`);
+    lines.push(`${formatDayDisplay(day)} (${itemQtyByDay[day]}) :`);
     if (dayOrders.length === 0) {
       lines.push("-");
     } else {
@@ -175,15 +175,15 @@ async function shareMarkdown(markdown: string, filename: string) {
   try {
     if (navigator.canShare?.({ files: [file] })) {
       await navigator.share({
-        title: "Orders Markdown",
-        text: "Dapur Bu Wikra orders export",
+        title: "Pesanan Markdown",
+        text: "Ekspor pesanan Dapur Bu Wikra",
         files: [file],
       });
       return true;
     }
 
     await navigator.share({
-      title: "Orders Markdown",
+      title: "Pesanan Markdown",
       text: markdown,
     });
     return true;
@@ -211,7 +211,7 @@ export function ExportMarkdownButton({
       const orders = response.data.data;
 
       if (orders.length === 0) {
-        toast.info("No orders to export");
+        toast.info("Tidak ada pesanan untuk diekspor");
         return;
       }
 
@@ -222,26 +222,26 @@ export function ExportMarkdownButton({
       );
 
       if (isLikelyMobile && (await shareMarkdown(markdown, filename))) {
-        toast.success("Markdown export opened");
+        toast.success("Ekspor Markdown dibuka");
         return;
       }
 
       const copiedToClipboard = await copyMarkdown(markdown);
       if (!copiedToClipboard) {
         downloadMarkdown(markdown, filename);
-        toast.success("Markdown downloaded");
+        toast.success("Markdown berhasil diunduh");
         return;
       }
 
       setCopied(true);
-      toast.success("Orders copied to clipboard as Markdown!");
+      toast.success("Pesanan berhasil disalin dalam format Markdown!");
 
       // Reset copied state after 2 seconds
       setTimeout(() => {
         setCopied(false);
       }, 2000);
     } catch (error) {
-      toast.error("Failed to export orders");
+      toast.error("Gagal mengekspor pesanan");
       console.error("Export failed:", error);
     } finally {
       setIsLoading(false);
@@ -259,17 +259,17 @@ export function ExportMarkdownButton({
       {isLoading ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
-          Loading...
+          Memuat...
         </>
       ) : copied ? (
         <>
           <Check className="h-4 w-4" />
-          Copied!
+          Tersalin!
         </>
       ) : (
         <>
           <Copy className="h-4 w-4" />
-          Export MD
+          Ekspor MD
         </>
       )}
     </Button>

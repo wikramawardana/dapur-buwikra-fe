@@ -40,6 +40,9 @@ jobs:
       - name: Type check
         run: pnpm exec tsc --noEmit
 
+      - name: Check Indonesian labels and API compatibility
+        run: pnpm test:language
+
       - name: Check generator authorization
         run: pnpm test:security
 

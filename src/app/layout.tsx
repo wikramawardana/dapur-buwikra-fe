@@ -4,8 +4,8 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Dapur Bu Wikra - Catering Management",
-  description: "Modern catering management system for Dapur Bu Wikra",
+  title: "Dapur Bu Wikra - Pengelolaan Katering",
+  description: "Sistem pengelolaan katering Dapur Bu Wikra",
 };
 
 export default function RootLayout({

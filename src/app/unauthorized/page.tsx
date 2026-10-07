@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { signOut, useSession } from "@/lib/auth-client";
+import { formatRoleDisplay } from "@/lib/constants";
 
 export default function UnauthorizedPage() {
   const { data: session, isPending } = useSession();
@@ -49,10 +50,10 @@ export default function UnauthorizedPage() {
 
           <div className="space-y-2">
             <CardTitle className="text-3xl font-black tracking-tight text-black dark:text-white">
-              Access Denied
+              Akses ditolak
             </CardTitle>
             <CardDescription className="text-base font-medium text-black/70 dark:text-white/70">
-              You don&apos;t have permission to access this application
+              Anda tidak memiliki izin untuk mengakses aplikasi ini
             </CardDescription>
           </div>
         </CardHeader>
@@ -62,15 +63,15 @@ export default function UnauthorizedPage() {
           {!isPending && session?.user && (
             <div className="p-4 bg-gray-100 dark:bg-gray-800 border-2 border-black dark:border-white">
               <p className="text-sm text-black/60 dark:text-white/60 mb-1">
-                Signed in as:
+                Masuk sebagai:
               </p>
               <p className="font-bold text-black dark:text-white">
                 {session.user.email}
               </p>
               <p className="text-sm text-black/60 dark:text-white/60 mt-2">
-                Current role:{" "}
+                Peran saat ini:{" "}
                 <span className="font-medium text-red-600 dark:text-red-400">
-                  {session.user.role || "No role assigned"}
+                  {formatRoleDisplay(session.user.role)}
                 </span>
               </p>
             </div>
@@ -79,8 +80,8 @@ export default function UnauthorizedPage() {
           {/* Message */}
           <div className="text-center">
             <p className="text-sm text-black/60 dark:text-white/60">
-              Please contact an administrator to request access to Dapur Bu
-              Wikra management system.
+              Hubungi admin untuk meminta akses ke sistem pengelolaan Dapur Bu
+              Wikra.
             </p>
           </div>
 
@@ -93,10 +94,10 @@ export default function UnauthorizedPage() {
             {isLoading ? (
               <div className="flex items-center gap-3">
                 <div className="w-6 h-6 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
-                <span>Signing out...</span>
+                <span>Keluar...</span>
               </div>
             ) : (
-              <span>Sign Out & Try Another Account</span>
+              <span>Keluar dan gunakan akun lain</span>
             )}
           </Button>
 

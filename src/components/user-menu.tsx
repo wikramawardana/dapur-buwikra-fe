@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut, useSession } from "@/lib/auth-client";
+import { formatRoleDisplay } from "@/lib/constants";
 
 export function UserMenu() {
   const { theme, setTheme } = useTheme();
@@ -67,7 +68,7 @@ export function UserMenu() {
           <Avatar className="h-8 w-8">
             <AvatarImage
               src={session?.user?.image || undefined}
-              alt={session?.user?.name || "User"}
+              alt={session?.user?.name || "Pengguna"}
               referrerPolicy="no-referrer"
             />
             <AvatarFallback className="bg-blue-100 text-black font-bold">
@@ -84,7 +85,7 @@ export function UserMenu() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-2">
             <p className="text-sm font-bold leading-none">
-              {session?.user?.name || "User"}
+              {session?.user?.name || "Pengguna"}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {session?.user?.email}
@@ -92,7 +93,7 @@ export function UserMenu() {
             <Badge
               className={`${getRoleBadgeColor(session?.user?.role)} border w-fit text-xs font-bold`}
             >
-              {session?.user?.role || "user"}
+              {formatRoleDisplay(session?.user?.role)}
             </Badge>
           </div>
         </DropdownMenuLabel>

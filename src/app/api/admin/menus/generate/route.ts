@@ -26,7 +26,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Unauthorized. Admin or valid bot token required.",
+          error:
+            "Akses ditolak. Gunakan akun admin, koki, atau token bot yang valid.",
         },
         { status: 401 },
       );
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            error: "Please provide either 'text' or 'parsed_data'",
+            error: "Masukkan teks menu atau data menu terstruktur.",
           },
           { status: 400 },
         );
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            error: "Authentication token needed to publish menu to backend.",
+            error: "Token autentikasi diperlukan untuk menampilkan menu.",
             parsed_data: parsedData,
             preview_image: previewDataUrl,
           },
@@ -153,7 +154,10 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("Error in menu flyer generation API:", error);
     return NextResponse.json(
-      { success: false, error: error?.message || "Internal server error" },
+      {
+        success: false,
+        error: error?.message || "Gagal memproses permintaan.",
+      },
       { status: 500 },
     );
   }
@@ -172,7 +176,10 @@ export async function GET(req: NextRequest) {
     );
     if (!auth.authorized)
       return NextResponse.json(
-        { error: "Unauthorized. Admin, chef or valid bot token required." },
+        {
+          error:
+            "Akses ditolak. Gunakan akun admin, koki, atau token bot yang valid.",
+        },
         { status: 401 },
       );
     const { searchParams } = new URL(req.url);

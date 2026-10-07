@@ -41,17 +41,17 @@ import type {
 import type { WeeklyExpense } from "@/types/weekly-expense.types";
 
 const DAYS = [
-  { name: "Monday", short: "Mon", countKey: "count_monday" as const },
-  { name: "Tuesday", short: "Tue", countKey: "count_tuesday" as const },
-  { name: "Wednesday", short: "Wed", countKey: "count_wednesday" as const },
-  { name: "Thursday", short: "Thu", countKey: "count_thursday" as const },
-  { name: "Friday", short: "Fri", countKey: "count_friday" as const },
+  { name: "Monday", short: "Sen", countKey: "count_monday" as const },
+  { name: "Tuesday", short: "Sel", countKey: "count_tuesday" as const },
+  { name: "Wednesday", short: "Rab", countKey: "count_wednesday" as const },
+  { name: "Thursday", short: "Kam", countKey: "count_thursday" as const },
+  { name: "Friday", short: "Jum", countKey: "count_friday" as const },
 ];
 
 export default function DashboardPage() {
   const { data: session, isPending } = useSession();
   const userRole = session?.user?.role;
-  const userName = session?.user?.name || session?.user?.email || "User";
+  const userName = session?.user?.name || session?.user?.email || "Pengguna";
   const canAccessOverview = userRole === "admin" || userRole === "chef";
   const defaultWeek = React.useMemo(() => getDefaultWeek(), []);
   const [filters, setFilters] = React.useState<OrderFilters>({
@@ -146,7 +146,7 @@ export default function DashboardPage() {
         (result) => result.status === "rejected",
       )
     ) {
-      toast.error("Some dashboard data could not be loaded");
+      toast.error("Sebagian data ringkasan tidak dapat dimuat");
     }
     setIsLoading(false);
   }, [canAccessOverview, filters.date_from, filters.date_to]);
@@ -172,10 +172,10 @@ export default function DashboardPage() {
               <CalendarCheck className="h-6 w-6 text-black" />
             </div>
             <div>
-              <h1 className="text-xl font-black">Access pending</h1>
+              <h1 className="text-xl font-black">Menunggu akses</h1>
               <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-                Your account is ready. An administrator still needs to assign
-                your role before the operational dashboard becomes available.
+                Akun Anda sudah siap. Admin perlu menetapkan peran Anda agar
+                ringkasan operasional dapat diakses.
               </p>
             </div>
           </CardContent>
@@ -213,10 +213,10 @@ export default function DashboardPage() {
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Weekly overview
+              Ringkasan mingguan
             </p>
             <h1 className="text-xl font-black sm:text-2xl">
-              Welcome back, {userName}
+              Selamat datang, {userName}
             </h1>
           </div>
         </div>
@@ -234,7 +234,7 @@ export default function DashboardPage() {
           className="rounded-none border-2 font-bold"
         >
           <Link href={ordersForWeek}>
-            View orders <ArrowRight className="h-4 w-4" />
+            Lihat pesanan <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>
         <Button
@@ -243,7 +243,7 @@ export default function DashboardPage() {
           className="rounded-none border-2 font-bold"
         >
           <Link href={`/shopping-costs?week_start=${filters.date_from}`}>
-            <Receipt className="h-4 w-4" /> Add shopping cost
+            <Receipt className="h-4 w-4" /> Tambah biaya belanja
           </Link>
         </Button>
         <Button
@@ -254,7 +254,7 @@ export default function DashboardPage() {
           onClick={() => setShowMoney((visible) => !visible)}
         >
           {showMoney ? <EyeOff /> : <Eye />}
-          {showMoney ? "Hide amounts" : "Show amounts"}
+          {showMoney ? "Sembunyikan nominal" : "Tampilkan nominal"}
         </Button>
       </div>
 
@@ -270,7 +270,7 @@ export default function DashboardPage() {
           aria-busy={isLoading}
         >
           <Metric
-            label="Total orders"
+            label="Total pesanan"
             value={`${stats?.total_count ?? 0}`}
             detail={`${stats?.total_nasi ?? 0} nasi`}
             icon={ShoppingCart}
@@ -278,29 +278,29 @@ export default function DashboardPage() {
             href={ordersForWeek}
           />
           <Metric
-            label="Total revenue"
+            label="Total pendapatan"
             value={money(stats?.total_sum ?? 0)}
-            detail={`${money(stats?.paid_sum ?? 0)} paid`}
+            detail={`${money(stats?.paid_sum ?? 0)} lunas`}
             icon={Banknote}
             color="green"
             href={ordersForWeek}
           />
           <Metric
-            label="Estimated net profit"
-            value={hasShoppingCost ? money(estimatedProfit) : "Add costs"}
+            label="Perkiraan laba bersih"
+            value={hasShoppingCost ? money(estimatedProfit) : "Tambah biaya"}
             detail={
               hasShoppingCost
-                ? `${money(shoppingCost)} shopping cost`
-                : "Shopping cost is not set"
+                ? `${money(shoppingCost)} biaya belanja`
+                : "Biaya belanja belum dicatat"
             }
             icon={WalletCards}
             color="amber"
             href={`/shopping-costs?week_start=${filters.date_from}`}
           />
           <Metric
-            label="Unpaid amount"
+            label="Tagihan belum lunas"
             value={money(stats?.unpaid_sum ?? 0)}
-            detail="Needs collection"
+            detail="Perlu ditagih"
             icon={CircleDollarSign}
             color="red"
             href={unpaidOrdersForWeek}
@@ -311,9 +311,9 @@ export default function DashboardPage() {
       <section className="neo-brutal neo-brutal-white p-4">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <h2 className="font-black">Orders by day</h2>
+            <h2 className="font-black">Pesanan per hari</h2>
             <p className="text-xs text-muted-foreground">
-              Customers and meal portions for the selected week
+              Jumlah pesanan dan porsi nasi pada minggu yang dipilih
             </p>
           </div>
           <Utensils className="h-5 w-5 text-blue-600" />
@@ -354,29 +354,29 @@ export default function DashboardPage() {
           <CardContent className="space-y-4 p-5">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                At a glance
+                Sekilas
               </p>
-              <h2 className="mt-1 text-lg font-black">Payment health</h2>
+              <h2 className="mt-1 text-lg font-black">Ringkasan pembayaran</h2>
             </div>
             <div className="space-y-3 text-sm">
               <SummaryRow
-                label="Paid"
+                label="Lunas"
                 value={money(stats?.paid_sum ?? 0)}
                 className="text-green-700 dark:text-green-300"
               />
               <SummaryRow
-                label="Unpaid"
+                label="Belum lunas"
                 value={money(stats?.unpaid_sum ?? 0)}
                 className="text-red-700 dark:text-red-300"
               />
               <SummaryRow
-                label="Shopping cost"
-                value={hasShoppingCost ? money(shoppingCost) : "Not set"}
+                label="Biaya belanja"
+                value={hasShoppingCost ? money(shoppingCost) : "Belum dicatat"}
                 className="text-amber-700 dark:text-amber-300"
               />
             </div>
             <Button asChild className="w-full rounded-none font-bold">
-              <Link href={ordersForWeek}>Review orders</Link>
+              <Link href={ordersForWeek}>Tinjau pesanan</Link>
             </Button>
           </CardContent>
         </Card>

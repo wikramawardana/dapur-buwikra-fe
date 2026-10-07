@@ -1,4 +1,5 @@
 import { format, parseISO } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 
 /**
  * Format a number as Indonesian Rupiah currency
@@ -21,7 +22,7 @@ export function formatDate(
 ): string {
   try {
     const date = parseISO(dateString);
-    return format(date, formatStr);
+    return format(date, formatStr, { locale: localeId });
   } catch {
     return dateString;
   }

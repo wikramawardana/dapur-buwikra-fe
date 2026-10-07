@@ -43,6 +43,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useSession } from "@/lib/auth-client";
+import { cmsErrorMessage } from "@/lib/cms-messages";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getDefaultWeek, getWeekRange } from "@/lib/week-utils";
 import {
@@ -92,7 +93,7 @@ export default function ShoppingCostsPage() {
       const response = await getWeeklyExpenses(week.dateFrom);
       setExpenses(response.data);
     } catch {
-      toast.error("Failed to load shopping costs");
+      toast.error("Gagal memuat biaya belanja");
       setExpenses([]);
     } finally {
       setIsLoading(false);
@@ -125,7 +126,7 @@ export default function ShoppingCostsPage() {
     event.preventDefault();
     const parsedAmount = Number(amount);
     if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
-      toast.error("Enter a valid shopping cost");
+      toast.error("Masukkan biaya belanja yang valid");
       return;
     }
 
@@ -140,17 +141,15 @@ export default function ShoppingCostsPage() {
     try {
       if (editingExpense) {
         await updateWeeklyExpense(editingExpense.id, payload);
-        toast.success("Shopping cost updated");
+        toast.success("Biaya belanja berhasil diperbarui");
       } else {
         await createWeeklyExpense(payload);
-        toast.success("Shopping cost added");
+        toast.success("Biaya belanja berhasil ditambahkan");
       }
       setIsDialogOpen(false);
       await fetchExpenses();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to save shopping cost",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal menyimpan biaya belanja"));
     } finally {
       setIsSubmitting(false);
     }
@@ -161,16 +160,12 @@ export default function ShoppingCostsPage() {
     setIsSubmitting(true);
     try {
       await deleteWeeklyExpense(deletingExpense.id);
-      toast.success("Shopping cost deleted");
+      toast.success("Biaya belanja berhasil dihapus");
       setIsDeleteDialogOpen(false);
       setDeletingExpense(null);
       await fetchExpenses();
     } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to delete shopping cost",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal menghapus biaya belanja"));
     } finally {
       setIsSubmitting(false);
     }
@@ -195,11 +190,11 @@ export default function ShoppingCostsPage() {
           <div>
             <CardTitle className="flex items-center gap-2 text-2xl font-bold">
               <Receipt className="h-6 w-6" />
-              Shopping Costs
+              Biaya belanja
             </CardTitle>
             <CardDescription>
-              Add each shopping trip separately. The total is deducted from
-              weekly revenue.
+              Catat setiap transaksi belanja secara terpisah. Totalnya dikurangi
+              dari pendapatan mingguan.
             </CardDescription>
           </div>
           <Button
@@ -207,7 +202,7 @@ export default function ShoppingCostsPage() {
             className="gap-2 rounded-none border-2 border-black bg-green-400 font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-green-500 dark:border-white"
           >
             <Plus className="h-4 w-4" />
-            Add shopping cost
+            Tambah biaya belanja
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -218,7 +213,7 @@ export default function ShoppingCostsPage() {
             />
             <div className="text-left sm:text-right">
               <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                Weekly total
+                Total mingguan
               </p>
               <p className="text-2xl font-black">{formatCurrency(total)}</p>
             </div>
@@ -228,11 +223,11 @@ export default function ShoppingCostsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Note / item</TableHead>
-                  <TableHead>Week</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Catatan / barang</TableHead>
+                  <TableHead>Minggu</TableHead>
+                  <TableHead className="text-right">Nominal</TableHead>
                   <TableHead className="w-[120px] text-right">
-                    Actions
+                    Tindakan
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -249,14 +244,14 @@ export default function ShoppingCostsPage() {
                       colSpan={4}
                       className="py-8 text-center text-muted-foreground"
                     >
-                      No shopping costs recorded for this week.
+                      Belum ada biaya belanja pada minggu ini.
                     </TableCell>
                   </TableRow>
                 ) : (
                   expenses.map((expense) => (
                     <TableRow key={expense.id}>
                       <TableCell className="font-medium">
-                        {expense.note || "Shopping"}
+                        {expense.note || "Belanja"}
                       </TableCell>
                       <TableCell>{`${formatDate(expense.week_start)} - ${formatDate(expense.week_end)}`}</TableCell>
                       <TableCell className="text-right font-bold">
@@ -268,7 +263,7 @@ export default function ShoppingCostsPage() {
                             variant="outline"
                             size="icon"
                             onClick={() => openEditDialog(expense)}
-                            aria-label="Edit shopping cost"
+                            aria-label="Ubah biaya belanja"
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -279,7 +274,7 @@ export default function ShoppingCostsPage() {
                               setDeletingExpense(expense);
                               setIsDeleteDialogOpen(true);
                             }}
-                            aria-label="Delete shopping cost"
+                            aria-label="Hapus biaya belanja"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -298,16 +293,16 @@ export default function ShoppingCostsPage() {
         <DialogContent className="rounded-none border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)]">
           <DialogHeader>
             <DialogTitle>
-              {editingExpense ? "Edit shopping cost" : "Add shopping cost"}
+              {editingExpense ? "Ubah biaya belanja" : "Tambah biaya belanja"}
             </DialogTitle>
             <DialogDescription>
-              Record one shopping trip or purchase for{" "}
-              {formatDate(week.dateFrom)} - {formatDate(week.dateTo)}.
+              Catat satu transaksi belanja untuk {formatDate(week.dateFrom)} -{" "}
+              {formatDate(week.dateTo)}.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="shopping-cost-amount">Amount (Rp)</Label>
+              <Label htmlFor="shopping-cost-amount">Nominal (Rp)</Label>
               <Input
                 id="shopping-cost-amount"
                 type="number"
@@ -321,12 +316,14 @@ export default function ShoppingCostsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="shopping-cost-note">Note / item (optional)</Label>
+              <Label htmlFor="shopping-cost-note">
+                Catatan / barang (opsional)
+              </Label>
               <Input
                 id="shopping-cost-note"
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
-                placeholder="Ingredients, packaging, etc."
+                placeholder="Bahan makanan, kemasan, dan lainnya"
               />
             </div>
             <DialogFooter>
@@ -335,10 +332,10 @@ export default function ShoppingCostsPage() {
                 variant="outline"
                 onClick={() => setIsDialogOpen(false)}
               >
-                Cancel
+                Batal
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save cost"}
+                {isSubmitting ? "Saving..." : "Simpan biaya"}
               </Button>
             </DialogFooter>
           </form>
@@ -351,25 +348,23 @@ export default function ShoppingCostsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete shopping cost?</AlertDialogTitle>
+            <AlertDialogTitle>Hapus biaya belanja?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove{" "}
+              Tindakan ini menghapus{" "}
               {deletingExpense
                 ? formatCurrency(deletingExpense.amount)
-                : "this expense"}{" "}
-              from the weekly total.
+                : "biaya ini"}{" "}
+              dari total mingguan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isSubmitting}>Batal</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isSubmitting}
               className="bg-red-500 text-white hover:bg-red-600"
             >
-              Delete
+              Hapus
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

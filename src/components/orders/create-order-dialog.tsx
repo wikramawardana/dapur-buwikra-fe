@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, getDay } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 import {
   CalendarIcon,
   ChevronsUpDown,
@@ -59,12 +60,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { getUploadUrl } from "@/lib/api.config";
 import { authClient, useSession } from "@/lib/auth-client";
+import { cmsErrorMessage } from "@/lib/cms-messages";
 import { formatCurrency } from "@/lib/format";
 import {
   getOfficePriceList,
   getPackageDisplayName,
   repriceDayOrders,
 } from "@/lib/office-pricing";
+import { formatDayDisplay } from "@/lib/week-utils";
 import { getMenuByDate } from "@/services/menu.service";
 import { createOrder, getOrderCustomers } from "@/services/orders.service";
 import { getActivePickupPoints } from "@/services/pickup-point.service";
@@ -91,12 +94,12 @@ const DAY_NAMES = [
 
 // Schema for the new order structure
 const orderFormSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Nama wajib diisi"),
   email: z
     .string()
-    .min(1, "Email is required")
-    .email("Please enter a valid email address"),
-  selectedDates: z.array(z.date()).min(1, "At least one date is required"),
+    .min(1, "Email wajib diisi")
+    .email("Masukkan alamat email yang valid"),
+  selectedDates: z.array(z.date()).min(1, "Pilih minimal satu tanggal"),
   dayOrders: z.record(
     z.string(),
     z.array(
@@ -349,7 +352,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
           setPriceListItems(Array.isArray(items) ? items : []);
         })
         .catch((error) => {
-          toast.error("Failed to load price list");
+          toast.error("Gagal memuat daftar harga");
           console.error(error);
         })
         .finally(() => {
@@ -366,7 +369,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
           setPickupPoints(response.data.map((point) => point.name));
         })
         .catch((error) => {
-          toast.error("Failed to load pickup points");
+          toast.error("Gagal memuat lokasi pengantaran");
           console.error(error);
         })
         .finally(() => {
@@ -382,7 +385,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
 
   // Format date key for dayOrders record
   const getDateKey = (date: Date): string => {
-    return format(date, "yyyy-MM-dd");
+    return format(date, "yyyy-MM-dd", { locale: localeId });
   };
 
   // Fetch menu for a specific date
@@ -405,11 +408,11 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
         setPreviewMenu(menu);
         setPreviewImageIndex(0);
       } else {
-        toast.info("No menu image available for this date");
+        toast.info("Belum ada gambar menu untuk tanggal ini");
       }
     } catch {
       setMenuCache((prev) => ({ ...prev, [dateKey]: null }));
-      toast.info("No menu available for this date");
+      toast.info("Belum ada menu untuk tanggal ini");
     } finally {
       setLoadingMenus((prev) => ({ ...prev, [dateKey]: false }));
     }
@@ -564,7 +567,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
         .filter((dayOrder) => dayOrder.items.length > 0);
 
       if (dayOrdersPayload.length === 0) {
-        toast.error("Please add at least one item to your order");
+        toast.error("Tambahkan minimal satu sajian ke pesanan");
         setIsSubmitting(false);
         return;
       }
@@ -588,19 +591,17 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       );
       // Show different message based on user role
       if (canChooseCustomer) {
-        toast.success("Order created successfully!");
+        toast.success("Pesanan berhasil dibuat!");
       } else {
-        toast.success("Order submitted! Your order is pending approval.", {
-          description: "You will be notified once your order is accepted.",
+        toast.success("Pesanan terkirim! Menunggu konfirmasi dapur.", {
+          description: "Anda akan diberi tahu setelah pesanan diterima.",
           duration: 5000,
         });
       }
       handleOpenChange(false);
       onOrderCreated?.();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create order",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal membuat pesanan"));
     } finally {
       setIsSubmitting(false);
     }
@@ -622,18 +623,18 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
           className="gap-2 h-9 px-3 text-sm sm:h-11 sm:px-6 sm:text-base font-bold border-2 border-black dark:border-white bg-blue-400 text-black hover:bg-blue-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[6px_6px_0px_0px_rgba(255,255,255,1)] hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all duration-150 rounded-none"
         >
           <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="hidden sm:inline">Create New Order</span>
-          <span className="sm:hidden">New Order</span>
+          <span className="hidden sm:inline">Buat pesanan baru</span>
+          <span className="sm:hidden">Pesanan baru</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-6xl max-h-[95vh] overflow-y-auto custom-scrollbar border-2 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] rounded-none bg-white dark:bg-black">
         <DialogHeader className="space-y-2 sm:space-y-3 pb-3 sm:pb-4 border-b-2 border-black dark:border-white">
           <DialogTitle className="text-xl sm:text-2xl font-black uppercase tracking-tight">
-            Create New Order
+            Buat pesanan baru
           </DialogTitle>
           <DialogDescription className="text-sm sm:text-base font-medium text-black/70 dark:text-white/70">
-            Select dates and add items for each day. Different items can be
-            ordered for different days.
+            Pilih tanggal dan tambahkan sajian untuk setiap hari. Anda dapat
+            memilih sajian yang berbeda tiap hari.
           </DialogDescription>
         </DialogHeader>
 
@@ -646,7 +647,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
                 <h3 className="text-base sm:text-lg font-bold uppercase tracking-wide">
-                  Customer Info
+                  Informasi pelanggan
                 </h3>
               </div>
               <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 items-start">
@@ -654,7 +655,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                   <div className="md:col-span-2">
                     <FormItem>
                       <FormLabel className="text-base font-bold uppercase tracking-wide">
-                        Customer
+                        Pelanggan
                       </FormLabel>
                       <Popover
                         modal
@@ -671,7 +672,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                               <span className="min-w-0 truncate">
                                 {watchedEmail
                                   ? `${watchedName || getNameFromEmail(watchedEmail)} — ${watchedEmail}`
-                                  : "Search previous customer"}
+                                  : "Cari pelanggan sebelumnya"}
                               </span>
                               <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
                             </Button>
@@ -682,7 +683,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                             value={customerSearch}
                             onValueChange={setCustomerSearch}
                           >
-                            <CommandInput placeholder="Search name or email..." />
+                            <CommandInput placeholder="Cari nama atau email..." />
                             <CommandList
                               className="max-h-[min(20rem,var(--radix-popover-content-available-height))] overflow-y-auto overscroll-contain touch-pan-y pr-1"
                               onWheel={handleCustomerListWheel}
@@ -692,12 +693,12 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                             >
                               <CommandEmpty>
                                 {isLoadingCustomers
-                                  ? "Loading customers..."
+                                  ? "Memuat pelanggan..."
                                   : emailLookupSchema.safeParse(
                                         normalizedCustomerSearch,
                                       ).success
-                                    ? "Press enter to use this email."
-                                    : "No previous customers found."}
+                                    ? "Tekan Enter untuk menggunakan email ini."
+                                    : "Tidak ada pelanggan sebelumnya."}
                               </CommandEmpty>
                               <CommandGroup>
                                 {hasCustomerOption && (
@@ -736,7 +737,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                       </p>
                                       {customer.created_by && (
                                         <p className="truncate text-xs text-muted-foreground/80">
-                                          Added by{" "}
+                                          Ditambahkan oleh{" "}
                                           {customer.created_by.name ||
                                             customer.created_by.email}
                                         </p>
@@ -759,11 +760,11 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-base font-bold uppercase tracking-wide">
-                        Customer Name *
+                        Nama pelanggan *
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter customer name"
+                          placeholder="Masukkan nama pelanggan"
                           className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium"
                           {...field}
                         />
@@ -779,7 +780,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-base font-bold uppercase tracking-wide">
-                        Email *{!canChooseCustomer && " (from your account)"}
+                        Email *{!canChooseCustomer && " (dari akun Anda)"}
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -796,7 +797,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                       </FormControl>
                       {!canChooseCustomer && (
                         <p className="text-xs text-muted-foreground">
-                          Email is auto-filled from your account
+                          Email diisi otomatis dari akun Anda
                         </p>
                       )}
                       <FormMessage />
@@ -835,8 +836,8 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                         <SelectValue
                           placeholder={
                             isLoadingPickupPoints
-                              ? "Loading pickup points..."
-                              : "Select drop off location..."
+                              ? "Memuat lokasi pengantaran..."
+                              : "Pilih lokasi pengantaran..."
                           }
                         />
                       </SelectTrigger>
@@ -861,7 +862,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
                 <h3 className="text-base sm:text-lg font-bold uppercase tracking-wide">
-                  Select Dates
+                  Pilih tanggal
                 </h3>
               </div>
               <FormField
@@ -870,7 +871,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-base font-bold uppercase tracking-wide">
-                      Order Dates *
+                      Tanggal pesanan *
                     </FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -881,8 +882,8 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {field.value && field.value.length > 0
-                              ? `${field.value.length} date(s) selected`
-                              : "Click to pick dates"}
+                              ? `${field.value.length} tanggal dipilih`
+                              : "Klik untuk memilih tanggal"}
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -899,10 +900,12 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                     </Popover>
                     {field.value && field.value.length > 0 && (
                       <p className="text-sm text-muted-foreground">
-                        Selected:{" "}
+                        Dipilih:{" "}
                         {field.value
                           .sort((a, b) => a.getTime() - b.getTime())
-                          .map((d) => format(d, "EEE, MMM d"))
+                          .map((d) =>
+                            format(d, "EEE, d MMM", { locale: localeId }),
+                          )
                           .join(" • ")}
                       </p>
                     )}
@@ -917,14 +920,14 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b-2 border-black dark:border-white">
                   <h3 className="text-base sm:text-lg font-bold uppercase tracking-wide">
-                    Items Per Day
+                    Sajian per hari
                   </h3>
                 </div>
 
                 {isLoadingPriceList ? (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin" />
-                    <span className="ml-2">Loading menu items...</span>
+                    <span className="ml-2">Memuat sajian menu...</span>
                   </div>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2">
@@ -948,9 +951,13 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                             <div className="flex items-center justify-between mb-3 pb-2 border-b border-black/20 dark:border-white/20">
                               <div className="flex items-center gap-2">
                                 <div>
-                                  <p className="font-bold text-lg">{dayName}</p>
+                                  <p className="font-bold text-lg">
+                                    {formatDayDisplay(dayName)}
+                                  </p>
                                   <p className="text-sm text-muted-foreground">
-                                    {format(date, "MMM d, yyyy")}
+                                    {format(date, "d MMM yyyy", {
+                                      locale: localeId,
+                                    })}
                                   </p>
                                 </div>
                                 <Button
@@ -989,7 +996,8 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                         {getPackageDisplayName(item.name)}
                                       </p>
                                       <p className="text-xs text-muted-foreground">
-                                        {formatCurrency(item.unit_price)} each
+                                        {formatCurrency(item.unit_price)} per
+                                        porsi
                                       </p>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -1045,7 +1053,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                 >
                                   <span className="flex items-center gap-2">
                                     <Plus className="h-4 w-4" />
-                                    Add Item
+                                    Tambah sajian
                                   </span>
                                   <ChevronsUpDown className="h-4 w-4 opacity-50" />
                                 </Button>
@@ -1057,7 +1065,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                 <Command>
                                   <CommandList>
                                     {mainItems.length > 0 && (
-                                      <CommandGroup heading="Main Items">
+                                      <CommandGroup heading="Paket utama">
                                         {mainItems.map((item) => (
                                           <CommandItem
                                             key={item.id}
@@ -1076,7 +1084,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                       </CommandGroup>
                                     )}
                                     {addonItems.length > 0 && (
-                                      <CommandGroup heading="Add-ons">
+                                      <CommandGroup heading="Tambahan">
                                         {addonItems.map((item) => (
                                           <CommandItem
                                             key={item.id}
@@ -1114,11 +1122,11 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-base font-bold uppercase tracking-wide">
-                      Notes (Optional)
+                      Catatan (opsional)
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Add any special instructions..."
+                        placeholder="Tambahkan permintaan khusus..."
                         className="min-h-20 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium resize-none"
                         {...field}
                       />
@@ -1134,10 +1142,10 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold uppercase tracking-wide text-black dark:text-white mb-1">
-                    Total Price
+                    Total harga
                   </p>
                   <p className="text-xs text-black/70 dark:text-white/70">
-                    {selectedDates?.length || 0} day(s) selected
+                    {selectedDates?.length || 0} hari dipilih
                   </p>
                 </div>
                 <div className="text-right">
@@ -1156,7 +1164,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                 disabled={isSubmitting}
                 className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
               >
-                Cancel
+                Batal
               </Button>
               <Button
                 type="submit"
@@ -1166,7 +1174,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Create Order
+                Buat pesanan
               </Button>
             </DialogFooter>
           </form>
@@ -1198,8 +1206,13 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                 <p className="font-bold text-lg">{previewMenu.title}</p>
                 {previewMenu.start_date && previewMenu.end_date && (
                   <p className="text-sm text-white/70">
-                    {format(new Date(previewMenu.start_date), "MMM d")} -{" "}
-                    {format(new Date(previewMenu.end_date), "MMM d, yyyy")}
+                    {format(new Date(previewMenu.start_date), "d MMM", {
+                      locale: localeId,
+                    })}{" "}
+                    -{" "}
+                    {format(new Date(previewMenu.end_date), "d MMM yyyy", {
+                      locale: localeId,
+                    })}
                   </p>
                 )}
               </div>
@@ -1228,7 +1241,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                       )
                     }
                   >
-                    Previous
+                    Sebelumnya
                   </Button>
                   <span className="text-white text-sm">
                     {previewImageIndex + 1} / {previewMenu.image_urls.length}
@@ -1244,7 +1257,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                       )
                     }
                   >
-                    Next
+                    Selanjutnya
                   </Button>
                 </div>
               )}

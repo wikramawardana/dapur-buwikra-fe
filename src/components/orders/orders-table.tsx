@@ -105,7 +105,7 @@ export function OrdersTable({
               onCheckedChange={(value) =>
                 table.toggleAllPageRowsSelected(!!value)
               }
-              aria-label="Select all"
+              aria-label="Pilih semua"
             />
           </div>
         ),
@@ -114,7 +114,7 @@ export function OrdersTable({
             <Checkbox
               checked={row.getIsSelected()}
               onCheckedChange={(value) => row.toggleSelected(!!value)}
-              aria-label="Select row"
+              aria-label="Pilih baris"
             />
           </div>
         ),
@@ -124,7 +124,7 @@ export function OrdersTable({
       },
       {
         accessorKey: "name",
-        header: () => <div className="text-left font-semibold">Name</div>,
+        header: () => <div className="text-left font-semibold">Nama</div>,
         cell: ({ row }) => {
           const order = row.original;
           const creator = order.created_by;
@@ -134,7 +134,7 @@ export function OrdersTable({
               <div className="font-bold text-black">{order.name}</div>
               {creator && (
                 <div className="mt-0.5 max-w-[180px] truncate text-xs text-muted-foreground">
-                  Added by {creator.name || creator.email}
+                  Ditambahkan oleh {creator.name || creator.email}
                 </div>
               )}
             </div>
@@ -143,7 +143,9 @@ export function OrdersTable({
       },
       {
         accessorKey: "created_at",
-        header: () => <div className="text-left font-semibold">Order Date</div>,
+        header: () => (
+          <div className="text-left font-semibold">Tanggal pesanan</div>
+        ),
         cell: ({ row }) => (
           <div className="text-left text-gray-600">
             {formatDate(row.getValue("created_at"))}
@@ -152,7 +154,9 @@ export function OrdersTable({
       },
       {
         id: "ordered",
-        header: () => <div className="text-left font-semibold">Ordered</div>,
+        header: () => (
+          <div className="text-left font-semibold">Sajian dipesan</div>
+        ),
         cell: ({ row }) => {
           const order = row.original;
           if (!order.day_orders || order.day_orders.length === 0) {
@@ -191,7 +195,7 @@ export function OrdersTable({
       },
       {
         accessorKey: "notes",
-        header: () => <div className="text-left font-semibold">Notes</div>,
+        header: () => <div className="text-left font-semibold">Catatan</div>,
         cell: ({ row }) => {
           const notes = row.getValue("notes") as string;
           if (!notes) return <div className="text-left text-gray-400">-</div>;
@@ -211,7 +215,9 @@ export function OrdersTable({
       },
       {
         accessorKey: "drop_off_location",
-        header: () => <div className="text-left font-semibold">Drop Point</div>,
+        header: () => (
+          <div className="text-left font-semibold">Lokasi pengantaran</div>
+        ),
         cell: ({ row }) => {
           const loc = row.getValue("drop_off_location") as string | undefined;
           if (!loc) return <div className="text-left text-gray-400">-</div>;
@@ -228,7 +234,7 @@ export function OrdersTable({
       {
         id: "total_price",
         header: () => (
-          <div className="text-left font-semibold">Total Price</div>
+          <div className="text-left font-semibold">Total harga</div>
         ),
         cell: ({ row }) => (
           <div className="text-left font-bold text-green-600">
@@ -262,7 +268,7 @@ export function OrdersTable({
       },
       {
         accessorKey: "payment_status",
-        header: () => <div className="text-left font-semibold">Payment</div>,
+        header: () => <div className="text-left font-semibold">Pembayaran</div>,
         cell: ({ row }) => (
           <div className="flex flex-col items-start gap-1">
             <StatusBadge
@@ -280,7 +286,7 @@ export function OrdersTable({
       },
       {
         id: "actions",
-        header: () => <div className="text-center font-semibold">Actions</div>,
+        header: () => <div className="text-center font-semibold">Tindakan</div>,
         cell: ({ row }) => (
           <div className="flex justify-center">
             <OrderActionDialog
@@ -323,10 +329,10 @@ export function OrdersTable({
       <div className="neo-brutal neo-brutal-white p-4 sm:p-8">
         <Empty>
           <EmptyHeader>
-            <EmptyTitle>No orders found</EmptyTitle>
+            <EmptyTitle>Tidak ada pesanan</EmptyTitle>
             <EmptyDescription>
-              No orders match your current filters. Try adjusting your search
-              criteria.
+              Tidak ada pesanan yang sesuai dengan filter. Coba ubah pencarian
+              Anda.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
@@ -364,7 +370,7 @@ export function OrdersTable({
                           }
                           onRowSelectionChange(newSelection);
                         }}
-                        aria-label={`Select ${order.name}`}
+                        aria-label={`Pilih ${order.name}`}
                       />
                     )}
                     <div className="min-w-0">
@@ -373,7 +379,7 @@ export function OrdersTable({
                       </h3>
                       {order.created_by && (
                         <p className="truncate text-xs text-muted-foreground">
-                          Added by{" "}
+                          Ditambahkan oleh{" "}
                           {order.created_by.name || order.created_by.email}
                         </p>
                       )}
@@ -388,7 +394,9 @@ export function OrdersTable({
 
                 <div className="mt-3 space-y-2 text-sm">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="text-gray-500 shrink-0">Ordered:</span>
+                    <span className="text-gray-500 shrink-0">
+                      Sajian dipesan:
+                    </span>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="text-gray-700 text-right cursor-pointer hover:underline">
@@ -419,7 +427,7 @@ export function OrdersTable({
                   </div>
                   {order.notes && (
                     <div className="flex items-start justify-between gap-2">
-                      <span className="text-gray-500 shrink-0">Notes:</span>
+                      <span className="text-gray-500 shrink-0">Catatan:</span>
                       <span className="text-gray-500 italic text-right">
                         {order.notes}
                       </span>
@@ -428,7 +436,7 @@ export function OrdersTable({
                   {order.drop_off_location && (
                     <div className="flex items-start justify-between gap-2">
                       <span className="text-gray-500 shrink-0">
-                        Drop Point:
+                        Lokasi pengantaran:
                       </span>
                       <span className="text-gray-700 text-right">
                         {order.drop_off_location}

@@ -56,6 +56,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useSession } from "@/lib/auth-client";
+import { cmsErrorMessage } from "@/lib/cms-messages";
 import { formatCurrency } from "@/lib/format";
 import type { ShopeeSummaryStats, ShopeeTransactionRow } from "@/lib/shopee-db";
 import {
@@ -183,9 +184,7 @@ export default function ShopeePayPartnerPage() {
         setSummary(res.summary);
         setPagination(res.pagination);
       } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Gagal memuat transaksi",
-        );
+        toast.error(cmsErrorMessage(err, "Gagal memuat transaksi"));
       } finally {
         setIsLoading(false);
       }
@@ -222,7 +221,7 @@ export default function ShopeePayPartnerPage() {
 
       if (res.tokenExpired) {
         toast.error(
-          "Sesi ShopeePay telah berakhir. Silakan perbarui session token!",
+          "Sesi ShopeePay telah berakhir. Silakan perbarui token sesi!",
         );
         setIsTokenDialogOpen(true);
       } else {
@@ -231,7 +230,7 @@ export default function ShopeePayPartnerPage() {
         checkToken();
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Gagal sinkronisasi");
+      toast.error(cmsErrorMessage(err, "Gagal sinkronisasi"));
     } finally {
       setIsSyncing(false);
     }
@@ -254,7 +253,7 @@ export default function ShopeePayPartnerPage() {
       checkToken();
       handleSync();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Gagal menyimpan token");
+      toast.error(cmsErrorMessage(err, "Gagal menyimpan token"));
     } finally {
       setIsSavingToken(false);
     }
@@ -283,9 +282,7 @@ export default function ShopeePayPartnerPage() {
       setLinkCustomerName("");
       loadData(pagination.page);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Gagal menghubungkan transaksi",
-      );
+      toast.error(cmsErrorMessage(err, "Gagal menghubungkan transaksi"));
     } finally {
       setIsLinking(false);
     }
@@ -319,9 +316,9 @@ export default function ShopeePayPartnerPage() {
             </span>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                ShopeePay Partner
+                ShopeePay
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-700 font-medium dark:bg-orange-950 dark:text-orange-300">
-                  Merchant Portal
+                  Portal merchant
                 </span>
               </h1>
               <p className="text-sm text-muted-foreground">
@@ -338,11 +335,11 @@ export default function ShopeePayPartnerPage() {
             <span>•</span>
             <span className="flex items-center gap-1">
               <Building2 className="w-3.5 h-3.5 text-orange-500" />
-              Merchant ID: <strong className="text-foreground">20463602</strong>
+              ID merchant: <strong className="text-foreground">20463602</strong>
             </span>
             <span>•</span>
             <span>
-              Store ID: <strong className="text-foreground">23091772</strong>
+              ID toko: <strong className="text-foreground">23091772</strong>
             </span>
             <span>•</span>
             <span>
@@ -416,7 +413,7 @@ export default function ShopeePayPartnerPage() {
         <Card className="shadow-xs border-orange-500/20 bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Total Pemasukan (Settled)
+              Total pemasukan berhasil
             </CardTitle>
             <span className="p-2 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400">
               <Wallet className="w-4 h-4" />
@@ -499,7 +496,7 @@ export default function ShopeePayPartnerPage() {
             <div className="relative flex-1">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Cari ID transaksi, referensi, order ID, nama, atau nominal..."
+                placeholder="Cari ID transaksi, referensi, ID pesanan, nama, atau nominal..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => {
@@ -560,7 +557,7 @@ export default function ShopeePayPartnerPage() {
               onClick={() => loadData(pagination.page)}
               disabled={isLoading}
               className="h-9 text-xs px-2.5"
-              title="Refresh tabel"
+              title="Perbarui tabel"
             >
               <RefreshCw
                 className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`}
@@ -711,7 +708,7 @@ export default function ShopeePayPartnerPage() {
                           <div className="flex flex-col">
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                               <CheckCircle2 className="w-3 h-3" />
-                              Order #{tx.order_id.replace(/^order:/, "")}
+                              Pesanan #{tx.order_id.replace(/^order:/, "")}
                             </span>
                             {tx.order_customer_name && (
                               <span className="text-[11px] text-muted-foreground">
@@ -738,7 +735,7 @@ export default function ShopeePayPartnerPage() {
                             onClick={() => setDetailItem(tx)}
                             className="h-7 px-2 text-xs"
                           >
-                            Detail
+                            Rincian
                           </Button>
                           {!tx.order_id && (
                             <Button
@@ -804,7 +801,7 @@ export default function ShopeePayPartnerPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <KeyRound className="w-5 h-5 text-orange-500" />
-                Session Token ShopeePay Partner
+                Token sesi ShopeePay
               </DialogTitle>
               <DialogDescription className="text-xs leading-relaxed">
                 Token sesi digunakan oleh server Dapur Bu Wikra untuk memanggil
@@ -816,7 +813,7 @@ export default function ShopeePayPartnerPage() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="token-input" className="text-xs font-semibold">
-                  Session Token Baru (B:...)
+                  Token sesi baru (B:...)
                 </Label>
                 <Input
                   id="token-input"
@@ -841,7 +838,7 @@ export default function ShopeePayPartnerPage() {
                       variant={tokenStatus.isValid ? "default" : "destructive"}
                       className="text-[10px] py-0"
                     >
-                      {tokenStatus.isValid ? "Valid" : "Kadaluarsa"}
+                      {tokenStatus.isValid ? "Valid" : "Kedaluwarsa"}
                     </Badge>
                   </div>
                   <div className="font-mono text-[11px] truncate text-foreground">
@@ -926,7 +923,7 @@ export default function ShopeePayPartnerPage() {
                 </div>
                 <div className="flex justify-between py-1 border-b border-border/50">
                   <span className="text-muted-foreground">
-                    Metode / Bank Issuer
+                    Metode / bank penerbit
                   </span>
                   <span className="font-medium text-foreground">
                     {detailItem.issuer_name || "QRIS ShopeePay"}
@@ -934,7 +931,7 @@ export default function ShopeePayPartnerPage() {
                 </div>
                 <div className="flex justify-between py-1 border-b border-border/50">
                   <span className="text-muted-foreground">
-                    Merchant ID / Store ID
+                    ID merchant / ID toko
                   </span>
                   <span className="font-mono text-foreground">
                     {detailItem.merchant_id || "20463602"} /{" "}
@@ -942,7 +939,7 @@ export default function ShopeePayPartnerPage() {
                   </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-border/50">
-                  <span className="text-muted-foreground">Terminal ID</span>
+                  <span className="text-muted-foreground">ID terminal</span>
                   <span className="font-mono text-foreground">
                     {detailItem.terminal_id || "A01"}
                   </span>
@@ -957,12 +954,12 @@ export default function ShopeePayPartnerPage() {
                 </div>
                 <div className="flex justify-between py-1">
                   <span className="text-muted-foreground">
-                    Status Order Terkait
+                    Status pesanan terkait
                   </span>
                   <span className="font-medium text-foreground">
                     {detailItem.order_id ? (
                       <span className="text-emerald-600 font-semibold">
-                        Order #{detailItem.order_id}
+                        Pesanan #{detailItem.order_id}
                       </span>
                     ) : (
                       <span className="text-amber-600">Belum Terhubung</span>
@@ -974,7 +971,7 @@ export default function ShopeePayPartnerPage() {
               {detailItem.raw_data && (
                 <details className="text-[11px] text-muted-foreground border rounded-lg p-2 bg-muted/20">
                   <summary className="cursor-pointer font-medium hover:text-foreground">
-                    Lihat Payload Mentah ShopeePay (JSON)
+                    Lihat data transaksi ShopeePay (JSON)
                   </summary>
                   <pre className="mt-2 p-2 bg-muted rounded overflow-x-auto text-[10px] font-mono max-h-40">
                     {JSON.stringify(detailItem.raw_data, null, 2)}
@@ -1065,7 +1062,7 @@ export default function ShopeePayPartnerPage() {
                   className="text-xs cursor-pointer font-normal"
                 >
                   Otomatis tandai pesanan sebagai{" "}
-                  <strong>&quot;Lunas (Paid)&quot;</strong>
+                  <strong>&quot;Lunas&quot;</strong>
                 </Label>
               </div>
             </div>

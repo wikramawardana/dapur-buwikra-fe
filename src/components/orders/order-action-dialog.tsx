@@ -1,6 +1,7 @@
 "use client";
 
 import { format, getDay } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 import {
   CalendarIcon,
   CheckCheck,
@@ -72,6 +73,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { getAuthToken } from "@/lib/api.config";
 import { useSession } from "@/lib/auth-client";
+import { cmsErrorMessage } from "@/lib/cms-messages";
 import { DAY_PAYMENT_STATUSES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import { generateInvoiceImage } from "@/lib/invoice-generator";
@@ -239,7 +241,7 @@ export function OrderActionDialog({
           setPriceListItems(Array.isArray(items) ? items : []);
         })
         .catch((error) => {
-          toast.error("Failed to load price list");
+          toast.error("Gagal memuat daftar harga");
           console.error(error);
         })
         .finally(() => {
@@ -256,7 +258,7 @@ export function OrderActionDialog({
           setPickupPoints(response.data.map((point) => point.name));
         })
         .catch((error) => {
-          toast.error("Failed to load pickup points");
+          toast.error("Gagal memuat lokasi pengantaran");
           console.error(error);
         })
         .finally(() => {
@@ -266,7 +268,8 @@ export function OrderActionDialog({
   }, [dialogOpen, actionMode, pickupPoints.length]);
 
   const getDayName = (date: Date): string => DAY_NAMES[getDay(date)];
-  const getDateKey = (date: Date): string => format(date, "yyyy-MM-dd");
+  const getDateKey = (date: Date): string =>
+    format(date, "yyyy-MM-dd", { locale: localeId });
 
   const handleOpenDialog = (mode: ActionMode) => {
     setActionMode(mode);
@@ -384,7 +387,7 @@ export function OrderActionDialog({
     if (isViewMode) return;
 
     if (!editName.trim()) {
-      toast.error("Customer name is required");
+      toast.error("Nama pelanggan wajib diisi");
       return;
     }
 
@@ -392,7 +395,7 @@ export function OrderActionDialog({
     const validDayOrders = editDayOrders.filter((d) => d.items.length > 0);
 
     if (validDayOrders.length === 0) {
-      toast.error("Order must have at least one item");
+      toast.error("Pesanan harus memiliki minimal satu sajian");
       return;
     }
 
@@ -412,13 +415,11 @@ export function OrderActionDialog({
         drop_off_location: editDropOffLocation || undefined,
       });
       setOrder(response.data);
-      toast.success("Order updated successfully!");
+      toast.success("Pesanan berhasil diperbarui!");
       setActionMode("view");
       onOrderUpdated?.();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update order",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal memperbarui pesanan"));
     } finally {
       setIsSubmitting(false);
     }
@@ -428,13 +429,11 @@ export function OrderActionDialog({
     setIsDeleting(true);
     try {
       await deleteOrder(order.id);
-      toast.success("Order deleted successfully!");
+      toast.success("Pesanan berhasil dihapus!");
       setDeleteDialogOpen(false);
       onOrderDeleted?.();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to delete order",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal menghapus pesanan"));
     } finally {
       setIsDeleting(false);
     }
@@ -446,12 +445,10 @@ export function OrderActionDialog({
     try {
       const response = await acceptOrder(order.id);
       setOrder(response.data);
-      toast.success("Order accepted successfully!");
+      toast.success("Pesanan berhasil diterima!");
       onOrderUpdated?.();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to accept order",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal menerima pesanan"));
     } finally {
       setIsWorkflowProcessing(false);
     }
@@ -459,21 +456,19 @@ export function OrderActionDialog({
 
   const handleReject = async () => {
     if (!rejectReason.trim()) {
-      toast.error("Rejection reason is required");
+      toast.error("Alasan penolakan wajib diisi");
       return;
     }
     setIsWorkflowProcessing(true);
     try {
       const response = await rejectOrder(order.id, rejectReason);
       setOrder(response.data);
-      toast.success("Order rejected");
+      toast.success("Pesanan ditolak");
       setRejectDialogOpen(false);
       setRejectReason("");
       onOrderUpdated?.();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to reject order",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal menolak pesanan"));
     } finally {
       setIsWorkflowProcessing(false);
     }
@@ -484,12 +479,10 @@ export function OrderActionDialog({
     try {
       const response = await startOrder(order.id);
       setOrder(response.data);
-      toast.success("Order started!");
+      toast.success("Pesanan mulai diproses!");
       onOrderUpdated?.();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to start order",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal memulai pesanan"));
     } finally {
       setIsWorkflowProcessing(false);
     }
@@ -500,12 +493,10 @@ export function OrderActionDialog({
     try {
       const response = await completeOrder(order.id);
       setOrder(response.data);
-      toast.success("Order completed!");
+      toast.success("Pesanan selesai!");
       onOrderUpdated?.();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to complete order",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal menyelesaikan pesanan"));
     } finally {
       setIsWorkflowProcessing(false);
     }
@@ -516,14 +507,12 @@ export function OrderActionDialog({
     try {
       const response = await cancelOrder(order.id, cancelReason || undefined);
       setOrder(response.data);
-      toast.success("Order cancelled");
+      toast.success("Pesanan dibatalkan");
       setCancelDialogOpen(false);
       setCancelReason("");
       onOrderUpdated?.();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to cancel order",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal membatalkan pesanan"));
     } finally {
       setIsWorkflowProcessing(false);
     }
@@ -539,7 +528,7 @@ export function OrderActionDialog({
           new ClipboardItem({ "image/png": blob }),
         ]);
         setInvoiceCopied(true);
-        toast.success("Invoice image copied to clipboard!");
+        toast.success("Gambar tagihan berhasil disalin!");
         setTimeout(() => setInvoiceCopied(false), 2000);
       } catch {
         // Fallback: download as file
@@ -549,11 +538,11 @@ export function OrderActionDialog({
         a.download = `invoice-${order.name}-${order.id}.png`;
         a.click();
         URL.revokeObjectURL(url);
-        toast.success("Invoice downloaded!");
+        toast.success("Tagihan berhasil diunduh!");
       }
     } catch (error) {
       console.error("Invoice generation error:", error);
-      toast.error("Failed to generate invoice");
+      toast.error("Gagal membuat tagihan");
     } finally {
       setIsCopyingInvoice(false);
     }
@@ -568,7 +557,7 @@ export function OrderActionDialog({
       setInvoicePreviewOpen(true);
     } catch (error) {
       console.error("Invoice generation error:", error);
-      toast.error("Gagal membuat preview invoice");
+      toast.error("Gagal membuat pratinjau tagihan");
     } finally {
       setIsGeneratingInvoicePreview(false);
     }
@@ -578,7 +567,7 @@ export function OrderActionDialog({
     const { text } = generateOrderWhatsAppMessage(order);
     navigator.clipboard.writeText(text);
     setMessageCopied(true);
-    toast.success("Rincian pesanan & link QRIS berhasil disalin!");
+    toast.success("Rincian pesanan dan tautan QRIS berhasil disalin!");
     setTimeout(() => setMessageCopied(false), 2000);
   };
 
@@ -590,7 +579,7 @@ export function OrderActionDialog({
   const handleCopyQrisLinkOnly = () => {
     const { url } = generateOrderWhatsAppMessage(order);
     navigator.clipboard.writeText(url);
-    toast.success("Link QRIS dinamis berhasil disalin!");
+    toast.success("Tautan QRIS dinamis berhasil disalin!");
   };
 
   const [isCheckingShopeePayment, setIsCheckingShopeePayment] =
@@ -668,7 +657,7 @@ export function OrderActionDialog({
             variant="ghost"
             className="h-8 w-8 p-0 border-2 border-black dark:border-white rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] hover:-translate-x-px hover:-translate-y-px transition-all duration-150 bg-white dark:bg-black"
           >
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">Buka menu</span>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -681,7 +670,7 @@ export function OrderActionDialog({
             className="cursor-pointer font-medium"
           >
             <Eye className="mr-2 h-4 w-4" />
-            View Detail
+            Lihat rincian
           </DropdownMenuItem>
           {(isAdmin || canEditOwnOrder) && (
             <DropdownMenuItem
@@ -689,7 +678,7 @@ export function OrderActionDialog({
               className="cursor-pointer font-medium"
             >
               <Pencil className="mr-2 h-4 w-4" />
-              Edit Order
+              Ubah pesanan
             </DropdownMenuItem>
           )}
           {isAdmin && (
@@ -698,7 +687,7 @@ export function OrderActionDialog({
               className="cursor-pointer font-medium text-red-600 focus:text-red-600"
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete Order
+              Hapus pesanan
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -709,13 +698,13 @@ export function OrderActionDialog({
         <DialogContent className="sm:max-w-4xl max-h-[95vh] overflow-y-auto custom-scrollbar border-2 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] rounded-none bg-white dark:bg-black">
           <DialogHeader className="space-y-3 pb-4 border-b-2 border-black dark:border-white">
             <DialogTitle className="text-2xl font-black uppercase tracking-tight">
-              {isViewMode ? "Order Detail" : "Edit Order"}
+              {isViewMode ? "Rincian pesanan" : "Ubah pesanan"}
             </DialogTitle>
             <DialogDescription className="text-base font-medium text-black/70 dark:text-white/70">
               {isViewMode
-                ? "View the order details below."
+                ? "Lihat rincian pesanan di bawah."
                 : isAdmin
-                  ? "Update customer info, items, payment status, and notes."
+                  ? "Ubah informasi pelanggan, sajian, status pembayaran, dan catatan."
                   : "Ubah pesanan sebelum diterima dapur. Status pembayaran hanya dapat diubah admin."}
             </DialogDescription>
           </DialogHeader>
@@ -724,18 +713,18 @@ export function OrderActionDialog({
             {/* Customer Info */}
             <div className="space-y-2">
               <h3 className="text-lg font-bold uppercase tracking-wide border-b-2 border-black dark:border-white pb-2">
-                Customer
+                Pelanggan
               </h3>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label className="text-sm font-bold uppercase">Name</Label>
+                  <Label className="text-sm font-bold uppercase">Nama</Label>
                   {isViewMode ? (
                     <p className="text-lg font-medium">{order.name}</p>
                   ) : (
                     <Input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      placeholder="Customer name"
+                      placeholder="Nama pelanggan"
                       className="h-12 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium"
                     />
                   )}
@@ -744,7 +733,7 @@ export function OrderActionDialog({
                   <Label className="text-sm font-bold uppercase">Email</Label>
                   {isViewMode ? (
                     <p className="text-lg font-medium">
-                      {order.email || "No email"}
+                      {order.email || "Tanpa email"}
                     </p>
                   ) : (
                     <Input
@@ -761,7 +750,7 @@ export function OrderActionDialog({
               {isViewMode && order.created_by && (
                 <div className="border-2 border-dashed border-black/30 p-3 dark:border-white/30">
                   <Label className="text-sm font-bold uppercase">
-                    Inserted by
+                    Ditambahkan oleh
                   </Label>
                   <p className="text-base font-medium">
                     {order.created_by.name || order.created_by.email}
@@ -779,7 +768,7 @@ export function OrderActionDialog({
             {isViewMode && (
               <div className="space-y-2">
                 <h3 className="text-lg font-bold uppercase tracking-wide border-b-2 border-black dark:border-white pb-2">
-                  Order Status
+                  Status pesanan
                 </h3>
                 <div className="flex items-center gap-4">
                   <StatusBadge
@@ -790,7 +779,7 @@ export function OrderActionDialog({
                   {order.rejection_reason && (
                     <div className="flex-1 p-3 bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700">
                       <p className="text-sm font-bold text-red-600 dark:text-red-400 uppercase">
-                        Reason:
+                        Alasan:
                       </p>
                       <p className="text-red-800 dark:text-red-200">
                         {order.rejection_reason}
@@ -804,7 +793,7 @@ export function OrderActionDialog({
             <div className="space-y-3">
               <div className="flex items-center justify-between border-b-2 border-black dark:border-white pb-2">
                 <h3 className="text-lg font-bold uppercase tracking-wide">
-                  Order Details
+                  Rincian pesanan
                 </h3>
                 {!isViewMode && (
                   <Popover>
@@ -816,7 +805,7 @@ export function OrderActionDialog({
                         className="h-9 gap-2 border-2 border-black dark:border-white rounded-none"
                       >
                         <CalendarIcon className="h-4 w-4" />
-                        Add Days
+                        Tambah hari
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="end">
@@ -834,7 +823,7 @@ export function OrderActionDialog({
                             className="w-full"
                             onClick={addNewDays}
                           >
-                            Add {selectedNewDates.length} Day(s)
+                            Tambah {selectedNewDates.length} hari
                           </Button>
                         </div>
                       )}
@@ -846,7 +835,7 @@ export function OrderActionDialog({
               {isLoadingPriceList && !isViewMode ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin" />
-                  <span className="ml-2">Loading menu items...</span>
+                  <span className="ml-2">Memuat sajian menu...</span>
                 </div>
               ) : displayDayOrders.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2">
@@ -870,10 +859,11 @@ export function OrderActionDialog({
                             </p>
                             {isViewMode && dayOrder.paid_at && (
                               <p className="mt-1 text-xs font-medium text-green-700 dark:text-green-400">
-                                Paid{" "}
+                                Lunas{" "}
                                 {format(
                                   new Date(dayOrder.paid_at),
                                   "dd MMM yyyy, HH:mm",
+                                  { locale: localeId },
                                 )}
                               </p>
                             )}
@@ -937,7 +927,7 @@ export function OrderActionDialog({
                               <div className="flex-1">
                                 <p className="font-medium">{item.name}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {formatCurrency(item.unit_price)} each
+                                  {formatCurrency(item.unit_price)} per porsi
                                 </p>
                               </div>
                               {isViewMode ? (
@@ -1000,7 +990,7 @@ export function OrderActionDialog({
                               >
                                 <span className="flex items-center gap-2">
                                   <Plus className="h-4 w-4" />
-                                  Add Item
+                                  Tambah sajian
                                 </span>
                                 <ChevronsUpDown className="h-4 w-4 opacity-50" />
                               </Button>
@@ -1012,7 +1002,7 @@ export function OrderActionDialog({
                               <Command>
                                 <CommandList>
                                   {mainItems.length > 0 && (
-                                    <CommandGroup heading="Main Items">
+                                    <CommandGroup heading="Paket utama">
                                       {mainItems.map((item) => (
                                         <CommandItem
                                           key={item.id}
@@ -1031,7 +1021,7 @@ export function OrderActionDialog({
                                     </CommandGroup>
                                   )}
                                   {addonItems.length > 0 && (
-                                    <CommandGroup heading="Add-ons">
+                                    <CommandGroup heading="Tambahan">
                                       {addonItems.map((item) => (
                                         <CommandItem
                                           key={item.id}
@@ -1059,18 +1049,20 @@ export function OrderActionDialog({
                   })}
                 </div>
               ) : (
-                <p className="text-muted-foreground">No items in this order.</p>
+                <p className="text-muted-foreground">
+                  Belum ada sajian dalam pesanan ini.
+                </p>
               )}
             </div>
 
             {/* Notes */}
             <div className="space-y-2">
               <Label className="text-base font-bold uppercase tracking-wide">
-                Drop Off Location
+                Lokasi pengantaran
               </Label>
               {isViewMode ? (
                 <p className="text-base">
-                  {order.drop_off_location || "No drop off location"}
+                  {order.drop_off_location || "Belum ada lokasi pengantaran"}
                 </p>
               ) : (
                 <Select
@@ -1082,8 +1074,8 @@ export function OrderActionDialog({
                     <SelectValue
                       placeholder={
                         isLoadingPickupPoints
-                          ? "Loading pickup points..."
-                          : "Select drop off location..."
+                          ? "Memuat lokasi pengantaran..."
+                          : "Pilih lokasi pengantaran..."
                       }
                     />
                   </SelectTrigger>
@@ -1105,15 +1097,15 @@ export function OrderActionDialog({
             {/* Notes */}
             <div className="space-y-2">
               <Label className="text-base font-bold uppercase tracking-wide">
-                Notes
+                Catatan
               </Label>
               {isViewMode ? (
-                <p className="text-base">{order.notes || "No notes"}</p>
+                <p className="text-base">{order.notes || "Tanpa catatan"}</p>
               ) : (
                 <Textarea
                   value={editNotes}
                   onChange={(e) => setEditNotes(e.target.value)}
-                  placeholder="Add notes..."
+                  placeholder="Tambahkan catatan..."
                   className="min-h-20 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black font-medium"
                 />
               )}
@@ -1122,7 +1114,7 @@ export function OrderActionDialog({
             {/* Payment Summary */}
             <div className="space-y-2">
               <Label className="text-base font-bold uppercase tracking-wide">
-                Payment Summary
+                Ringkasan pembayaran
               </Label>
               {order.payment_review_requested_at &&
                 order.payment_status !== "paid" && (
@@ -1134,7 +1126,7 @@ export function OrderActionDialog({
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="border-2 border-black bg-green-100 p-3 dark:border-white dark:bg-green-950">
                   <p className="text-xs font-bold uppercase text-green-700 dark:text-green-300">
-                    Paid
+                    Lunas
                   </p>
                   <p className="text-lg font-black">
                     {formatCurrency(displayPaymentTotals.paid)}
@@ -1142,7 +1134,7 @@ export function OrderActionDialog({
                 </div>
                 <div className="border-2 border-black bg-red-100 p-3 dark:border-white dark:bg-red-950">
                   <p className="text-xs font-bold uppercase text-red-700 dark:text-red-300">
-                    Remaining
+                    Sisa tagihan
                   </p>
                   <p className="text-lg font-black">
                     {formatCurrency(displayPaymentTotals.unpaid)}
@@ -1165,7 +1157,7 @@ export function OrderActionDialog({
                     onClick={() => markAllDaysPayment("paid")}
                     className="rounded-none border-2 border-black bg-green-100 font-bold dark:border-white dark:bg-green-950"
                   >
-                    Mark All Paid
+                    Tandai semua lunas
                   </Button>
                   <Button
                     type="button"
@@ -1174,7 +1166,7 @@ export function OrderActionDialog({
                     onClick={() => markAllDaysPayment("unpaid")}
                     className="rounded-none border-2 border-black bg-red-100 font-bold dark:border-white dark:bg-red-950"
                   >
-                    Mark All Unpaid
+                    Tandai semua belum lunas
                   </Button>
                 </div>
               )}
@@ -1184,7 +1176,7 @@ export function OrderActionDialog({
             <div className="border-2 border-black dark:border-white bg-green-200 dark:bg-green-900 p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-bold uppercase tracking-wide text-black dark:text-white">
-                  Total Price
+                  Total harga
                 </p>
                 <span className="text-3xl font-black text-black dark:text-white">
                   {formatCurrency(totalPrice)}
@@ -1208,7 +1200,7 @@ export function OrderActionDialog({
                       {isWorkflowProcessing && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
-                      Accept
+                      Terima
                     </Button>
                     <Button
                       type="button"
@@ -1216,7 +1208,7 @@ export function OrderActionDialog({
                       disabled={isWorkflowProcessing}
                       className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-red-500 text-white hover:bg-red-600"
                     >
-                      Reject
+                      Tolak
                     </Button>
                   </>
                 )}
@@ -1231,7 +1223,7 @@ export function OrderActionDialog({
                       {isWorkflowProcessing && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
-                      Start
+                      Mulai proses
                     </Button>
                     <Button
                       type="button"
@@ -1239,7 +1231,7 @@ export function OrderActionDialog({
                       disabled={isWorkflowProcessing}
                       className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-gray-500 text-white hover:bg-gray-600"
                     >
-                      Cancel Order
+                      Batalkan pesanan
                     </Button>
                   </>
                 )}
@@ -1254,7 +1246,7 @@ export function OrderActionDialog({
                       {isWorkflowProcessing && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
-                      Complete
+                      Selesaikan
                     </Button>
                     <Button
                       type="button"
@@ -1262,7 +1254,7 @@ export function OrderActionDialog({
                       disabled={isWorkflowProcessing}
                       className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-gray-500 text-white hover:bg-gray-600"
                     >
-                      Cancel Order
+                      Batalkan pesanan
                     </Button>
                   </>
                 )}
@@ -1275,14 +1267,14 @@ export function OrderActionDialog({
                 onClick={handleWatchInvoice}
                 disabled={isGeneratingInvoicePreview}
                 className="h-12 px-5 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black hover:bg-muted"
-                title="Lihat preview invoice pesanan"
+                title="Lihat pratinjau tagihan pesanan"
               >
                 {isGeneratingInvoicePreview ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Eye className="mr-2 h-4 w-4 text-blue-600" />
                 )}
-                Lihat Invoice
+                Lihat tagihan
               </Button>
             )}
             {isViewMode &&
@@ -1309,7 +1301,7 @@ export function OrderActionDialog({
                   onClick={handleCheckShopeePayment}
                   disabled={isCheckingShopeePayment}
                   className="h-12 px-4 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-emerald-400 hover:bg-emerald-500 text-black"
-                  title="Periksa mutasi pembayaran ShopeePay secara realtime"
+                  title="Periksa mutasi pembayaran ShopeePay secara langsung"
                 >
                   {isCheckingShopeePayment ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1325,14 +1317,14 @@ export function OrderActionDialog({
                     type="button"
                     onClick={handleCopyWhatsAppMessage}
                     className="h-12 px-4 text-base font-bold border-2 border-black rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] bg-yellow-300 hover:bg-yellow-400 text-black border-r-0"
-                    title="Salin rincian pesanan dan link QRIS untuk dikirim ke customer via WhatsApp"
+                    title="Salin rincian pesanan dan tautan QRIS untuk dikirim kepada pelanggan melalui WhatsApp"
                   >
                     {messageCopied ? (
                       <CheckCheck className="mr-2 h-4 w-4 text-emerald-700" />
                     ) : (
                       <MessageSquare className="mr-2 h-4 w-4" />
                     )}
-                    {messageCopied ? "Tersalin!" : "Salin Pesan WA"}
+                    {messageCopied ? "Tersalin!" : "Salin pesan WhatsApp"}
                   </Button>
 
                   <DropdownMenu>
@@ -1365,7 +1357,7 @@ export function OrderActionDialog({
                         className="cursor-pointer font-medium text-xs flex items-center gap-2 py-2"
                       >
                         <QrCode className="h-4 w-4 text-orange-600" />
-                        Salin Hanya Link QRIS
+                        Salin tautan QRIS saja
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -1379,7 +1371,7 @@ export function OrderActionDialog({
               disabled={isSubmitting || isWorkflowProcessing}
               className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
             >
-              {isViewMode ? "Close" : "Cancel"}
+              {isViewMode ? "Tutup" : "Batal"}
             </Button>
             {!isViewMode && (
               <Button
@@ -1391,7 +1383,7 @@ export function OrderActionDialog({
                 {isSubmitting && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Save Changes
+                Simpan perubahan
               </Button>
             )}
           </DialogFooter>
@@ -1403,10 +1395,10 @@ export function OrderActionDialog({
         <AlertDialogContent className="border-2 border-black dark:border-white rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-black uppercase">
-              Reject Order
+              Tolak pesanan
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base">
-              Please provide a reason for rejecting this order.
+              Masukkan alasan penolakan pesanan ini.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
@@ -1414,13 +1406,13 @@ export function OrderActionDialog({
               className="text-sm font-bold uppercase"
               htmlFor="reject-reason"
             >
-              Reason (Required)
+              Alasan (wajib)
             </Label>
             <Textarea
               id="reject-reason"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Enter rejection reason..."
+              placeholder="Masukkan alasan penolakan..."
               className="mt-2 min-h-24 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
             />
           </div>
@@ -1430,7 +1422,7 @@ export function OrderActionDialog({
               onClick={() => setRejectReason("")}
               className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
             >
-              Cancel
+              Batal
             </AlertDialogCancel>
             <Button
               onClick={handleReject}
@@ -1440,7 +1432,7 @@ export function OrderActionDialog({
               {isWorkflowProcessing && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Reject Order
+              Tolak pesanan
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1451,11 +1443,11 @@ export function OrderActionDialog({
         <AlertDialogContent className="border-2 border-black dark:border-white rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-black uppercase">
-              Cancel Order
+              Batalkan pesanan
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base">
-              Are you sure you want to cancel this order? You can optionally
-              provide a reason.
+              Yakin ingin membatalkan pesanan ini? Anda dapat menambahkan
+              alasan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
@@ -1463,13 +1455,13 @@ export function OrderActionDialog({
               className="text-sm font-bold uppercase"
               htmlFor="cancel-reason"
             >
-              Reason (Optional)
+              Alasan (opsional)
             </Label>
             <Textarea
               id="cancel-reason"
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
-              placeholder="Enter cancellation reason (optional)..."
+              placeholder="Masukkan alasan pembatalan (opsional)..."
               className="mt-2 min-h-24 text-base border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
             />
           </div>
@@ -1479,7 +1471,7 @@ export function OrderActionDialog({
               onClick={() => setCancelReason("")}
               className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
             >
-              Go Back
+              Kembali
             </AlertDialogCancel>
             <Button
               onClick={handleCancel}
@@ -1489,7 +1481,7 @@ export function OrderActionDialog({
               {isWorkflowProcessing && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Cancel Order
+              Batalkan pesanan
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1501,11 +1493,11 @@ export function OrderActionDialog({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg font-black uppercase">
               <Eye className="w-5 h-5 text-blue-600" />
-              Invoice Pesanan - {order.name}
+              Tagihan pesanan - {order.name}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Preview invoice visual pesanan Dapur Bu Wikra (termasuk rincian
-              menu dan QRIS dinamis)
+              Pratinjau tagihan pesanan Dapur Bu Wikra, termasuk rincian menu
+              dan QRIS dinamis
             </DialogDescription>
           </DialogHeader>
 
@@ -1513,13 +1505,13 @@ export function OrderActionDialog({
             {invoiceImageUrl ? (
               <img
                 src={invoiceImageUrl}
-                alt={`Invoice ${order.name}`}
+                alt={`Tagihan ${order.name}`}
                 className="max-h-[60vh] object-contain rounded shadow-sm"
               />
             ) : (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Loader2 className="w-8 h-8 animate-spin" />
-                <span className="text-xs">Membuat gambar invoice...</span>
+                <span className="text-xs">Membuat gambar tagihan...</span>
               </div>
             )}
           </div>
@@ -1553,7 +1545,7 @@ export function OrderActionDialog({
                   a.href = invoiceImageUrl;
                   a.download = `invoice-${order.name}-${order.id}.png`;
                   a.click();
-                  toast.success("Invoice berhasil diunduh!");
+                  toast.success("Tagihan berhasil diunduh!");
                 }}
                 className="h-10 px-4 text-xs font-bold border-2 border-black rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-white hover:bg-gray-100"
               >
@@ -1579,11 +1571,11 @@ export function OrderActionDialog({
         <AlertDialogContent className="border-2 border-black dark:border-white rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-black uppercase">
-              Delete Order
+              Hapus pesanan
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base">
-              Are you sure you want to delete order for{" "}
-              <strong>{order.name}</strong>? This action cannot be undone.
+              Yakin ingin menghapus pesanan untuk <strong>{order.name}</strong>?
+              Tindakan ini tidak dapat dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3">
@@ -1591,7 +1583,7 @@ export function OrderActionDialog({
               disabled={isDeleting}
               className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black"
             >
-              Cancel
+              Batal
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
@@ -1599,7 +1591,7 @@ export function OrderActionDialog({
               className="h-12 px-6 text-base font-bold border-2 border-black dark:border-white rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] bg-red-500 text-white hover:bg-red-600"
             >
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete
+              Hapus
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

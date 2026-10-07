@@ -6,6 +6,7 @@ import {
   startOfWeek,
   subWeeks,
 } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 
 export interface WeekOption {
   label: string;
@@ -34,8 +35,8 @@ export function getWeekRange(referenceDate: Date): {
   const monday = mondayWeekStart(referenceDate);
   const friday = fridayWeekEnd(referenceDate);
   return {
-    dateFrom: format(monday, "yyyy-MM-dd"),
-    dateTo: format(friday, "yyyy-MM-dd"),
+    dateFrom: format(monday, "yyyy-MM-dd", { locale: localeId }),
+    dateTo: format(friday, "yyyy-MM-dd", { locale: localeId }),
   };
 }
 
@@ -61,11 +62,11 @@ function formatWeekLabel(monday: Date, friday: Date, today: Date): string {
     (monday.getTime() - todayMonday.getTime()) / (7 * 24 * 60 * 60 * 1000),
   );
 
-  const range = `${format(monday, "d MMM")} - ${format(friday, "d MMM yyyy")}`;
+  const range = `${format(monday, "d MMM", { locale: localeId })} - ${format(friday, "d MMM yyyy", { locale: localeId })}`;
 
-  if (diff === 0) return `This Week (${range})`;
-  if (diff === 1) return `Next Week (${range})`;
-  if (diff === -1) return `Last Week (${range})`;
+  if (diff === 0) return `Minggu ini (${range})`;
+  if (diff === 1) return `Minggu depan (${range})`;
+  if (diff === -1) return `Minggu lalu (${range})`;
   return range;
 }
 
@@ -78,8 +79,8 @@ export function generateWeekOptions(): WeekOption[] {
       i === 0 ? today : i > 0 ? addWeeks(today, i) : subWeeks(today, -i);
     const monday = mondayWeekStart(ref);
     const friday = fridayWeekEnd(ref);
-    const dateFrom = format(monday, "yyyy-MM-dd");
-    const dateTo = format(friday, "yyyy-MM-dd");
+    const dateFrom = format(monday, "yyyy-MM-dd", { locale: localeId });
+    const dateTo = format(friday, "yyyy-MM-dd", { locale: localeId });
 
     options.push({
       label: formatWeekLabel(monday, friday, today),

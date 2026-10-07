@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { useSession } from "@/lib/auth-client";
+import { cmsErrorMessage } from "@/lib/cms-messages";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { getDefaultWeek, getWeekValue } from "@/lib/week-utils";
 import { getOrders } from "@/services/orders.service";
@@ -114,9 +115,7 @@ export default function OrdersPage() {
       if (error instanceof Error && error.message.includes("401")) {
         return;
       }
-      toast.error(
-        error instanceof Error ? error.message : "Failed to fetch orders",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal memuat pesanan"));
       setOrders([]);
     } finally {
       if (requestId === ordersRequestId.current) {
@@ -187,11 +186,11 @@ export default function OrdersPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <CardTitle className="text-xl font-bold sm:text-2xl">
-                {isStaff ? "Orders Management" : "Pesanan Saya"}
+                {isStaff ? "Pengelolaan pesanan" : "Pesanan Saya"}
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">
                 {isStaff
-                  ? "Manage and track all customer orders"
+                  ? "Kelola dan pantau semua pesanan pelanggan"
                   : "Lihat status pembayaran dan ubah pesanan yang masih menunggu konfirmasi dapur."}
               </CardDescription>
             </div>
@@ -222,14 +221,14 @@ export default function OrdersPage() {
                     const url = `${window.location.origin}/order/${weekStart}`;
                     navigator.clipboard.writeText(url);
                     toast.success(
-                      `Link order minggu (${weekStart}) berhasil disalin!`,
+                      `Tautan pesanan minggu (${weekStart}) berhasil disalin!`,
                     );
                   }}
                   className="h-9 px-3 text-xs font-bold border-2 border-black rounded-none bg-yellow-300 hover:bg-yellow-400 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                  title="Salin link form order untuk minggu yang sedang dipilih"
+                  title="Salin tautan formulir pesanan untuk minggu yang dipilih"
                 >
                   <Copy className="h-3.5 w-3.5 mr-1.5" />
-                  Salin Link Order
+                  Salin tautan pesanan
                 </Button>
                 <Button
                   type="button"
@@ -249,7 +248,7 @@ export default function OrdersPage() {
                   title="Bagikan via WhatsApp"
                 >
                   <Share2 className="h-3.5 w-3.5 mr-1.5" />
-                  Share WA
+                  Bagikan ke WhatsApp
                 </Button>
                 <Button
                   type="button"
@@ -260,10 +259,10 @@ export default function OrdersPage() {
                     window.open(`/order/${weekStart}`, "_blank");
                   }}
                   className="h-9 px-3 text-xs font-bold border-2 border-black rounded-none bg-blue-100 hover:bg-blue-200 text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                  title="Buka form di tab baru"
+                  title="Buka formulir di tab baru"
                 >
                   <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                  Buka Form
+                  Buka formulir
                 </Button>
               </div>
             </div>
@@ -283,12 +282,11 @@ export default function OrdersPage() {
                 role="status"
               >
                 <Spinner className="h-3.5 w-3.5" />
-                Updating results...
+                Memperbarui hasil...
               </div>
             ) : (
               <p className="text-xs font-medium text-muted-foreground">
-                {pagination.total_items} order
-                {pagination.total_items === 1 ? "" : "s"} found
+                {pagination.total_items} pesanan ditemukan
               </p>
             )}
             {isStaff && (

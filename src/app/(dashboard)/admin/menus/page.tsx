@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 import {
   CalendarIcon,
   Copy,
@@ -148,7 +149,7 @@ export default function MenusPage() {
         ...remainingResponses.flatMap((response) => response.data.data || []),
       ]);
     } catch (_error) {
-      toast.error("Failed to load menus");
+      toast.error("Gagal memuat menu");
       setMenus([]);
     } finally {
       setIsLoading(false);
@@ -220,7 +221,7 @@ export default function MenusPage() {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
       if (files.some((file) => file.type && !file.type.startsWith("image/"))) {
-        toast.error("Please select an image file");
+        toast.error("Pilih berkas gambar");
         return;
       }
 
@@ -245,7 +246,7 @@ export default function MenusPage() {
 
   const handleSubmit = async () => {
     if (formContentType === "weekly_menu" && (!formStartDate || !formEndDate)) {
-      toast.error("Please select the weekly menu dates");
+      toast.error("Pilih tanggal menu mingguan");
       return;
     }
 
@@ -255,17 +256,17 @@ export default function MenusPage() {
       formEndDate &&
       formEndDate < formStartDate
     ) {
-      toast.error("End date must be on or after start date");
+      toast.error("Tanggal akhir harus sama atau setelah tanggal awal");
       return;
     }
 
     if (formContentType === "weekly_menu" && !generatedWeeklyTitle.trim()) {
-      toast.error("Please enter a title");
+      toast.error("Masukkan judul");
       return;
     }
 
     if (formContentType === "portfolio" && !formPortfolioDate) {
-      toast.error("Please select the food date");
+      toast.error("Pilih tanggal sajian");
       return;
     }
 
@@ -276,15 +277,15 @@ export default function MenusPage() {
           content_type: formContentType,
           start_date:
             formContentType === "weekly_menu" && formStartDate
-              ? format(formStartDate, "yyyy-MM-dd")
+              ? format(formStartDate, "yyyy-MM-dd", { locale: localeId })
               : undefined,
           end_date:
             formContentType === "weekly_menu" && formEndDate
-              ? format(formEndDate, "yyyy-MM-dd")
+              ? format(formEndDate, "yyyy-MM-dd", { locale: localeId })
               : undefined,
           portfolio_date:
             formContentType === "portfolio" && formPortfolioDate
-              ? format(formPortfolioDate, "yyyy-MM-dd")
+              ? format(formPortfolioDate, "yyyy-MM-dd", { locale: localeId })
               : undefined,
           description: formDescription,
           is_active: formIsActive,
@@ -298,7 +299,7 @@ export default function MenusPage() {
         for (const image of formImages) {
           await uploadMenuImage(editingMenu.id, image);
         }
-        toast.success("Menu updated successfully");
+        toast.success("Menu berhasil diperbarui");
       } else {
         // Create menu first
         const response = await createMenu({
@@ -306,15 +307,15 @@ export default function MenusPage() {
           description: formDescription,
           start_date:
             formContentType === "weekly_menu" && formStartDate
-              ? format(formStartDate, "yyyy-MM-dd")
+              ? format(formStartDate, "yyyy-MM-dd", { locale: localeId })
               : undefined,
           end_date:
             formContentType === "weekly_menu" && formEndDate
-              ? format(formEndDate, "yyyy-MM-dd")
+              ? format(formEndDate, "yyyy-MM-dd", { locale: localeId })
               : undefined,
           portfolio_date:
             formContentType === "portfolio" && formPortfolioDate
-              ? format(formPortfolioDate, "yyyy-MM-dd")
+              ? format(formPortfolioDate, "yyyy-MM-dd", { locale: localeId })
               : undefined,
           is_active: formIsActive,
           is_featured: formIsFeatured,
@@ -325,13 +326,13 @@ export default function MenusPage() {
             await uploadMenuImage(response.data.id, image);
           }
         }
-        toast.success("Menu created successfully");
+        toast.success("Menu berhasil ditambahkan");
       }
       setIsDialogOpen(false);
       refreshMenus();
     } catch (_error) {
       toast.error(
-        editingMenu ? "Failed to update menu" : "Failed to create menu",
+        editingMenu ? "Gagal memperbarui menu" : "Gagal menambahkan menu",
       );
     } finally {
       setIsSubmitting(false);
@@ -356,11 +357,11 @@ export default function MenusPage() {
       }
       // Then delete the menu
       await deleteMenu(deletingMenu.id);
-      toast.success("Menu deleted successfully");
+      toast.success("Menu berhasil dihapus");
       setIsDeleteDialogOpen(false);
       refreshMenus();
     } catch (_error) {
-      toast.error("Failed to delete menu");
+      toast.error("Gagal menghapus menu");
     } finally {
       setIsSubmitting(false);
     }
@@ -370,10 +371,10 @@ export default function MenusPage() {
     setIsUploadingImage(true);
     try {
       await uploadMenuImage(menuId, file);
-      toast.success("Image uploaded successfully");
+      toast.success("Gambar berhasil diunggah");
       refreshMenus();
     } catch (_error) {
-      toast.error("Failed to upload image");
+      toast.error("Gagal mengunggah gambar");
     } finally {
       setIsUploadingImage(false);
     }
@@ -392,14 +393,14 @@ export default function MenusPage() {
 
     try {
       await updateMenu(menu.id, { is_active: nextIsActive });
-      toast.success(`Menu ${nextIsActive ? "activated" : "deactivated"}`);
+      toast.success(`Menu ${nextIsActive ? "diaktifkan" : "dinonaktifkan"}`);
     } catch (_error) {
       setMenus((current) =>
         current.map((item) =>
           item.id === menu.id ? { ...item, is_active: menu.is_active } : item,
         ),
       );
-      toast.error("Failed to update menu");
+      toast.error("Gagal memperbarui menu");
     } finally {
       setUpdatingMenuIds((current) => {
         const next = new Set(current);
@@ -412,7 +413,7 @@ export default function MenusPage() {
   const handleCopyOrderLink = (startDate: string) => {
     const url = `${window.location.origin}/order/${startDate}`;
     navigator.clipboard.writeText(url);
-    toast.success("Link order berhasil disalin!");
+    toast.success("Tautan pesanan berhasil disalin!");
   };
 
   const handleShareOrderWhatsApp = (menu: Menu) => {
@@ -508,7 +509,7 @@ export default function MenusPage() {
             {activeType === "portfolio" && (
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  Order:
+                  Urutan:
                 </span>
                 <Button
                   type="button"
@@ -517,7 +518,7 @@ export default function MenusPage() {
                   onClick={() => setPortfolioSort("newest")}
                   className="rounded-none border-2"
                 >
-                  Newest
+                  Terbaru
                 </Button>
                 <Button
                   type="button"
@@ -526,7 +527,7 @@ export default function MenusPage() {
                   onClick={() => setPortfolioSort("oldest")}
                   className="rounded-none border-2"
                 >
-                  Oldest
+                  Terlama
                 </Button>
               </div>
             )}
@@ -536,8 +537,9 @@ export default function MenusPage() {
               </div>
             ) : visibleMenus.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No {activeType === "portfolio" ? "Jejak Rasa" : "weekly menus"}{" "}
-                yet. Click &quot;Tambah konten&quot; to add one.
+                Belum ada{" "}
+                {activeType === "portfolio" ? "Jejak Rasa" : "menu mingguan"}.
+                Klik &quot;Tambah konten&quot; untuk menambahkan.
               </div>
             ) : (
               <div className="space-y-4">
@@ -574,7 +576,7 @@ export default function MenusPage() {
                                   {formatPortfolioDate(menu.portfolio_date)}
                                 </p>
                                 <h3 className="mt-1 text-lg font-bold">
-                                  {menu.description || "Jejak Rasa entry"}
+                                  {menu.description || "Entri Jejak Rasa"}
                                 </h3>
                               </>
                             ) : (
@@ -597,19 +599,19 @@ export default function MenusPage() {
                           >
                             {menu.is_featured && (
                               <span className="px-2 py-1 text-xs font-bold uppercase border-2 border-black bg-yellow-300">
-                                ⭐ Homepage
+                                ⭐ Halaman utama
                               </span>
                             )}
                             <span
                               className={`px-2 py-1 text-xs font-bold uppercase border-2 border-black ${menu.is_active ? "bg-green-200" : "bg-gray-200"}`}
                             >
-                              {menu.is_active ? "Active" : "Inactive"}
+                              {menu.is_active ? "Aktif" : "Nonaktif"}
                             </span>
                             <Switch
                               checked={menu.is_active}
                               disabled={updatingMenuIds.has(menu.id)}
                               onCheckedChange={() => handleToggleActive(menu)}
-                              aria-label={`${menu.is_active ? "Deactivate" : "Activate"} ${menu.title}`}
+                              aria-label={`${menu.is_active ? "Nonaktifkan" : "Aktifkan"} ${menu.title}`}
                             />
                           </div>
                         </div>
@@ -641,7 +643,7 @@ export default function MenusPage() {
                                     title="Salin link formulir pemesanan"
                                   >
                                     <Copy className="h-3.5 w-3.5 mr-1" />
-                                    Salin Link
+                                    Salin tautan
                                   </Button>
                                   <Button
                                     variant="outline"
@@ -653,7 +655,7 @@ export default function MenusPage() {
                                     title="Bagikan menu via WhatsApp"
                                   >
                                     <Share2 className="h-3.5 w-3.5 mr-1" />
-                                    Share WA
+                                    Bagikan ke WhatsApp
                                   </Button>
                                   <Button
                                     variant="outline"
@@ -665,10 +667,10 @@ export default function MenusPage() {
                                       )
                                     }
                                     className="border-2 border-black rounded-none bg-blue-100 hover:bg-blue-200 font-bold text-xs"
-                                    title="Buka form pemesanan pelanggan di tab baru"
+                                    title="Buka formulir pemesanan pelanggan di tab baru"
                                   >
                                     <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                                    Buka Form
+                                    Buka formulir
                                   </Button>
                                 </>
                               )}
@@ -682,7 +684,7 @@ export default function MenusPage() {
                               className="border-2 border-black rounded-none"
                             >
                               <Eye className="h-4 w-4 mr-1" />
-                              Preview
+                              Pratinjau
                             </Button>
                             <Button
                               variant="outline"
@@ -691,7 +693,7 @@ export default function MenusPage() {
                               className="border-2 border-black rounded-none"
                             >
                               <Pencil className="h-4 w-4 mr-1" />
-                              Edit
+                              Ubah
                             </Button>
                             <Button
                               variant="destructive"
@@ -756,7 +758,7 @@ export default function MenusPage() {
                   <span
                     className={`px-2 py-1 text-xs font-bold uppercase border-2 border-black ${previewMenu.is_active ? "bg-green-200" : "bg-gray-200"}`}
                   >
-                    {previewMenu.is_active ? "Active" : "Inactive"}
+                    {previewMenu.is_active ? "Aktif" : "Nonaktif"}
                   </span>
                 </div>
 
@@ -780,7 +782,7 @@ export default function MenusPage() {
                           className="flex-1 border-2 border-black rounded-none bg-yellow-300 hover:bg-yellow-400 font-bold text-xs"
                         >
                           <Copy className="h-4 w-4 mr-1.5" />
-                          Salin Link Form
+                          Salin tautan formulir
                         </Button>
                         <Button
                           variant="outline"
@@ -789,7 +791,7 @@ export default function MenusPage() {
                           className="flex-1 border-2 border-black rounded-none bg-green-300 hover:bg-green-400 font-bold text-xs"
                         >
                           <Share2 className="h-4 w-4 mr-1.5" />
-                          Bagikan ke WA
+                          Bagikan ke WhatsApp
                         </Button>
                         <Button
                           variant="outline"
@@ -803,7 +805,7 @@ export default function MenusPage() {
                           className="border-2 border-black rounded-none bg-blue-100 hover:bg-blue-200 font-bold text-xs"
                         >
                           <ExternalLink className="h-4 w-4 mr-1.5" />
-                          Buka Form
+                          Buka formulir
                         </Button>
                       </div>
                     )}
@@ -818,7 +820,7 @@ export default function MenusPage() {
                       size="sm"
                     >
                       <Pencil className="h-4 w-4 mr-2" />
-                      Edit Content
+                      Ubah konten
                     </Button>
                     <Button
                       variant="destructive"
@@ -830,7 +832,7 @@ export default function MenusPage() {
                       size="sm"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
+                      Hapus
                     </Button>
                   </div>
                 </div>
@@ -845,17 +847,17 @@ export default function MenusPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
-              {editingMenu ? "Edit Content" : "Tambah konten"}
+              {editingMenu ? "Ubah konten" : "Tambah konten"}
             </DialogTitle>
             <DialogDescription>
               {editingMenu
-                ? "Update the public content details."
-                : "Share Jejak Rasa or announce a weekly menu."}
+                ? "Ubah rincian konten yang ditampilkan kepada pelanggan."
+                : "Tambahkan Jejak Rasa atau umumkan menu mingguan."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="font-bold">Content Type *</Label>
+              <Label className="font-bold">Jenis konten *</Label>
               <Tabs
                 value={formContentType}
                 onValueChange={(value) => {
@@ -880,29 +882,29 @@ export default function MenusPage() {
                     value="weekly_menu"
                     className="rounded-none py-2 font-bold data-[state=active]:bg-blue-400 data-[state=active]:text-black"
                   >
-                    Weekly Menu
+                    Menu mingguan
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
               <p className="text-xs text-muted-foreground">
                 {formContentType === "portfolio"
-                  ? "A permanent collection of dishes and cooking stories."
-                  : "A dated announcement for an upcoming week."}
+                  ? "Koleksi sajian dan cerita dapur yang dapat dilihat kapan saja."
+                  : "Pengumuman menu untuk minggu yang akan datang."}
               </p>
             </div>
 
             {formContentType === "weekly_menu" && (
               <div className="space-y-2">
-                <Label className="font-bold">Generated Title</Label>
+                <Label className="font-bold">Judul otomatis</Label>
                 <Input
                   value={generatedWeeklyTitle}
                   readOnly
-                  placeholder="Select the start and end dates below"
+                  placeholder="Pilih tanggal awal dan akhir di bawah"
                   className="h-12 border-2 border-black rounded-none bg-blue-50 font-bold text-blue-900"
                 />
                 <p className="text-xs text-muted-foreground">
-                  This title is generated automatically from the selected date
-                  range.
+                  Judul dibuat otomatis berdasarkan rentang tanggal yang
+                  dipilih.
                 </p>
               </div>
             )}
@@ -918,7 +920,7 @@ export default function MenusPage() {
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formPortfolioDate
-                        ? format(formPortfolioDate, "PPP")
+                        ? format(formPortfolioDate, "PPP", { locale: localeId })
                         : "Pilih tanggal sajian"}
                     </Button>
                   </PopoverTrigger>
@@ -937,13 +939,13 @@ export default function MenusPage() {
             )}
 
             <div className="space-y-2">
-              <Label className="font-bold">Description</Label>
+              <Label className="font-bold">Deskripsi</Label>
               <Textarea
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
                 placeholder={
                   formContentType === "weekly_menu"
-                    ? "Add details or promotional wording here, e.g. 🔥 NEW!"
+                    ? "Tambahkan rincian atau teks promosi, misalnya 🔥 MENU BARU!"
                     : "Tell customers about this food or catering work..."
                 }
                 className="border-2 border-black rounded-none"
@@ -953,7 +955,7 @@ export default function MenusPage() {
             {formContentType === "weekly_menu" && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="font-bold">Start Date *</Label>
+                  <Label className="font-bold">Tanggal awal *</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -962,8 +964,8 @@ export default function MenusPage() {
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {formStartDate
-                          ? format(formStartDate, "PPP")
-                          : "Pick a date"}
+                          ? format(formStartDate, "PPP", { locale: localeId })
+                          : "Pilih tanggal"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -976,7 +978,7 @@ export default function MenusPage() {
                   </Popover>
                 </div>
                 <div className="space-y-2">
-                  <Label className="font-bold">End Date *</Label>
+                  <Label className="font-bold">Tanggal akhir *</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -985,8 +987,8 @@ export default function MenusPage() {
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {formEndDate
-                          ? format(formEndDate, "PPP")
-                          : "Pick a date"}
+                          ? format(formEndDate, "PPP", { locale: localeId })
+                          : "Pilih tanggal"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -1003,7 +1005,7 @@ export default function MenusPage() {
 
             {/* Image Upload */}
             <div className="space-y-2">
-              <Label className="font-bold">Photo</Label>
+              <Label className="font-bold">Foto</Label>
               <input
                 ref={imageInputRef}
                 type="file"
@@ -1019,7 +1021,7 @@ export default function MenusPage() {
                       <img
                         key={preview}
                         src={preview}
-                        alt={`Content preview ${index + 1}`}
+                        alt={`Pratinjau konten ${index + 1}`}
                         className="aspect-square w-full border border-black object-cover"
                       />
                     ))}
@@ -1041,7 +1043,7 @@ export default function MenusPage() {
                     className="mt-2 gap-2 border-2 border-black rounded-none bg-white text-black"
                   >
                     <ImagePlus className="h-4 w-4" />
-                    Replace photos
+                    Ganti foto
                   </Button>
                 </div>
               ) : (
@@ -1052,13 +1054,13 @@ export default function MenusPage() {
                 >
                   <ImagePlus className="h-8 w-8 mb-2 text-gray-400" />
                   <span className="text-sm text-gray-500">
-                    Tap to upload one or more photos
+                    Klik untuk mengunggah satu atau beberapa foto
                   </span>
                 </button>
               )}
               {removeExistingImages && formImages.length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Current photo will be removed when you save.
+                  Foto saat ini akan dihapus saat perubahan disimpan.
                 </p>
               )}
             </div>
@@ -1068,14 +1070,14 @@ export default function MenusPage() {
                 checked={formIsActive}
                 onCheckedChange={setFormIsActive}
               />
-              <Label>Published</Label>
+              <Label>Ditampilkan</Label>
             </div>
             <div className="flex items-center gap-2">
               <Switch
                 checked={formIsFeatured}
                 onCheckedChange={setFormIsFeatured}
               />
-              <Label>Show on homepage</Label>
+              <Label>Tampilkan di halaman utama</Label>
             </div>
           </div>
           <DialogFooter>
@@ -1084,7 +1086,7 @@ export default function MenusPage() {
               onClick={() => setIsDialogOpen(false)}
               className="border-2 border-black rounded-none"
             >
-              Cancel
+              Batal
             </Button>
             <Button
               onClick={handleSubmit}
@@ -1094,7 +1096,7 @@ export default function MenusPage() {
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {editingMenu ? "Update" : "Create"}
+              {editingMenu ? "Simpan perubahan" : "Tambahkan"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1107,15 +1109,15 @@ export default function MenusPage() {
       >
         <AlertDialogContent className="border-2 border-black rounded-none">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Menu</AlertDialogTitle>
+            <AlertDialogTitle>Hapus menu</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deletingMenu?.title}"? This will
-              also delete all associated images.
+              Yakin ingin menghapus "{deletingMenu?.title}"? Semua gambar
+              terkait juga akan dihapus.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="border-2 border-black rounded-none">
-              Cancel
+              Batal
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
@@ -1125,7 +1127,7 @@ export default function MenusPage() {
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Delete
+              Hapus
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

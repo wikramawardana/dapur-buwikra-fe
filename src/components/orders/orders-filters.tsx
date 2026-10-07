@@ -24,6 +24,7 @@ import {
   PAYMENT_STATUSES,
   SORT_OPTIONS,
 } from "@/lib/constants";
+import { formatDayDisplay } from "@/lib/week-utils";
 import { getActivePickupPoints } from "@/services/pickup-point.service";
 import type {
   OrderFilters,
@@ -256,13 +257,13 @@ export function OrdersFilters({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
         <div className="flex-1 space-y-1.5">
           <Label htmlFor="order-search" className="font-bold">
-            Search
+            Cari
           </Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="order-search"
-              placeholder="Search name, email, or order..."
+              placeholder="Cari nama, email, atau pesanan..."
               value={search}
               onChange={(event) => handleSearchChange(event.target.value)}
               className="w-full pl-9 neo-brutal neo-brutal-white"
@@ -278,16 +279,16 @@ export function OrdersFilters({
             className="gap-2 neo-brutal neo-brutal-white"
           >
             <X className="h-4 w-4" />
-            Clear All
+            Hapus semua filter
           </Button>
         )}
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <div className="space-y-1.5">
-          <Label className="text-xs font-bold uppercase">Order Status</Label>
+          <Label className="text-xs font-bold uppercase">Status pesanan</Label>
           <MultiSelectFilter
-            allLabel="All statuses"
+            allLabel="Semua status"
             idPrefix="status-filter"
             options={[...ORDER_STATUSES]}
             selectedValues={selectedOrderStatuses}
@@ -296,9 +297,9 @@ export function OrdersFilters({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-bold uppercase">Payment</Label>
+          <Label className="text-xs font-bold uppercase">Pembayaran</Label>
           <MultiSelectFilter
-            allLabel="All payments"
+            allLabel="Semua pembayaran"
             idPrefix="payment-filter"
             options={[...PAYMENT_STATUSES]}
             selectedValues={selectedPaymentStatuses}
@@ -307,20 +308,25 @@ export function OrdersFilters({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-bold uppercase">Day</Label>
+          <Label className="text-xs font-bold uppercase">Hari</Label>
           <MultiSelectFilter
-            allLabel="All days"
+            allLabel="Semua hari"
             idPrefix="day-filter"
-            options={DAYS_OF_WEEK.map((day) => ({ value: day, label: day }))}
+            options={DAYS_OF_WEEK.map((day) => ({
+              value: day,
+              label: formatDayDisplay(day),
+            }))}
             selectedValues={selectedDays}
             onChange={handleDayChange}
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-bold uppercase">Pickup Point</Label>
+          <Label className="text-xs font-bold uppercase">
+            Lokasi pengantaran
+          </Label>
           <MultiSelectFilter
-            allLabel="All pickup points"
+            allLabel="Semua lokasi"
             idPrefix="pickup-filter"
             options={pickupPointOptions}
             selectedValues={selectedPickupPoints}
@@ -329,7 +335,9 @@ export function OrdersFilters({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-bold uppercase">Sort By</Label>
+          <Label className="text-xs font-bold uppercase">
+            Urutkan berdasarkan
+          </Label>
           <Select
             value={filters.sort_by || "name"}
             onValueChange={(value) => updateFilters({ sort_by: value })}
@@ -348,7 +356,7 @@ export function OrdersFilters({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-bold uppercase">Direction</Label>
+          <Label className="text-xs font-bold uppercase">Arah urutan</Label>
           <Select
             value={filters.sort_order || "asc"}
             onValueChange={(value: "asc" | "desc") =>
@@ -359,8 +367,8 @@ export function OrdersFilters({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="asc">Ascending</SelectItem>
-              <SelectItem value="desc">Descending</SelectItem>
+              <SelectItem value="asc">Menaik</SelectItem>
+              <SelectItem value="desc">Menurun</SelectItem>
             </SelectContent>
           </Select>
         </div>

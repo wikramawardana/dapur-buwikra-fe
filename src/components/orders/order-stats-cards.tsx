@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 import { Eye, EyeOff, Filter, ShoppingCart, Utensils } from "lucide-react";
 import { useState } from "react";
 import { WeeklyProfitCard } from "@/components/orders/weekly-profit-card";
@@ -20,21 +21,23 @@ interface OrderStatsCardsProps {
 }
 
 const DAYS = [
-  { name: "Monday", short: "Mon", countKey: "count_monday" as const },
-  { name: "Tuesday", short: "Tue", countKey: "count_tuesday" as const },
-  { name: "Wednesday", short: "Wed", countKey: "count_wednesday" as const },
-  { name: "Thursday", short: "Thu", countKey: "count_thursday" as const },
-  { name: "Friday", short: "Fri", countKey: "count_friday" as const },
+  { name: "Monday", short: "Sen", countKey: "count_monday" as const },
+  { name: "Tuesday", short: "Sel", countKey: "count_tuesday" as const },
+  { name: "Wednesday", short: "Rab", countKey: "count_wednesday" as const },
+  { name: "Thursday", short: "Kam", countKey: "count_thursday" as const },
+  { name: "Friday", short: "Jum", countKey: "count_friday" as const },
 ];
 
 function formatDateRange(dateFrom?: string, dateTo?: string): string | null {
   if (!dateFrom && !dateTo) return null;
   try {
     if (dateFrom && dateTo) {
-      return `${format(new Date(dateFrom), "dd MMM")} - ${format(new Date(dateTo), "dd MMM yyyy")}`;
+      return `${format(new Date(dateFrom), "dd MMM", { locale: localeId })} - ${format(new Date(dateTo), "dd MMM yyyy", { locale: localeId })}`;
     }
-    if (dateFrom) return `From ${format(new Date(dateFrom), "dd MMM yyyy")}`;
-    if (dateTo) return `Until ${format(new Date(dateTo), "dd MMM yyyy")}`;
+    if (dateFrom)
+      return `Mulai ${format(new Date(dateFrom), "dd MMM yyyy", { locale: localeId })}`;
+    if (dateTo)
+      return `Hingga ${format(new Date(dateTo), "dd MMM yyyy", { locale: localeId })}`;
   } catch {
     return null;
   }
@@ -76,14 +79,14 @@ export function OrderStatsCards({
       {/* Filter Context */}
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Filter className="h-3 w-3" />
-        <span className="font-medium">Stats for:</span>
+        <span className="font-medium">Ringkasan untuk:</span>
         {dateRange ? (
           <Badge variant="secondary" className="text-xs font-normal">
             📅 {dateRange}
           </Badge>
         ) : (
           <Badge variant="outline" className="text-xs font-normal">
-            All dates
+            Semua tanggal
           </Badge>
         )}
       </div>
@@ -94,7 +97,7 @@ export function OrderStatsCards({
         <Card className="neo-brutal bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-blue-600 sm:text-sm">
-              Total Orders
+              Total pesanan
             </CardTitle>
             <ShoppingCart className="h-4 w-4 text-blue-500 sm:h-5 sm:w-5" />
           </CardHeader>
@@ -104,7 +107,7 @@ export function OrderStatsCards({
             </div>
             <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-blue-500 sm:text-xs font-medium">
               <Utensils className="h-3 w-3" />
-              <span>Total Nasi:</span>
+              <span>Total nasi:</span>
               <span className="font-bold text-blue-700">
                 {stats?.total_nasi ?? 0}
               </span>
@@ -116,13 +119,15 @@ export function OrderStatsCards({
         <Card className="neo-brutal bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-4 pt-4">
             <CardTitle className="text-xs font-medium text-green-600 sm:text-sm">
-              Total Revenue
+              Total pendapatan
             </CardTitle>
             <button
               type="button"
               onClick={() => setShowRevenue(!showRevenue)}
               className="p-0.5 rounded hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
-              aria-label={showRevenue ? "Hide revenue" : "Show revenue"}
+              aria-label={
+                showRevenue ? "Sembunyikan pendapatan" : "Tampilkan pendapatan"
+              }
             >
               {showRevenue ? (
                 <Eye className="h-4 w-4 text-green-500 sm:h-5 sm:w-5" />
@@ -139,7 +144,7 @@ export function OrderStatsCards({
             </div>
             <div className="flex flex-wrap items-center gap-x-2 mt-1.5 text-[11px] text-green-500 sm:text-xs">
               <span>
-                Paid:{" "}
+                Lunas:{" "}
                 <span className="font-semibold text-green-700">
                   {showRevenue
                     ? formatCurrency(stats?.paid_sum ?? 0)
@@ -148,7 +153,7 @@ export function OrderStatsCards({
               </span>
               <span className="text-green-300">•</span>
               <span>
-                Unpaid:{" "}
+                Belum lunas:{" "}
                 <span className="font-semibold text-red-600">
                   {showRevenue
                     ? formatCurrency(stats?.unpaid_sum ?? 0)
@@ -197,7 +202,7 @@ export function OrderStatsCards({
                 >
                   {userCount}
                 </p>
-                <p className="text-[10px] text-muted-foreground">orders</p>
+                <p className="text-[10px] text-muted-foreground">pesanan</p>
                 <div
                   className={`flex items-center gap-1 mt-0.5 text-[11px] font-semibold ${isActive ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`}
                 >

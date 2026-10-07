@@ -55,6 +55,7 @@ export function WeekSelector({ value, onChange }: WeekSelectorProps) {
         variant="outline"
         size="icon"
         className="h-8 w-8 shrink-0 border-2 border-black dark:border-white rounded-none hover:bg-yellow-100 dark:hover:bg-yellow-900"
+        aria-label="Minggu sebelumnya"
         onClick={handlePrev}
         disabled={currentIndex <= 0}
       >
@@ -62,7 +63,7 @@ export function WeekSelector({ value, onChange }: WeekSelectorProps) {
       </Button>
       <Select value={value} onValueChange={handleSelect}>
         <SelectTrigger className="w-[220px] sm:w-[280px] border-2 border-black dark:border-white rounded-none font-bold text-xs sm:text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]">
-          <SelectValue placeholder="Select week" />
+          <SelectValue placeholder="Pilih minggu" />
         </SelectTrigger>
         <SelectContent className="border-2 border-black dark:border-white rounded-none">
           {options.map((option) => (
@@ -80,6 +81,7 @@ export function WeekSelector({ value, onChange }: WeekSelectorProps) {
         variant="outline"
         size="icon"
         className="h-8 w-8 shrink-0 border-2 border-black dark:border-white rounded-none hover:bg-yellow-100 dark:hover:bg-yellow-900"
+        aria-label="Minggu selanjutnya"
         onClick={handleNext}
         disabled={currentIndex >= options.length - 1}
       >
@@ -91,7 +93,7 @@ export function WeekSelector({ value, onChange }: WeekSelectorProps) {
         className="shrink-0 border-2 border-black dark:border-white rounded-none font-bold text-xs hover:bg-yellow-100 dark:hover:bg-yellow-900 hidden sm:flex"
         onClick={handleToday}
       >
-        Today
+        Minggu ini
       </Button>
     </div>
   );

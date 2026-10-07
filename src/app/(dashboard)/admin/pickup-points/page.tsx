@@ -85,7 +85,7 @@ export default function PickupPointsPage() {
       const response = await getPickupPoints();
       setPoints(response.data.data);
     } catch {
-      toast.error("Failed to load pickup points");
+      toast.error("Gagal memuat lokasi pengantaran");
       setPoints([]);
     } finally {
       setIsLoading(false);
@@ -113,7 +113,7 @@ export default function PickupPointsPage() {
   const handleSubmit = async () => {
     const name = formName.trim();
     if (!name) {
-      toast.error("Pickup point name is required");
+      toast.error("Nama lokasi pengantaran wajib diisi");
       return;
     }
 
@@ -121,18 +121,18 @@ export default function PickupPointsPage() {
     try {
       if (editingPoint) {
         await updatePickupPoint(editingPoint.id, { name });
-        toast.success("Pickup point updated");
+        toast.success("Lokasi pengantaran berhasil diperbarui");
       } else {
         await createPickupPoint({ name });
-        toast.success("Pickup point created");
+        toast.success("Lokasi pengantaran berhasil ditambahkan");
       }
       setIsDialogOpen(false);
       await fetchPoints();
     } catch {
       toast.error(
         editingPoint
-          ? "Failed to update pickup point"
-          : "Failed to create pickup point",
+          ? "Gagal memperbarui lokasi pengantaran"
+          : "Gagal menambahkan lokasi pengantaran",
       );
     } finally {
       setIsSubmitting(false);
@@ -151,7 +151,7 @@ export default function PickupPointsPage() {
     try {
       await updatePickupPoint(point.id, { is_active: nextIsActive });
       toast.success(
-        `Pickup point ${point.is_active ? "deactivated" : "activated"}`,
+        `Lokasi pengantaran ${point.is_active ? "dinonaktifkan" : "diaktifkan"}`,
       );
     } catch {
       setPoints((current) =>
@@ -159,7 +159,7 @@ export default function PickupPointsPage() {
           item.id === point.id ? { ...item, is_active: point.is_active } : item,
         ),
       );
-      toast.error("Failed to update pickup point");
+      toast.error("Gagal memperbarui lokasi pengantaran");
     } finally {
       setUpdatingPointIds((current) => {
         const next = new Set(current);
@@ -175,12 +175,12 @@ export default function PickupPointsPage() {
     setIsSubmitting(true);
     try {
       await deletePickupPoint(deletingPoint.id);
-      toast.success("Pickup point deleted");
+      toast.success("Lokasi pengantaran berhasil dihapus");
       setIsDeleteDialogOpen(false);
       setDeletingPoint(null);
       await fetchPoints();
     } catch {
-      toast.error("Failed to delete pickup point");
+      toast.error("Gagal menghapus lokasi pengantaran");
     } finally {
       setIsSubmitting(false);
     }
@@ -227,17 +227,18 @@ export default function PickupPointsPage() {
               </div>
             ) : points.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground">
-                No pickup points yet. Click "Tambah lokasi" to create one.
+                Belum ada lokasi pengantaran. Klik "Tambah lokasi" untuk
+                menambahkan.
               </div>
             ) : (
               <div className="neo-brutal neo-brutal-white">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="font-bold">Name</TableHead>
-                      <TableHead className="font-bold">Active</TableHead>
+                      <TableHead className="font-bold">Nama</TableHead>
+                      <TableHead className="font-bold">Aktif</TableHead>
                       <TableHead className="text-center font-bold">
-                        Actions
+                        Tindakan
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -291,17 +292,19 @@ export default function PickupPointsPage() {
         <DialogContent className="rounded-none border-2 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:border-white dark:bg-black">
           <DialogHeader>
             <DialogTitle>
-              {editingPoint ? "Edit Pickup Point" : "Add Pickup Point"}
+              {editingPoint
+                ? "Ubah lokasi pengantaran"
+                : "Tambah lokasi pengantaran"}
             </DialogTitle>
             <DialogDescription>
               {editingPoint
-                ? "Update the pickup point name."
-                : "Create a pickup point for order selection."}
+                ? "Ubah nama lokasi pengantaran."
+                : "Tambahkan lokasi yang dapat dipilih saat memesan."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-4">
             <Label htmlFor="pickup-point-name" className="font-bold">
-              Name
+              Nama
             </Label>
             <Input
               id="pickup-point-name"
@@ -310,7 +313,7 @@ export default function PickupPointsPage() {
               onKeyDown={(event) => {
                 if (event.key === "Enter") handleSubmit();
               }}
-              placeholder="e.g., Trinity Tower - Lobby"
+              placeholder="Contoh: Trinity Tower - Lobi"
               className="h-12 rounded-none border-2 border-black dark:border-white"
             />
           </div>
@@ -320,7 +323,7 @@ export default function PickupPointsPage() {
               onClick={() => setIsDialogOpen(false)}
               className="rounded-none border-2 border-black"
             >
-              Cancel
+              Batal
             </Button>
             <Button
               onClick={handleSubmit}
@@ -330,7 +333,7 @@ export default function PickupPointsPage() {
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {editingPoint ? "Update" : "Create"}
+              {editingPoint ? "Simpan perubahan" : "Tambahkan"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -342,15 +345,15 @@ export default function PickupPointsPage() {
       >
         <AlertDialogContent className="rounded-none border-2 border-black">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Pickup Point</AlertDialogTitle>
+            <AlertDialogTitle>Hapus lokasi pengantaran</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deletingPoint?.name}"? Existing
-              orders will keep their saved pickup point.
+              Yakin ingin menghapus "{deletingPoint?.name}"? Lokasi pada pesanan
+              yang sudah dibuat tetap tersimpan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-none border-2 border-black">
-              Cancel
+              Batal
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
@@ -360,7 +363,7 @@ export default function PickupPointsPage() {
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Delete
+              Hapus
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

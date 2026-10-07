@@ -108,7 +108,7 @@ export default function PriceListPage() {
       const response = await getPriceList();
       setItems(response.data.data);
     } catch (_error) {
-      toast.error("Failed to load price list");
+      toast.error("Gagal memuat daftar harga");
       setItems([]);
     } finally {
       setIsLoading(false);
@@ -168,20 +168,20 @@ export default function PriceListPage() {
           price: parseFloat(formPrice),
           category: formCategory,
         });
-        toast.success("Item updated successfully");
+        toast.success("Paket berhasil diperbarui");
       } else {
         await createPriceListItem({
           name: catalogName,
           price: parseFloat(formPrice),
           category: formCategory,
         });
-        toast.success("Item created successfully");
+        toast.success("Paket berhasil ditambahkan");
       }
       setIsDialogOpen(false);
       fetchItems();
     } catch (_error) {
       toast.error(
-        editingItem ? "Failed to update item" : "Failed to create item",
+        editingItem ? "Gagal memperbarui paket" : "Gagal menambahkan paket",
       );
     } finally {
       setIsSubmitting(false);
@@ -194,11 +194,11 @@ export default function PriceListPage() {
     setIsSubmitting(true);
     try {
       await deletePriceListItem(deletingItem.id);
-      toast.success("Item deleted successfully");
+      toast.success("Paket berhasil dihapus");
       setIsDeleteDialogOpen(false);
       fetchItems();
     } catch (_error) {
-      toast.error("Failed to delete item");
+      toast.error("Gagal menghapus paket");
     } finally {
       setIsSubmitting(false);
     }
@@ -207,10 +207,10 @@ export default function PriceListPage() {
   const handleToggleActive = async (item: PriceListItem) => {
     try {
       await updatePriceListItem(item.id, { is_active: !item.is_active });
-      toast.success(`Item ${item.is_active ? "deactivated" : "activated"}`);
+      toast.success(`Paket ${item.is_active ? "dinonaktifkan" : "diaktifkan"}`);
       fetchItems();
     } catch (_error) {
-      toast.error("Failed to update item");
+      toast.error("Gagal memperbarui paket");
     }
   };
 
@@ -328,7 +328,7 @@ export default function PriceListPage() {
                             <Button
                               variant="outline"
                               size="icon"
-                              aria-label={`Edit ${item.name}`}
+                              aria-label={`Ubah ${item.name}`}
                               onClick={() => openEditDialog(item)}
                               className="h-8 w-8 border-2 border-black rounded-none"
                             >
@@ -360,7 +360,7 @@ export default function PriceListPage() {
         <DialogContent className="border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
-              {editingItem ? "Edit paket" : "Tambah paket"}
+              {editingItem ? "Ubah paket" : "Tambah paket"}
             </DialogTitle>
             <DialogDescription>
               {editingItem
@@ -395,7 +395,7 @@ export default function PriceListPage() {
                 id="package-name"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                placeholder="e.g., Nasi Goreng"
+                placeholder="Contoh: Porsi Mantap"
                 className="h-12 border-2 border-black rounded-none"
               />
             </div>
@@ -409,7 +409,7 @@ export default function PriceListPage() {
                 type="number"
                 value={formPrice}
                 onChange={(e) => setFormPrice(e.target.value)}
-                placeholder="e.g., 17500"
+                placeholder="Contoh: 17500"
                 className="h-12 border-2 border-black rounded-none"
               />
             </div>
@@ -465,8 +465,8 @@ export default function PriceListPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Hapus paket</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deletingItem?.name}"? This
-              action cannot be undone.
+              Yakin ingin menghapus "{deletingItem?.name}"? Tindakan ini tidak
+              dapat dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

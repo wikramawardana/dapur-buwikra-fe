@@ -48,14 +48,14 @@ export function WeeklyProfitCard({
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">
-              Clean Money / Net Profit
+              Laba bersih
             </p>
             <p className="text-2xl font-black text-amber-900 dark:text-amber-100 sm:text-3xl">
               {isLoading
-                ? "Loading..."
+                ? "Memuat..."
                 : hasExpenses
                   ? displayAmount(cleanMoney)
-                  : "Add shopping costs"}
+                  : "Tambah biaya belanja"}
             </p>
           </div>
         </div>
@@ -67,17 +67,17 @@ export function WeeklyProfitCard({
           className="border-2 border-black bg-white font-bold text-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-amber-100 dark:border-white dark:bg-black dark:text-white dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]"
         >
           <ArrowRight className="h-4 w-4" />
-          Manage shopping costs
+          Kelola biaya belanja
         </Button>
       </div>
       <div className="grid grid-cols-1 gap-2 border-t-2 border-amber-200 px-4 py-3 text-xs font-medium text-amber-800 dark:border-amber-800 dark:text-amber-200 sm:grid-cols-3">
-        <span>Total revenue: {displayAmount(revenue)}</span>
+        <span>Total pendapatan: {displayAmount(revenue)}</span>
         <span>
-          Weekly shopping:{" "}
-          {hasExpenses ? displayAmount(shoppingCost) : "Not set"}
+          Biaya belanja mingguan:{" "}
+          {hasExpenses ? displayAmount(shoppingCost) : "Belum dicatat"}
         </span>
         <span>
-          Week:{" "}
+          Minggu:{" "}
           {weekStart && weekEnd
             ? `${formatDate(weekStart)} - ${formatDate(weekEnd)}`
             : "-"}

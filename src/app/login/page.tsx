@@ -91,7 +91,7 @@ function LoginForm() {
               Dapur Bu Wikra
             </CardTitle>
             <CardDescription className="text-sm font-medium text-black/50">
-              Catering Management System
+              Sistem pengelolaan katering
             </CardDescription>
           </div>
         </CardHeader>
@@ -107,20 +107,20 @@ function LoginForm() {
             {isLoading ? (
               <div className="flex items-center gap-3">
                 <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin" />
-                <span>Redirecting...</span>
+                <span>Mengalihkan...</span>
               </div>
             ) : (
               <div className="flex items-center gap-3">
                 <GoogleIcon className="w-5 h-5" />
-                <span>Continue with Google</span>
+                <span>Lanjutkan dengan Google</span>
               </div>
             )}
           </Button>
 
           <p className="text-center text-xs text-black/40 leading-relaxed">
-            Secured by Auth.
+            Akses dilindungi oleh Auth.
             <br />
-            Only authorized users can access this system.
+            Hanya pengguna dengan izin yang dapat mengakses sistem ini.
           </p>
         </CardContent>
       </Card>
@@ -141,7 +141,7 @@ function LoginLoading() {
               Dapur Bu Wikra
             </CardTitle>
             <CardDescription className="text-sm font-medium text-black/50">
-              Loading...
+              Memuat...
             </CardDescription>
           </div>
         </CardHeader>

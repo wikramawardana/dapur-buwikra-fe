@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cmsErrorMessage } from "@/lib/cms-messages";
 import type {
   FlyerTemplateStyle,
   GenerateMenuResponse,
@@ -87,7 +88,7 @@ export function MenuGeneratorDialog({
 
       const result: GenerateMenuResponse = await res.json();
       if (!res.ok || !result.success) {
-        throw new Error(result.error || "Gagal membuat flyer menu");
+        throw new Error(result.error || "Gagal membuat poster menu");
       }
 
       setGeneratedData(result.parsed_data);
@@ -96,12 +97,12 @@ export function MenuGeneratorDialog({
       }
       toast.success(
         useExistingData
-          ? "Flyer diperbarui!"
-          : "Menu berhasil dianalisis & flyer dibuat!",
+          ? "Poster diperbarui!"
+          : "Menu berhasil dianalisis dan poster dibuat!",
       );
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "Gagal memproses menu");
+      toast.error(cmsErrorMessage(err, "Gagal memproses menu"));
     } finally {
       setIsGenerating(false);
     }
@@ -109,7 +110,7 @@ export function MenuGeneratorDialog({
 
   const handleSaveAndPublish = async () => {
     if (!generatedData || !flyerImage) {
-      toast.error("Belum ada flyer yang siap dipublikasikan");
+      toast.error("Belum ada poster yang siap ditampilkan");
       return;
     }
 
@@ -131,7 +132,7 @@ export function MenuGeneratorDialog({
         throw new Error(result.error || "Gagal menyimpan ke server");
       }
 
-      toast.success("Menu dan flyer berhasil disimpan & dipublikasikan!");
+      toast.success("Menu dan poster berhasil disimpan dan ditampilkan!");
       setIsOpen(false);
       // Reset state
       setInputText("");
@@ -144,7 +145,7 @@ export function MenuGeneratorDialog({
       }
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "Gagal mempublikasikan menu");
+      toast.error(cmsErrorMessage(err, "Gagal menampilkan menu"));
     } finally {
       setIsSaving(false);
     }
@@ -169,7 +170,7 @@ export function MenuGeneratorDialog({
       <DialogTrigger asChild>
         <Button className="bg-amber-600 hover:bg-amber-700 text-white font-medium flex items-center gap-2 shadow-sm">
           <Sparkles className="w-4 h-4 text-amber-200" />
-          <span>Auto Generate Flyer</span>
+          <span>Buat poster dengan AI</span>
         </Button>
       </DialogTrigger>
 
@@ -177,12 +178,11 @@ export function MenuGeneratorDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-bold text-gray-900">
             <Wand2 className="w-5 h-5 text-amber-600" />
-            Generator Flyer Menu Otomatis
+            Pembuat poster menu otomatis
           </DialogTitle>
           <DialogDescription>
-            Cukup ketik atau paste teks menu masakan Anda. AI akan menganalisis
-            komponen menu dan menghasilkan flyer siap posting dalam format Canva
-            Dapur Bu Wikra.
+            Ketik atau tempel teks menu Anda. AI akan menganalisis sajian dan
+            membuat poster yang siap dibagikan dengan desain Dapur Bu Wikra.
           </DialogDescription>
         </DialogHeader>
 
@@ -216,7 +216,7 @@ export function MenuGeneratorDialog({
                 {/* Template Style Selector */}
                 <div>
                   <Label className="font-semibold text-gray-800 block mb-1.5">
-                    Pilihan Desain Template
+                    Pilihan desain
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
@@ -235,7 +235,7 @@ export function MenuGeneratorDialog({
                         )}
                       </div>
                       <span className="text-xs text-gray-500 mt-0.5">
-                        Flyer Canva Portrait (1024x1280) dengan pointer panah
+                        Poster tegak (1024 × 1280) dengan penunjuk panah
                       </span>
                     </button>
 
@@ -255,7 +255,8 @@ export function MenuGeneratorDialog({
                         )}
                       </div>
                       <span className="text-xs text-gray-500 mt-0.5">
-                        Poster Kotak (1000x1000) dengan badge harga bintang
+                        Poster persegi (1000 × 1000) dengan label harga
+                        berbentuk bintang
                       </span>
                     </button>
                   </div>
@@ -302,7 +303,7 @@ export function MenuGeneratorDialog({
                     <div className="mt-2 w-24 h-24 rounded-lg overflow-hidden border border-gray-200">
                       <img
                         src={photoPreview}
-                        alt="Preview"
+                        alt="Pratinjau"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -322,12 +323,12 @@ export function MenuGeneratorDialog({
                   {isGenerating ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Menganalisis & Merender Flyer...</span>
+                      <span>Menganalisis menu dan membuat poster...</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      <span>Generate Flyer Sekarang</span>
+                      <span>Buat poster sekarang</span>
                     </>
                   )}
                 </Button>
@@ -354,7 +355,7 @@ export function MenuGeneratorDialog({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs font-medium">Judul Flyer</Label>
+                    <Label className="text-xs font-medium">Judul poster</Label>
                     <Input
                       value={generatedData.title}
                       onChange={(e) =>
@@ -441,12 +442,12 @@ export function MenuGeneratorDialog({
                           price_label: e.target.value,
                         })
                       }
-                      placeholder="e.g. 25K"
+                      placeholder="Contoh: 25K"
                       className="h-8 text-sm mt-0.5"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs font-medium">Tagline</Label>
+                    <Label className="text-xs font-medium">Slogan</Label>
                     <Input
                       value={generatedData.tagline}
                       onChange={(e) =>
@@ -462,7 +463,7 @@ export function MenuGeneratorDialog({
 
                 <div>
                   <Label className="text-xs font-medium">
-                    Deskripsi / Copywriting
+                    Deskripsi / teks promosi
                   </Label>
                   <Textarea
                     rows={2}
@@ -538,7 +539,7 @@ export function MenuGeneratorDialog({
               <div className="flex flex-col items-center gap-3 text-amber-700">
                 <Loader2 className="w-8 h-8 animate-spin" />
                 <span className="text-sm font-medium">
-                  Merender flyer berkualitas tinggi...
+                  Membuat poster berkualitas tinggi...
                 </span>
               </div>
             ) : flyerImage ? (
@@ -546,7 +547,7 @@ export function MenuGeneratorDialog({
                 <div className="relative group w-full max-w-[320px] rounded-xl overflow-hidden shadow-lg border border-gray-300">
                   <img
                     src={flyerImage}
-                    alt="Menu Flyer Preview"
+                    alt="Pratinjau poster menu"
                     className="w-full h-auto object-contain"
                   />
                 </div>
@@ -571,7 +572,7 @@ export function MenuGeneratorDialog({
               <div className="flex flex-col items-center text-center text-gray-400 gap-2 p-6">
                 <ImageIcon className="w-12 h-12 stroke-[1.5]" />
                 <span className="text-sm font-medium">
-                  Pratinjau flyer akan muncul di sini
+                  Pratinjau poster akan muncul di sini
                 </span>
                 <span className="text-xs text-gray-400 max-w-[220px]">
                   Masukkan teks menu di sebelah kiri untuk melihat hasil desain
@@ -605,7 +606,7 @@ export function MenuGeneratorDialog({
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>Simpan & Publikasikan Menu</span>
+                  <span>Simpan dan tampilkan menu</span>
                 </>
               )}
             </Button>

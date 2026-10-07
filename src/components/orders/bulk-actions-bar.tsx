@@ -22,6 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { cmsErrorMessage } from "@/lib/cms-messages";
 import type { BulkOperationResult } from "@/services/orders.service";
 import {
   bulkAcceptOrders,
@@ -59,9 +60,9 @@ interface ActionConfig {
 const ACTIONS: ActionConfig[] = [
   {
     key: "accept",
-    label: "Accept",
+    label: "Terima",
     icon: <ThumbsUp className="h-3.5 w-3.5" />,
-    description: "Accept the selected pending orders?",
+    description: "Terima pesanan terpilih yang masih menunggu?",
     variant: "default",
     className:
       "bg-blue-600 hover:bg-blue-700 text-white border-2 border-blue-800",
@@ -69,10 +70,10 @@ const ACTIONS: ActionConfig[] = [
   },
   {
     key: "start",
-    label: "Start",
+    label: "Mulai proses",
     icon: <Play className="h-3.5 w-3.5" />,
     description:
-      "Start processing the selected orders? They will move to In Progress status.",
+      "Mulai memproses pesanan terpilih? Statusnya akan berubah menjadi Diproses.",
     variant: "default",
     className:
       "bg-purple-600 hover:bg-purple-700 text-white border-2 border-purple-800",
@@ -80,10 +81,10 @@ const ACTIONS: ActionConfig[] = [
   },
   {
     key: "complete",
-    label: "Complete",
+    label: "Selesaikan",
     icon: <CheckCheck className="h-3.5 w-3.5" />,
     description:
-      "Mark the selected orders as completed? This indicates all items have been delivered.",
+      "Tandai pesanan terpilih sebagai selesai? Pastikan semua sajian sudah diantar.",
     variant: "default",
     className:
       "bg-green-600 hover:bg-green-700 text-white border-2 border-green-800",
@@ -91,9 +92,9 @@ const ACTIONS: ActionConfig[] = [
   },
   {
     key: "mark_paid",
-    label: "Mark Paid",
+    label: "Tandai lunas",
     icon: <CreditCard className="h-3.5 w-3.5" />,
-    description: "Mark the selected orders as fully paid?",
+    description: "Tandai pesanan terpilih sebagai lunas?",
     variant: "default",
     className:
       "bg-emerald-600 hover:bg-emerald-700 text-white border-2 border-emerald-800",
@@ -104,18 +105,18 @@ const ACTIONS: ActionConfig[] = [
 function showResultToast(actionLabel: string, result: BulkOperationResult) {
   if (result.failed.length === 0) {
     toast.success(
-      `${actionLabel}: ${result.succeeded.length} order${result.succeeded.length > 1 ? "s" : ""} updated successfully`,
+      `${actionLabel}: ${result.succeeded.length} pesanan berhasil diperbarui`,
     );
   } else if (result.succeeded.length === 0) {
     toast.error(
-      `${actionLabel}: All ${result.failed.length} order${result.failed.length > 1 ? "s" : ""} failed`,
+      `${actionLabel}: Semua ${result.failed.length} pesanan gagal diperbarui`,
       {
         description: result.failed.map((f) => f.error).join(", "),
       },
     );
   } else {
     toast.warning(
-      `${actionLabel}: ${result.succeeded.length} succeeded, ${result.failed.length} failed`,
+      `${actionLabel}: ${result.succeeded.length} berhasil, ${result.failed.length} gagal`,
       {
         description: result.failed.map((f) => f.error).join(", "),
       },
@@ -141,7 +142,9 @@ export function BulkActionsBar({
     const eligibleOrders = selectedOrders.filter(config.isEligible);
 
     if (eligibleOrders.length === 0) {
-      toast.warning(`No eligible orders for "${config.label}" action`);
+      toast.warning(
+        `Tidak ada pesanan yang dapat diproses dengan tindakan "${config.label}"`,
+      );
       return;
     }
 
@@ -173,9 +176,7 @@ export function BulkActionsBar({
         onClearSelection();
       }
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Bulk action failed",
-      );
+      toast.error(cmsErrorMessage(error, "Gagal menjalankan tindakan massal"));
     } finally {
       setLoadingAction(null);
     }
@@ -198,14 +199,14 @@ export function BulkActionsBar({
             {selectedOrders.length}
           </span>
           <span className="text-sm font-semibold text-black">
-            order{selectedOrders.length > 1 ? "s" : ""} selected
+            pesanan dipilih
           </span>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClearSelection}
             className="h-6 w-6 p-0 text-gray-500 hover:text-black"
-            title="Clear selection"
+            title="Hapus pilihan"
           >
             <X className="h-3.5 w-3.5" />
           </Button>
@@ -242,28 +243,28 @@ export function BulkActionsBar({
                 <AlertDialogContent className="neo-brutal neo-brutal-white">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="font-bold">
-                      {action.label} {count} Order{count > 1 ? "s" : ""}
+                      {action.label} {count} Pesanan
                     </AlertDialogTitle>
                     <AlertDialogDescription>
                       {action.description}
                       {count < selectedOrders.length && (
                         <span className="mt-2 block text-xs text-amber-600">
-                          Note: Only {count} of {selectedOrders.length} selected
-                          order{selectedOrders.length > 1 ? "s" : ""}{" "}
-                          {count === 1 ? "is" : "are"} eligible for this action.
+                          Catatan: Hanya {count} dari {selectedOrders.length}{" "}
+                          pesanan terpilih yang dapat diproses dengan tindakan
+                          ini.
                         </span>
                       )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel className="neo-brutal">
-                      Cancel
+                      Batal
                     </AlertDialogCancel>
                     <AlertDialogAction
                       className={`neo-brutal ${action.className}`}
                       onClick={() => handleBulkAction(action.key)}
                     >
-                      {action.label} {count} Order{count > 1 ? "s" : ""}
+                      {action.label} {count} Pesanan
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

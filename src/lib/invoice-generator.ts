@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 import QRCode from "qrcode";
 import { formatCurrency } from "./format";
 import { calculateOrderPayable, generateDynamicQRIS } from "./qris";
@@ -206,7 +207,9 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
   const totalPrice = calculateTotalFromDayOrders(dayOrders);
   const paymentTotals = calculatePaymentTotals(dayOrders, order.payment_status);
   const invoiceNumber = `INV-${order.id.slice(0, 8).toUpperCase()}`;
-  const invoiceDate = format(new Date(order.created_at), "dd MMMM yyyy");
+  const invoiceDate = format(new Date(order.created_at), "dd MMMM yyyy", {
+    locale: localeId,
+  });
   const isPaid = paymentTotals.unpaid === 0;
   const hasUnpaid = paymentTotals.unpaid > 0;
 
@@ -311,7 +314,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
   });
   y += 34;
 
-  drawText(ctx, "CATERING & HOMEMADE FOOD", cardPad + cardW / 2, y, {
+  drawText(ctx, "KATERING & MASAKAN RUMAHAN", cardPad + cardW / 2, y, {
     font: '600 12px "Inter", Arial, sans-serif',
     color: GREY_DARK,
     align: "center",
@@ -323,7 +326,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
   y += 12;
 
   // "INVOICE" subtitle
-  drawText(ctx, "INVOICE", cardPad + cardW / 2, y, {
+  drawText(ctx, "TAGIHAN", cardPad + cardW / 2, y, {
     font: 'bold 16px "Inter", Arial, sans-serif',
     color: BLUE,
     align: "center",
@@ -338,7 +341,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
   });
 
   // Left side - Invoice number
-  drawText(ctx, "No. Invoice", cardPad + 16, y + 12, {
+  drawText(ctx, "No. Tagihan", cardPad + 16, y + 12, {
     font: 'bold 11px "Inter", Arial, sans-serif',
     color: GREY_DARK,
   });
@@ -420,11 +423,11 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
   ctx.fillStyle = BLACK;
   ctx.fillRect(cardPad, y, cardW, 36);
 
-  drawText(ctx, "ITEM", cardPad + 12, y + 10, {
+  drawText(ctx, "SAJIAN", cardPad + 12, y + 10, {
     font: 'bold 12px "Inter", Arial, sans-serif',
     color: WHITE,
   });
-  drawText(ctx, "QTY", cardPad + cardW - 140, y + 10, {
+  drawText(ctx, "JUMLAH", cardPad + cardW - 140, y + 10, {
     font: 'bold 12px "Inter", Arial, sans-serif',
     color: WHITE,
     align: "center",
@@ -455,7 +458,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
 
     drawText(
       ctx,
-      `${formatDayDisplay(dayOrder.day).toUpperCase()} — ${format(new Date(dayOrder.date), "dd MMM yyyy")}`,
+      `${formatDayDisplay(dayOrder.day).toUpperCase()} — ${format(new Date(dayOrder.date), "dd MMM yyyy", { locale: localeId })}`,
       cardPad + 16,
       y + 9,
       {
@@ -465,7 +468,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
     );
 
     // Day payment badge
-    const badgeText = dayPayStatus === "paid" ? "PAID" : "UNPAID";
+    const badgeText = dayPayStatus === "paid" ? "LUNAS" : "BELUM LUNAS";
     const badgeColor = dayPayStatus === "paid" ? GREEN_BORDER : RED_BORDER;
     const badgeBg = dayPayStatus === "paid" ? GREEN_BG : RED_BG;
 
@@ -725,7 +728,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
 
     drawText(
       ctx,
-      "Scan kode QR di bawah untuk melakukan pembayaran",
+      "Pindai kode QR di bawah untuk melakukan pembayaran",
       cardPad + cardW / 2,
       y,
       {
@@ -808,7 +811,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
     });
     drawText(
       ctx,
-      `Scan QRIS → Nominal otomatis: ${formatCurrency(invoicePayable)}`,
+      `Pindai QRIS → Nominal otomatis: ${formatCurrency(invoicePayable)}`,
       cardPad + cardW / 2,
       y + 15,
       {
@@ -835,7 +838,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
 
   drawText(
     ctx,
-    "Dapur Buwikra — Catering & Homemade Food",
+    "Dapur Bu Wikra — Katering & Masakan Rumahan",
     cardPad + cardW / 2,
     y,
     {
@@ -868,7 +871,7 @@ export async function generateInvoiceImage(order: InvoiceOrder): Promise<Blob> {
     trimmedCanvas.toBlob(
       (blob) => {
         if (blob) resolve(blob);
-        else reject(new Error("Failed to create image blob"));
+        else reject(new Error("Gagal membuat berkas gambar"));
       },
       "image/png",
       1.0,

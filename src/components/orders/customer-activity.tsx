@@ -26,10 +26,11 @@ export function CustomerActivity({
     <Card className="neo-brutal bg-amber-50 dark:bg-amber-950/30">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-bold uppercase tracking-wide">
-          Recent Customer Activity
+          Aktivitas pelanggan terbaru
         </CardTitle>
         <CardDescription>
-          Track who added, updated, or deleted customers.
+          Pantau siapa yang menambahkan, mengubah, atau menghapus data
+          pelanggan.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -47,7 +48,7 @@ export function CustomerActivity({
           </div>
         ) : activities.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No tracked customer activity yet.
+            Belum ada aktivitas pelanggan tercatat.
           </p>
         ) : (
           <ScrollArea
@@ -59,10 +60,11 @@ export function CustomerActivity({
                 const creator =
                   activity.performed_by.name || activity.performed_by.email;
                 const actionLabel = {
-                  created: "added",
-                  updated: "updated",
-                  deleted: "deleted",
-                  payment_review_requested: "requested payment review for",
+                  created: "menambahkan",
+                  updated: "memperbarui",
+                  deleted: "menghapus",
+                  payment_review_requested:
+                    "meminta verifikasi pembayaran untuk",
                 }[activity.action];
                 const ActionIcon = {
                   created: UserPlus,
@@ -82,7 +84,7 @@ export function CustomerActivity({
                     <div className="min-w-0">
                       <p className="text-sm leading-5">
                         <span className="font-bold">{creator}</span>{" "}
-                        {actionLabel} customer{" "}
+                        {actionLabel} pelanggan{" "}
                         <span className="font-bold">
                           {activity.customer_name}
                         </span>

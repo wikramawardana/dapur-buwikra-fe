@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { ORDER_STATUSES, PAYMENT_STATUSES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { OrderStatus, PaymentStatus } from "@/types/order.types";
 
@@ -44,7 +45,9 @@ export function StatusBadge({
 
   // Display label mapping for order statuses
   const displayLabel =
-    type === "order" && status === "inprogress" ? "In Progress" : status;
+    (type === "order" ? ORDER_STATUSES : PAYMENT_STATUSES).find(
+      (option) => option.value === status,
+    )?.label ?? status;
 
   return (
     <Badge

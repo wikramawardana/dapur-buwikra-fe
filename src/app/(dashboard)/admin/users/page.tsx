@@ -57,6 +57,7 @@ import {
 } from "@/components/ui/table";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { authClient, useSession } from "@/lib/auth-client";
+import { formatRoleDisplay } from "@/lib/constants";
 
 interface User {
   id: string;
@@ -72,14 +73,18 @@ const ROLES = [
   {
     value: "admin",
     label: "Admin",
-    description: "Full access to all features",
+    description: "Akses penuh ke semua fitur",
   },
   {
     value: "chef",
-    label: "Chef",
-    description: "Can manage orders",
+    label: "Koki",
+    description: "Dapat mengelola pesanan",
   },
-  { value: "user", label: "User", description: "No access (pending approval)" },
+  {
+    value: "user",
+    label: "Pengguna",
+    description: "Belum memiliki akses (menunggu persetujuan)",
+  },
 ];
 
 export default function AdminUsersPage() {
@@ -115,7 +120,7 @@ export default function AdminUsersPage() {
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);
-      toast.error("Failed to fetch users");
+      toast.error("Gagal memuat pengguna");
     } finally {
       setIsLoading(false);
     }
@@ -136,7 +141,7 @@ export default function AdminUsersPage() {
       });
 
       toast.success(
-        `Role updated to ${selectedRole} for ${selectedUser.email}`,
+        `Peran ${selectedUser.email} diubah menjadi ${formatRoleDisplay(selectedRole)}`,
       );
       setIsRoleDialogOpen(false);
       setSelectedUser(null);
@@ -144,7 +149,7 @@ export default function AdminUsersPage() {
       fetchUsers();
     } catch (error) {
       console.error("Failed to update role:", error);
-      toast.error("Failed to update user role");
+      toast.error("Gagal memperbarui peran pengguna");
     } finally {
       setIsUpdating(false);
     }
@@ -154,15 +159,15 @@ export default function AdminUsersPage() {
     try {
       if (user.banned) {
         await authClient.admin.unbanUser({ userId: user.id });
-        toast.success(`${user.email} has been unbanned`);
+        toast.success(`Blokir ${user.email} dibuka`);
       } else {
         await authClient.admin.banUser({ userId: user.id });
-        toast.success(`${user.email} has been banned`);
+        toast.success(`${user.email} diblokir`);
       }
       fetchUsers();
     } catch (error) {
       console.error("Failed to ban/unban user:", error);
-      toast.error("Failed to update user status");
+      toast.error("Gagal memperbarui status pengguna");
     }
   };
 
@@ -172,13 +177,13 @@ export default function AdminUsersPage() {
     setIsUpdating(true);
     try {
       await authClient.admin.removeUser({ userId: selectedUser.id });
-      toast.success(`${selectedUser.email} has been removed`);
+      toast.success(`${selectedUser.email} dihapus`);
       setIsDeleteDialogOpen(false);
       setSelectedUser(null);
       fetchUsers();
     } catch (error) {
       console.error("Failed to remove user:", error);
-      toast.error("Failed to remove user");
+      toast.error("Gagal menghapus pengguna");
     } finally {
       setIsUpdating(false);
     }
@@ -220,10 +225,10 @@ export default function AdminUsersPage() {
           <CardHeader className="flex flex-col gap-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <CardTitle className="text-xl font-bold sm:text-2xl">
-                User Management
+                Pengelolaan pengguna
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">
-                Manage user roles and permissions
+                Kelola peran dan izin pengguna
               </CardDescription>
             </div>
           </CardHeader>
@@ -240,7 +245,7 @@ export default function AdminUsersPage() {
                 <Card className="neo-brutal bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
                   <CardHeader className="pb-1 sm:pb-2 flex flex-row items-center justify-between space-y-0 px-2 pt-2 sm:px-6 sm:pt-6">
                     <CardDescription className="text-blue-600 font-medium text-xs sm:text-sm">
-                      Total Users
+                      Total pengguna
                     </CardDescription>
                     <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                   </CardHeader>
@@ -253,7 +258,7 @@ export default function AdminUsersPage() {
                 <Card className="neo-brutal bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800">
                   <CardHeader className="pb-1 sm:pb-2 flex flex-row items-center justify-between space-y-0 px-2 pt-2 sm:px-6 sm:pt-6">
                     <CardDescription className="text-red-600 font-medium text-xs sm:text-sm">
-                      Admins
+                      Admin
                     </CardDescription>
                     <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
                   </CardHeader>
@@ -266,7 +271,7 @@ export default function AdminUsersPage() {
                 <Card className="neo-brutal bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
                   <CardHeader className="pb-1 sm:pb-2 flex flex-row items-center justify-between space-y-0 px-2 pt-2 sm:px-6 sm:pt-6">
                     <CardDescription className="text-green-600 font-medium text-xs sm:text-sm">
-                      Chefs
+                      Koki
                     </CardDescription>
                     <UserCog className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
                   </CardHeader>
@@ -286,16 +291,16 @@ export default function AdminUsersPage() {
                   <div>
                     <CardTitle className="text-lg sm:text-xl font-bold text-black dark:text-white flex items-center gap-2">
                       <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Users
+                      Pengguna
                     </CardTitle>
                     <CardDescription className="text-xs sm:text-sm text-black/60 dark:text-white/60">
-                      View and manage user access
+                      Lihat dan kelola akses pengguna
                     </CardDescription>
                   </div>
                   <div className="relative w-full sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40" />
                     <Input
-                      placeholder="Search users..."
+                      placeholder="Cari pengguna..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-10 border-2 border-black dark:border-white"
@@ -329,7 +334,7 @@ export default function AdminUsersPage() {
                                   </Avatar>
                                   <div className="min-w-0">
                                     <p className="font-medium text-black dark:text-white text-sm truncate">
-                                      {user.name || "No name"}
+                                      {user.name || "Tanpa nama"}
                                     </p>
                                     <p className="text-xs text-black/60 dark:text-white/60 truncate">
                                       {user.email}
@@ -352,7 +357,7 @@ export default function AdminUsersPage() {
                                     className="border-2 border-black dark:border-white"
                                   >
                                     <DropdownMenuLabel>
-                                      Actions
+                                      Tindakan
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
@@ -363,13 +368,15 @@ export default function AdminUsersPage() {
                                       }}
                                     >
                                       <UserCog className="w-4 h-4 mr-2" />
-                                      Change Role
+                                      Ubah peran
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                       onClick={() => handleBanUser(user)}
                                     >
                                       <Shield className="w-4 h-4 mr-2" />
-                                      {user.banned ? "Unban User" : "Ban User"}
+                                      {user.banned
+                                        ? "Buka blokir pengguna"
+                                        : "Blokir pengguna"}
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
@@ -380,7 +387,7 @@ export default function AdminUsersPage() {
                                       }}
                                     >
                                       <Trash2 className="w-4 h-4 mr-2" />
-                                      Remove User
+                                      Hapus pengguna
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
@@ -389,7 +396,7 @@ export default function AdminUsersPage() {
                                 <Badge
                                   className={`${getRoleBadgeColor(user.role)} border-2 font-bold text-xs`}
                                 >
-                                  {user.role || "user"}
+                                  {formatRoleDisplay(user.role)}
                                 </Badge>
                                 <Badge
                                   className={`border-2 font-bold text-xs ${
@@ -398,7 +405,7 @@ export default function AdminUsersPage() {
                                       : "bg-green-400 text-black border-black"
                                   }`}
                                 >
-                                  {user.banned ? "Banned" : "Active"}
+                                  {user.banned ? "Diblokir" : "Aktif"}
                                 </Badge>
                               </div>
                             </CardContent>
@@ -406,7 +413,7 @@ export default function AdminUsersPage() {
                         ))}
                         {filteredUsers.length === 0 && (
                           <div className="text-center py-8 text-black/60 dark:text-white/60">
-                            No users found
+                            Tidak ada pengguna
                           </div>
                         )}
                       </div>
@@ -417,19 +424,19 @@ export default function AdminUsersPage() {
                           <TableHeader>
                             <TableRow className="border-b-2 border-black dark:border-white bg-gray-100 dark:bg-gray-800">
                               <TableHead className="font-bold text-black dark:text-white">
-                                User
+                                Pengguna
                               </TableHead>
                               <TableHead className="font-bold text-black dark:text-white">
                                 Email
                               </TableHead>
                               <TableHead className="font-bold text-black dark:text-white">
-                                Role
+                                Peran
                               </TableHead>
                               <TableHead className="font-bold text-black dark:text-white">
                                 Status
                               </TableHead>
                               <TableHead className="font-bold text-black dark:text-white text-right">
-                                Actions
+                                Tindakan
                               </TableHead>
                             </TableRow>
                           </TableHeader>
@@ -450,7 +457,7 @@ export default function AdminUsersPage() {
                                       </AvatarFallback>
                                     </Avatar>
                                     <span className="font-medium text-black dark:text-white">
-                                      {user.name || "No name"}
+                                      {user.name || "Tanpa nama"}
                                     </span>
                                   </div>
                                 </TableCell>
@@ -461,7 +468,7 @@ export default function AdminUsersPage() {
                                   <Badge
                                     className={`${getRoleBadgeColor(user.role)} border-2 font-bold`}
                                   >
-                                    {user.role || "user"}
+                                    {formatRoleDisplay(user.role)}
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
@@ -472,7 +479,7 @@ export default function AdminUsersPage() {
                                         : "bg-green-400 text-black border-black"
                                     }`}
                                   >
-                                    {user.banned ? "Banned" : "Active"}
+                                    {user.banned ? "Diblokir" : "Aktif"}
                                   </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">
@@ -492,7 +499,7 @@ export default function AdminUsersPage() {
                                       className="border-2 border-black dark:border-white"
                                     >
                                       <DropdownMenuLabel>
-                                        Actions
+                                        Tindakan
                                       </DropdownMenuLabel>
                                       <DropdownMenuSeparator />
                                       <DropdownMenuItem
@@ -503,15 +510,15 @@ export default function AdminUsersPage() {
                                         }}
                                       >
                                         <UserCog className="w-4 h-4 mr-2" />
-                                        Change Role
+                                        Ubah peran
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                         onClick={() => handleBanUser(user)}
                                       >
                                         <Shield className="w-4 h-4 mr-2" />
                                         {user.banned
-                                          ? "Unban User"
-                                          : "Ban User"}
+                                          ? "Buka blokir pengguna"
+                                          : "Blokir pengguna"}
                                       </DropdownMenuItem>
                                       <DropdownMenuSeparator />
                                       <DropdownMenuItem
@@ -522,7 +529,7 @@ export default function AdminUsersPage() {
                                         }}
                                       >
                                         <Trash2 className="w-4 h-4 mr-2" />
-                                        Remove User
+                                        Hapus pengguna
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
@@ -535,7 +542,7 @@ export default function AdminUsersPage() {
                                   colSpan={5}
                                   className="text-center py-8 text-black/60 dark:text-white/60"
                                 >
-                                  No users found
+                                  Tidak ada pengguna
                                 </TableCell>
                               </TableRow>
                             )}
@@ -548,7 +555,7 @@ export default function AdminUsersPage() {
                     {totalPages > 1 && (
                       <div className="flex flex-col gap-2 mt-4 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs sm:text-sm text-black/60 dark:text-white/60">
-                          Page {currentPage} of {totalPages}
+                          Halaman {currentPage} dari {totalPages}
                         </p>
                         <div className="flex gap-2">
                           <Button
@@ -589,16 +596,16 @@ export default function AdminUsersPage() {
         <DialogContent className="neo-brutal neo-brutal-white">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-black dark:text-white">
-              Change User Role
+              Ubah peran pengguna
             </DialogTitle>
             <DialogDescription className="text-black/60 dark:text-white/60">
-              Update the role for {selectedUser?.email}
+              Ubah peran untuk {selectedUser?.email}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <Select value={selectedRole} onValueChange={setSelectedRole}>
               <SelectTrigger className="border-2 border-black dark:border-white">
-                <SelectValue placeholder="Select a role" />
+                <SelectValue placeholder="Pilih peran" />
               </SelectTrigger>
               <SelectContent className="border-2 border-black dark:border-white">
                 {ROLES.map((role) => (
@@ -620,14 +627,14 @@ export default function AdminUsersPage() {
               onClick={() => setIsRoleDialogOpen(false)}
               className="border-2 border-black dark:border-white"
             >
-              Cancel
+              Batal
             </Button>
             <Button
               onClick={handleUpdateRole}
               disabled={isUpdating}
               className="bg-blue-400 text-black border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              {isUpdating ? "Updating..." : "Update Role"}
+              {isUpdating ? "Updating..." : "Simpan peran"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -638,11 +645,11 @@ export default function AdminUsersPage() {
         <DialogContent className="neo-brutal neo-brutal-white">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-black dark:text-white">
-              Remove User
+              Hapus pengguna
             </DialogTitle>
             <DialogDescription className="text-black/60 dark:text-white/60">
-              Are you sure you want to remove {selectedUser?.email}? This action
-              cannot be undone.
+              Yakin ingin menghapus {selectedUser?.email}? Tindakan ini tidak
+              dapat dibatalkan.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -651,14 +658,14 @@ export default function AdminUsersPage() {
               onClick={() => setIsDeleteDialogOpen(false)}
               className="border-2 border-black dark:border-white"
             >
-              Cancel
+              Batal
             </Button>
             <Button
               onClick={handleRemoveUser}
               disabled={isUpdating}
               className="bg-red-400 text-black border-2 border-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
             >
-              {isUpdating ? "Removing..." : "Remove User"}
+              {isUpdating ? "Removing..." : "Hapus pengguna"}
             </Button>
           </DialogFooter>
         </DialogContent>

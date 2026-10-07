@@ -35,15 +35,15 @@ export function OrdersPagination({
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
         <span>
-          Showing {Math.min((page - 1) * page_size + 1, total_items)} to{" "}
-          {Math.min(page * page_size, total_items)} of {total_items} results
+          Menampilkan {Math.min((page - 1) * page_size + 1, total_items)} hingga{" "}
+          {Math.min(page * page_size, total_items)} dari {total_items} hasil
         </span>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <div className="flex items-center gap-2">
           <span className="whitespace-nowrap text-xs sm:text-sm text-muted-foreground">
-            Rows per page:
+            Baris per halaman:
           </span>
           <Select
             value={String(page_size)}
