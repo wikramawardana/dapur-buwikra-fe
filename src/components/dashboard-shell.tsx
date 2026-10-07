@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ChefHat,
   DollarSign,
   Home,
   LayoutDashboard,
@@ -11,13 +10,12 @@ import {
   ShoppingCart,
   Smartphone,
   UtensilsCrossed,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
@@ -32,359 +30,223 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { UserMenu } from "@/components/user-menu";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
-const dashboardItem = {
-  title: "Dashboard",
-  href: "/dashboard",
-  icon: LayoutDashboard,
-  group: "menu" as const,
-};
-
-const menuItems = [
+const navigation = [
   {
-    title: "Orders",
+    title: "Ringkasan",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    group: "Operasional",
+    roles: ["admin", "chef", "user"],
+  },
+  {
+    title: "Pesanan",
     href: "/orders",
     icon: ShoppingCart,
+    group: "Operasional",
     roles: ["admin", "chef", "user"],
-    group: "menu" as const,
   },
   {
-    title: "Shopping Costs",
+    title: "Biaya belanja",
     href: "/shopping-costs",
     icon: Receipt,
+    group: "Operasional",
     roles: ["admin", "chef"],
-    group: "menu" as const,
   },
-];
-
-const adminMenuItems = [
   {
-    title: "Menus",
+    title: "Menu & Jejak Rasa",
     href: "/admin/menus",
     icon: UtensilsCrossed,
+    group: "Konten & pengaturan",
     roles: ["admin", "chef"],
-    group: "admin" as const,
   },
   {
-    title: "Price List",
+    title: "Paket & harga",
     href: "/admin/pricelist",
     icon: DollarSign,
+    group: "Konten & pengaturan",
     roles: ["admin"],
-    group: "admin" as const,
   },
   {
-    title: "Pickup Points",
+    title: "Lokasi pengantaran",
     href: "/admin/pickup-points",
     icon: MapPin,
+    group: "Konten & pengaturan",
     roles: ["admin"],
-    group: "admin" as const,
   },
   {
-    title: "ShopeePay Partner",
+    title: "ShopeePay",
     href: "/admin/shopeepay",
     icon: Smartphone,
+    group: "Konten & pengaturan",
     roles: ["admin"],
-    group: "admin" as const,
   },
-  // Hidden: user management is now centralized via Auth
-  // {
-  //   title: "User Management",
-  //   href: "/admin/users",
-  //   icon: Shield,
-  //   roles: ["admin"],
-  //   group: "admin" as const,
-  // },
 ];
 
-function getPageTitle(pathname: string): string {
-  const allItems = [dashboardItem, ...menuItems, ...adminMenuItems];
-  const match = allItems.find(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+function Brand({ compact = false }: { compact?: boolean }) {
+  return (
+    <Link
+      href="/dashboard"
+      aria-label="Dapur Bu Wikra — Ringkasan"
+      className="cms-brand"
+    >
+      {compact ? (
+        <span>
+          BW<span className="text-primary">.</span>
+        </span>
+      ) : (
+        <>
+          <span className="text-xs font-semibold text-muted-foreground">
+            Dapur
+          </span>
+          <span className="text-xl font-black tracking-tight">
+            Bu Wikra<span className="text-primary">.</span>
+          </span>
+        </>
+      )}
+    </Link>
   );
-  return match?.title ?? "Dashboard";
 }
 
-interface DashboardShellProps {
-  children: React.ReactNode;
-}
-
-export function DashboardShell({ children }: DashboardShellProps) {
+export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
-
-  const filteredMenuItems = menuItems.filter((item) =>
-    item.roles.includes(userRole || ""),
+  const items = navigation.filter((item) =>
+    item.roles.includes(session?.user?.role || ""),
   );
+  const pageTitle =
+    navigation.find(
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+    )?.title ?? "Dapur Bu Wikra";
 
-  const filteredAdminMenuItems = adminMenuItems.filter((item) =>
-    item.roles.includes(userRole || ""),
-  );
-
-  const allNavItems = [dashboardItem, ...filteredMenuItems];
-  const pageTitle = getPageTitle(pathname);
-
-  function isActive(href: string) {
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
-
-  function NavLinks({ inSheet = false }: { inSheet?: boolean }) {
-    const showCollapsed = collapsed && !inSheet;
-
+  function Nav({ mobile = false }: { mobile?: boolean }) {
+    const compact = collapsed && !mobile;
     return (
-      <ScrollArea className="h-full pt-4 pb-2">
-        {!showCollapsed && (
-          <p className="px-4 pb-2 text-[10px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 border-b border-black/10 dark:border-white/10 mx-2 mb-2">
-            Menu
-          </p>
-        )}
-        <nav className="flex flex-col gap-1 px-2">
-          {allNavItems.map((item) => {
-            const active = isActive(item.href);
-            const linkContent = (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={false}
-                onClick={() => inSheet && setMobileOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 text-sm font-bold transition-all border-2",
-                  active
-                    ? "bg-yellow-400 text-black border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                    : "text-black/60 dark:text-white/60 border-transparent hover:border-black dark:hover:border-white hover:bg-yellow-100 dark:hover:bg-yellow-900",
-                  showCollapsed && "justify-center px-2",
-                )}
-              >
-                <item.icon className="h-4 w-4 shrink-0" />
-                {!showCollapsed && <span>{item.title}</span>}
-              </Link>
-            );
-
-            if (showCollapsed) {
-              return (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                  <TooltipContent side="right">{item.title}</TooltipContent>
-                </Tooltip>
-              );
-            }
-            return linkContent;
-          })}
-        </nav>
-
-        {filteredAdminMenuItems.length > 0 && (
-          <>
-            {!showCollapsed && (
-              <p className="px-4 pt-4 pb-2 text-[10px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 border-b border-black/10 dark:border-white/10 mx-2 mb-2">
-                Administration
-              </p>
+      <nav aria-label="Navigasi utama" className="cms-navigation">
+        {["Operasional", "Konten & pengaturan"].map((group) => (
+          <div key={group} className="space-y-2">
+            {!compact && items.some((item) => item.group === group) && (
+              <p className="cms-nav-group">{group}</p>
             )}
-            {showCollapsed && (
-              <div className="my-2 mx-2 h-px bg-black/10 dark:bg-white/10" />
-            )}
-            <nav className="flex flex-col gap-1 px-2">
-              {filteredAdminMenuItems.map((item) => {
-                const active = isActive(item.href);
-                const linkContent = (
+            {items
+              .filter((item) => item.group === group)
+              .map((item) => {
+                const active =
+                  pathname === item.href ||
+                  pathname.startsWith(`${item.href}/`);
+                const link = (
                   <Link
                     key={item.href}
                     href={item.href}
                     prefetch={false}
-                    onClick={() => inSheet && setMobileOpen(false)}
+                    aria-label={item.title}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 text-sm font-bold transition-all border-2",
-                      active
-                        ? "bg-yellow-400 text-black border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                        : "text-black/60 dark:text-white/60 border-transparent hover:border-black dark:hover:border-white hover:bg-yellow-100 dark:hover:bg-yellow-900",
-                      showCollapsed && "justify-center px-2",
+                      "cms-nav-link",
+                      active && "cms-nav-active",
+                      compact && "justify-center",
                     )}
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    {!showCollapsed && <span>{item.title}</span>}
+                    <item.icon size={20} strokeWidth={1.8} aria-hidden="true" />
+                    {!compact && <span>{item.title}</span>}
                   </Link>
                 );
-
-                if (showCollapsed) {
-                  return (
-                    <Tooltip key={item.href}>
-                      <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                      <TooltipContent side="right">{item.title}</TooltipContent>
-                    </Tooltip>
-                  );
-                }
-                return linkContent;
+                return compact ? (
+                  <Tooltip key={item.href}>
+                    <TooltipTrigger asChild>{link}</TooltipTrigger>
+                    <TooltipContent side="right">{item.title}</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <div key={item.href}>{link}</div>
+                );
               })}
-            </nav>
-          </>
-        )}
-
-        {/* Back to Home */}
-        <div className="px-2 pt-2 mt-auto border-t border-black/10 dark:border-white/10 mx-2">
-          {collapsed && !inSheet ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href="/"
-                  prefetch={false}
-                  className="flex items-center justify-center px-2 py-2.5 text-sm font-bold transition-all border-2 border-transparent text-black/60 dark:text-white/60 hover:border-black dark:hover:border-white hover:bg-yellow-100 dark:hover:bg-yellow-900"
-                >
-                  <Home className="h-4 w-4 shrink-0" />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">Back to Home</TooltipContent>
-            </Tooltip>
-          ) : (
-            <Link
-              href="/"
-              prefetch={false}
-              onClick={() => inSheet && setMobileOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold transition-all border-2 border-transparent text-black/60 dark:text-white/60 hover:border-black dark:hover:border-white hover:bg-yellow-100 dark:hover:bg-yellow-900"
-            >
-              <Home className="h-4 w-4 shrink-0" />
-              <span>Back to Home</span>
-            </Link>
-          )}
-        </div>
-      </ScrollArea>
-    );
-  }
-
-  if (isMobile) {
-    return (
-      <TooltipProvider delayDuration={0}>
-        <div className="flex h-screen flex-col">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b-4 border-black dark:border-white bg-white dark:bg-black px-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 border-2 border-black dark:border-white hover:bg-yellow-200 shrink-0"
-              onClick={() => setMobileOpen(true)}
-            >
-              <PanelLeft className="h-4 w-4" />
-            </Button>
-            <div className="mr-2 h-6 w-[3px] shrink-0 bg-black dark:bg-white" />
-            <h2 className="text-sm font-black text-black dark:text-white">
-              {pageTitle}
-            </h2>
-            <div className="ml-auto">
-              <UserMenu />
-            </div>
-          </header>
-
-          <main className="flex-1 overflow-auto bg-[#f5f5f5] dark:bg-[#1a1a1a]">
-            {children}
-          </main>
-        </div>
-
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetContent
-            side="left"
-            className="w-72 border-r-4 border-black dark:border-white bg-white dark:bg-black p-0 [&>button]:hidden"
-          >
-            <SheetHeader className="sr-only">
-              <SheetTitle>Navigation</SheetTitle>
-              <SheetDescription>Main navigation menu</SheetDescription>
-            </SheetHeader>
-            <div className="flex h-16 items-center border-b-4 border-black dark:border-white px-3">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2.5 font-black text-black dark:text-white"
-                onClick={() => setMobileOpen(false)}
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-blue-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                  <ChefHat className="h-5 w-5 text-black" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm leading-tight">Dapur Bu Wikra</span>
-                  <span className="text-[10px] font-medium text-black/50 dark:text-white/50 leading-tight">
-                    Catering Management
-                  </span>
-                </div>
-              </Link>
-            </div>
-            <NavLinks inSheet />
-          </SheetContent>
-        </Sheet>
-      </TooltipProvider>
+          </div>
+        ))}
+        <Link
+          href="/"
+          prefetch={false}
+          aria-label="Buka halaman utama"
+          className={cn("cms-nav-link mt-auto", compact && "justify-center")}
+        >
+          <Home size={20} strokeWidth={1.8} aria-hidden="true" />
+          {!compact && <span>Halaman utama</span>}
+        </Link>
+      </nav>
     );
   }
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <div
-        className={cn(
-          "grid h-screen grid-rows-[4rem_1fr] transition-all duration-300",
-          collapsed ? "grid-cols-[60px_1fr]" : "grid-cols-[256px_1fr]",
-        )}
-      >
-        {/* Sidebar header */}
-        <div className="flex items-center border-r-4 border-b-4 border-black dark:border-white bg-white dark:bg-black px-3">
-          {!collapsed ? (
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2.5 font-black text-black dark:text-white"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-blue-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                <ChefHat className="h-5 w-5 text-black" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm leading-tight">Dapur Bu Wikra</span>
-                <span className="text-[10px] font-medium text-black/50 dark:text-white/50 leading-tight">
-                  Catering Management
-                </span>
-              </div>
-            </Link>
-          ) : (
-            <Link href="/dashboard" className="mx-auto">
-              <div className="flex h-9 w-9 items-center justify-center bg-blue-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                <ChefHat className="h-5 w-5 text-black" />
-              </div>
-            </Link>
-          )}
-        </div>
-
-        {/* Main header */}
-        <header className="flex items-center gap-2 border-b-4 border-black dark:border-white bg-white dark:bg-black px-4">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 border-2 border-black dark:border-white hover:bg-yellow-200 shrink-0"
-                onClick={() => setCollapsed(!collapsed)}
-              >
-                <PanelLeft className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            </TooltipContent>
-          </Tooltip>
-          <div className="mr-2 h-6 w-[3px] shrink-0 bg-black dark:bg-white" />
-          <h2 className="text-sm font-black text-black dark:text-white">
-            {pageTitle}
-          </h2>
-          <div className="ml-auto">
-            <UserMenu />
+    <TooltipProvider delayDuration={150}>
+      <div className={cn("cms-shell", collapsed && "cms-collapsed")}>
+        <a href="#cms-content" className="cms-skip-link">
+          Lewati ke konten
+        </a>
+        <aside className="cms-sidebar hidden md:flex">
+          <div className="cms-brand-area">
+            <Brand compact={collapsed} />
           </div>
-        </header>
-
-        {/* Sidebar nav */}
-        <div className="border-r-4 border-black dark:border-white bg-white dark:bg-black overflow-hidden">
-          <NavLinks />
+          <Nav />
+        </aside>
+        <div className="cms-workspace">
+          <header className="cms-header">
+            <Button
+              variant="outline"
+              size="icon"
+              className="hidden md:inline-flex"
+              aria-label={collapsed ? "Perluas navigasi" : "Ringkas navigasi"}
+              aria-expanded={!collapsed}
+              onClick={() => setCollapsed(!collapsed)}
+            >
+              <PanelLeft aria-hidden="true" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="md:hidden"
+              aria-label="Buka navigasi"
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen(true)}
+            >
+              <PanelLeft aria-hidden="true" />
+            </Button>
+            <span className="font-bold text-sm sm:text-base">{pageTitle}</span>
+            <div className="ml-auto">
+              <UserMenu />
+            </div>
+          </header>
+          <main id="cms-content" tabIndex={-1} className="cms-content">
+            {children}
+          </main>
         </div>
-
-        {/* Main content */}
-        <main className="overflow-auto bg-[#f5f5f5] dark:bg-[#1a1a1a]">
-          {children}
-        </main>
       </div>
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent
+          side="left"
+          className="cms-mobile-sidebar w-72 p-0 [&>button]:hidden"
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigasi</SheetTitle>
+            <SheetDescription>Menu pengelolaan Dapur Bu Wikra</SheetDescription>
+          </SheetHeader>
+          <div className="cms-brand-area justify-between">
+            <Brand />
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Tutup navigasi"
+              onClick={() => setMobileOpen(false)}
+            >
+              <X aria-hidden="true" />
+            </Button>
+          </div>
+          <Nav mobile />
+        </SheetContent>
+      </Sheet>
     </TooltipProvider>
   );
 }

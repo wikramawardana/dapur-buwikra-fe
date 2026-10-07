@@ -467,10 +467,11 @@ export default function MenusPage() {
             <div>
               <CardTitle className="text-2xl font-bold flex items-center gap-2">
                 <UtensilsCrossed className="h-6 w-6" />
-                Food Content
+                Menu & Jejak Rasa
               </CardTitle>
               <CardDescription>
-                Publish Jejak Rasa and announce upcoming weekly menus
+                Kelola cerita dapur dan menu mingguan yang akan tampil kepada
+                pelanggan.
               </CardDescription>
             </div>
             <div className="flex items-center gap-3">
@@ -480,7 +481,7 @@ export default function MenusPage() {
                 className="gap-2 font-bold border-2 border-black dark:border-white bg-green-400 text-black hover:bg-green-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none"
               >
                 <Plus className="h-4 w-4" />
-                Create Content
+                Tambah konten
               </Button>
             </div>
           </CardHeader>
@@ -500,7 +501,7 @@ export default function MenusPage() {
                   value="weekly_menu"
                   className="rounded-none px-4 py-2 font-bold data-[state=active]:bg-blue-400 data-[state=active]:text-black"
                 >
-                  Weekly Menu ({weeklyCount})
+                  Menu mingguan ({weeklyCount})
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -536,7 +537,7 @@ export default function MenusPage() {
             ) : visibleMenus.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No {activeType === "portfolio" ? "Jejak Rasa" : "weekly menus"}{" "}
-                yet. Click &quot;Create Content&quot; to add one.
+                yet. Click &quot;Tambah konten&quot; to add one.
               </div>
             ) : (
               <div className="space-y-4">
@@ -844,7 +845,7 @@ export default function MenusPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
-              {editingMenu ? "Edit Content" : "Create Content"}
+              {editingMenu ? "Edit Content" : "Tambah konten"}
             </DialogTitle>
             <DialogDescription>
               {editingMenu

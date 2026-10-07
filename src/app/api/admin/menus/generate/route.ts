@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth-server";
 import { parseMenuTextWithAI } from "@/lib/dashscope-parser";
 import { generateMenuFlyerImage } from "@/lib/flyer-template-engine";
+import { authorizeMenuGenerator } from "@/lib/menu-generator-auth";
 import type {
   FlyerTemplateStyle,
   ParsedMenuData,
@@ -12,36 +13,14 @@ const BACKEND_API_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   "http://127.0.0.1:8000/api/v1";
 
-function isAuthorized(
-  session: any,
-  req: NextRequest,
-): { authorized: boolean; token?: string } {
-  // 1. Session check
-  if (session?.user?.role === "admin" || session?.user?.role === "chef") {
-    return { authorized: true, token: session.session?.token };
-  }
-
-  // 2. Bearer / Bot token check
-  const authHeader = req.headers.get("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    const bearer = authHeader.slice(7).trim();
-    const botToken = process.env.DAPUR_BOT_TOKEN;
-    if (botToken && bearer === botToken) {
-      return { authorized: true, token: bearer };
-    }
-    // Also accept if bearer token is provided (will be validated by backend)
-    if (bearer) {
-      return { authorized: true, token: bearer };
-    }
-  }
-
-  return { authorized: false };
-}
-
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession();
-    const auth = isAuthorized(session, req);
+    const auth = authorizeMenuGenerator(
+      session,
+      req.headers.get("authorization"),
+      process.env.DAPUR_BOT_TOKEN,
+    );
 
     if (!auth.authorized) {
       return NextResponse.json(
@@ -185,6 +164,17 @@ export async function POST(req: NextRequest) {
  */
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession();
+    const auth = authorizeMenuGenerator(
+      session,
+      req.headers.get("authorization"),
+      process.env.DAPUR_BOT_TOKEN,
+    );
+    if (!auth.authorized)
+      return NextResponse.json(
+        { error: "Unauthorized. Admin, chef or valid bot token required." },
+        { status: 401 },
+      );
     const { searchParams } = new URL(req.url);
     const text =
       searchParams.get("text") ||

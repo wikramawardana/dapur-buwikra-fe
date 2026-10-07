@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/table";
 import { useSession } from "@/lib/auth-client";
 import { formatCurrency } from "@/lib/format";
+import { getPackageDisplayName } from "@/lib/office-pricing";
 import {
   createPriceListItem,
   deletePriceListItem,
@@ -74,8 +75,18 @@ export default function PriceListPage() {
   );
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  const [priceGroup, setPriceGroup] = React.useState("all");
+  const visibleItems = items.filter(
+    (item) =>
+      priceGroup === "all" ||
+      (priceGroup === "hermina"
+        ? getPackageDisplayName(item.name) !== item.name.trim()
+        : getPackageDisplayName(item.name) === item.name.trim()),
+  );
+
   // Form state
   const [formName, setFormName] = React.useState("");
+  const [formOffice, setFormOffice] = React.useState("regular");
   const [formPrice, setFormPrice] = React.useState("");
   const [formCategory, setFormCategory] =
     React.useState<PriceListCategory>("main");
@@ -113,6 +124,7 @@ export default function PriceListPage() {
   const openCreateDialog = () => {
     setEditingItem(null);
     setFormName("");
+    setFormOffice("regular");
     setFormPrice("");
     setFormCategory("main");
     setIsDialogOpen(true);
@@ -120,7 +132,12 @@ export default function PriceListPage() {
 
   const openEditDialog = (item: PriceListItem) => {
     setEditingItem(item);
-    setFormName(item.name);
+    setFormName(getPackageDisplayName(item.name));
+    setFormOffice(
+      getPackageDisplayName(item.name) !== item.name.trim()
+        ? "hermina"
+        : "regular",
+    );
     setFormPrice(item.price.toString());
     setFormCategory(item.category);
     setIsDialogOpen(true);
@@ -132,23 +149,29 @@ export default function PriceListPage() {
   };
 
   const handleSubmit = async () => {
-    if (!formName.trim() || !formPrice) {
-      toast.error("Please fill all fields");
+    if (
+      !getPackageDisplayName(formName) ||
+      !formPrice ||
+      !Number.isFinite(Number(formPrice)) ||
+      Number(formPrice) <= 0
+    ) {
+      toast.error("Isi nama paket dan harga yang lebih besar dari nol");
       return;
     }
 
+    const catalogName = `${getPackageDisplayName(formName)}${formOffice === "hermina" ? " - Hermina" : ""}`;
     setIsSubmitting(true);
     try {
       if (editingItem) {
         await updatePriceListItem(editingItem.id, {
-          name: formName,
+          name: catalogName,
           price: parseFloat(formPrice),
           category: formCategory,
         });
         toast.success("Item updated successfully");
       } else {
         await createPriceListItem({
-          name: formName,
+          name: catalogName,
           price: parseFloat(formPrice),
           category: formCategory,
         });
@@ -211,10 +234,10 @@ export default function PriceListPage() {
             <div>
               <CardTitle className="text-2xl font-bold flex items-center gap-2">
                 <DollarSign className="h-6 w-6" />
-                Price List Management
+                Paket & harga
               </CardTitle>
               <CardDescription>
-                Manage menu items and add-ons with their prices
+                Kelola harga paket dan tambahan untuk setiap lokasi.
               </CardDescription>
             </div>
             <Button
@@ -222,54 +245,80 @@ export default function PriceListPage() {
               className="gap-2 font-bold border-2 border-black dark:border-white bg-green-400 text-black hover:bg-green-500 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none"
             >
               <Plus className="h-4 w-4" />
-              Add Item
+              Tambah paket
             </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="price-group">Kelompok harga</Label>
+              <Select value={priceGroup} onValueChange={setPriceGroup}>
+                <SelectTrigger id="price-group" className="w-full sm:w-72">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua harga</SelectItem>
+                  <SelectItem value="regular">Trinity & Gama Tower</SelectItem>
+                  <SelectItem value="hermina">Khusus Hermina</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Harga tanpa penanda Hermina berlaku untuk Trinity dan Gama
+                Tower. Paket Hermina menggantikan paket umum dengan nama yang
+                sama; tambahan umum tetap tersedia.
+              </p>
+            </div>
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Spinner className="h-8 w-8" />
               </div>
-            ) : items.length === 0 ? (
+            ) : visibleItems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No items yet. Click "Add Item" to create one.
+                Belum ada paket dalam kelompok ini. Pilih kelompok lain atau
+                tambah paket.
               </div>
             ) : (
               <div className="neo-brutal neo-brutal-white">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="font-bold">Name</TableHead>
-                      <TableHead className="font-bold">Price</TableHead>
-                      <TableHead className="font-bold">Category</TableHead>
-                      <TableHead className="font-bold">Active</TableHead>
+                      <TableHead className="font-bold">Nama</TableHead>
+                      <TableHead className="font-bold">Lokasi harga</TableHead>
+                      <TableHead className="font-bold">Harga</TableHead>
+                      <TableHead className="font-bold">Kategori</TableHead>
+                      <TableHead className="font-bold">Aktif</TableHead>
                       <TableHead className="font-bold text-center">
-                        Actions
+                        Tindakan
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {items.map((item) => (
+                    {visibleItems.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">
-                          {item.name}
+                          {getPackageDisplayName(item.name)}
                         </TableCell>
-                        <TableCell className="font-bold text-green-600">
+                        <TableCell className="text-sm">
+                          {getPackageDisplayName(item.name) !== item.name.trim()
+                            ? "Hermina"
+                            : "Trinity & Gama Tower"}
+                        </TableCell>
+                        <TableCell className="font-bold tabular-nums">
                           {formatCurrency(item.price)}
                         </TableCell>
                         <TableCell>
                           <span
-                            className={`px-2 py-1 text-xs font-bold uppercase border-2 border-black ${
+                            className={`cms-category px-2 py-1 text-xs font-bold uppercase border-2 border-black ${
                               item.category === "main"
                                 ? "bg-blue-200"
                                 : "bg-amber-200"
                             }`}
                           >
-                            {item.category}
+                            {item.category === "main" ? "Paket" : "Tambahan"}
                           </span>
                         </TableCell>
                         <TableCell>
                           <Switch
+                            aria-label={`Aktifkan ${item.name}`}
                             checked={item.is_active}
                             onCheckedChange={() => handleToggleActive(item)}
                           />
@@ -279,6 +328,7 @@ export default function PriceListPage() {
                             <Button
                               variant="outline"
                               size="icon"
+                              aria-label={`Edit ${item.name}`}
                               onClick={() => openEditDialog(item)}
                               className="h-8 w-8 border-2 border-black rounded-none"
                             >
@@ -287,6 +337,7 @@ export default function PriceListPage() {
                             <Button
                               variant="destructive"
                               size="icon"
+                              aria-label={`Hapus ${item.name}`}
                               onClick={() => openDeleteDialog(item)}
                               className="h-8 w-8 border-2 border-black rounded-none"
                             >
@@ -309,18 +360,39 @@ export default function PriceListPage() {
         <DialogContent className="border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
-              {editingItem ? "Edit Item" : "Add New Item"}
+              {editingItem ? "Edit paket" : "Tambah paket"}
             </DialogTitle>
             <DialogDescription>
               {editingItem
-                ? "Update the item details."
-                : "Create a new price list item."}
+                ? "Ubah rincian paket dan kelompok harganya."
+                : "Tambahkan paket atau tambahan baru."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="font-bold">Name</Label>
+              <Label htmlFor="package-office">Kelompok harga</Label>
+              <Select value={formOffice} onValueChange={setFormOffice}>
+                <SelectTrigger id="package-office">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="regular">
+                    Trinity & Gama Tower / umum
+                  </SelectItem>
+                  <SelectItem value="hermina">Khusus Hermina</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Pilih lokasi harga; cukup isi nama paket tanpa tambahan nama
+                kantor.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="package-name" className="font-bold">
+                Nama paket
+              </Label>
               <Input
+                id="package-name"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
                 placeholder="e.g., Nasi Goreng"
@@ -328,8 +400,12 @@ export default function PriceListPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="font-bold">Price (IDR)</Label>
+              <Label htmlFor="package-price" className="font-bold">
+                Harga (Rp)
+              </Label>
               <Input
+                id="package-price"
+                min="1"
                 type="number"
                 value={formPrice}
                 onChange={(e) => setFormPrice(e.target.value)}
@@ -338,17 +414,22 @@ export default function PriceListPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="font-bold">Category</Label>
+              <Label htmlFor="package-category" className="font-bold">
+                Kategori
+              </Label>
               <Select
                 value={formCategory}
                 onValueChange={(v) => setFormCategory(v as PriceListCategory)}
               >
-                <SelectTrigger className="h-12 border-2 border-black rounded-none">
+                <SelectTrigger
+                  id="package-category"
+                  className="h-12 border-2 border-black rounded-none"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="main">Main (Per Day Item)</SelectItem>
-                  <SelectItem value="addon">Add-on</SelectItem>
+                  <SelectItem value="main">Paket harian</SelectItem>
+                  <SelectItem value="addon">Tambahan</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -359,7 +440,7 @@ export default function PriceListPage() {
               onClick={() => setIsDialogOpen(false)}
               className="border-2 border-black rounded-none"
             >
-              Cancel
+              Batal
             </Button>
             <Button
               onClick={handleSubmit}
@@ -369,7 +450,7 @@ export default function PriceListPage() {
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {editingItem ? "Update" : "Create"}
+              {editingItem ? "Simpan perubahan" : "Tambah paket"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -382,7 +463,7 @@ export default function PriceListPage() {
       >
         <AlertDialogContent className="border-2 border-black rounded-none">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Item</AlertDialogTitle>
+            <AlertDialogTitle>Hapus paket</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete "{deletingItem?.name}"? This
               action cannot be undone.
@@ -390,7 +471,7 @@ export default function PriceListPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="border-2 border-black rounded-none">
-              Cancel
+              Batal
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
@@ -400,7 +481,7 @@ export default function PriceListPage() {
               {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Delete
+              Hapus
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -60,6 +60,7 @@ export function UserMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
+          aria-label="Menu akun dan tema"
           variant="ghost"
           className="relative h-8 w-8 rounded-full border-2 border-black dark:border-white"
         >
@@ -69,7 +70,7 @@ export function UserMenu() {
               alt={session?.user?.name || "User"}
               referrerPolicy="no-referrer"
             />
-            <AvatarFallback className="bg-yellow-400 text-black font-bold">
+            <AvatarFallback className="bg-blue-100 text-black font-bold">
               {getInitials(session?.user?.name, session?.user?.email || "")}
             </AvatarFallback>
           </Avatar>
@@ -104,7 +105,7 @@ export function UserMenu() {
           ) : (
             <Moon className="mr-2 h-4 w-4" />
           )}
-          <span>Toggle theme</span>
+          <span>Ganti tema</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -112,7 +113,7 @@ export function UserMenu() {
           className="text-red-600 focus:text-red-600"
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>Keluar</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

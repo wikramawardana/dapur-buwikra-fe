@@ -206,10 +206,10 @@ export default function PickupPointsPage() {
             <div>
               <CardTitle className="flex items-center gap-2 text-2xl font-bold">
                 <MapPin className="h-6 w-6" />
-                Pickup Point Management
+                Lokasi pengantaran
               </CardTitle>
               <CardDescription>
-                Manage the pickup points available when creating orders
+                Kelola lokasi yang dapat dipilih pelanggan saat memesan.
               </CardDescription>
             </div>
             <Button
@@ -217,7 +217,7 @@ export default function PickupPointsPage() {
               className="gap-2 rounded-none border-2 border-black bg-green-400 font-bold text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-green-500 dark:border-white"
             >
               <Plus className="h-4 w-4" />
-              Add Point
+              Tambah lokasi
             </Button>
           </CardHeader>
           <CardContent>
@@ -227,7 +227,7 @@ export default function PickupPointsPage() {
               </div>
             ) : points.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground">
-                No pickup points yet. Click "Add Point" to create one.
+                No pickup points yet. Click "Tambah lokasi" to create one.
               </div>
             ) : (
               <div className="neo-brutal neo-brutal-white">
