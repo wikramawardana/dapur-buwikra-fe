@@ -108,7 +108,9 @@ const orderFormSchema = z.object({
     ),
   ),
   notes: z.string().optional(),
-  drop_off_location: z.string().optional(),
+  drop_off_location: z
+    .string()
+    .min(1, "Pilih lokasi pengantaran terlebih dahulu"),
 });
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
@@ -227,9 +229,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   const selectedDates = form.watch("selectedDates");
   const dayOrders = form.watch("dayOrders");
   const selectedLocation = form.watch("drop_off_location") || "";
-  const officeItems = canChooseCustomer
-    ? priceListItems
-    : getOfficePriceList(priceListItems, selectedLocation);
+  const officeItems = getOfficePriceList(priceListItems, selectedLocation);
   const watchedName = form.watch("name");
   const watchedEmail = form.watch("email");
   const totalPrice = calculateTotalPrice(dayOrders || {});
@@ -481,18 +481,19 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
       shouldDirty: true,
       shouldValidate: true,
     });
-    if (
+    const location =
       customer.drop_off_location &&
       pickupPoints.includes(customer.drop_off_location)
-    ) {
-      form.setValue("drop_off_location", customer.drop_off_location, {
-        shouldDirty: true,
-      });
-    } else {
-      form.setValue("drop_off_location", "", {
-        shouldDirty: true,
-      });
-    }
+        ? customer.drop_off_location
+        : "";
+    form.setValue(
+      "dayOrders",
+      repriceDayOrders(form.getValues("dayOrders"), priceListItems, location),
+    );
+    form.setValue("drop_off_location", location, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
     autoFilledNameRef.current = customer.name;
     setCustomerSearch(`${customer.name} ${customer.email}`);
     setIsCustomerPickerOpen(false);
@@ -525,17 +526,13 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
   };
 
   const onSubmit = async (data: OrderFormValues) => {
-    if (
-      !canChooseCustomer &&
-      !pickupPoints.includes(data.drop_off_location || "")
-    ) {
+    if (!pickupPoints.includes(data.drop_off_location)) {
       form.setError("drop_off_location", {
         message: "Pilih lokasi pengantaran terlebih dahulu",
       });
       return;
     }
     if (
-      !canChooseCustomer &&
       data.selectedDates.some((date) =>
         (data.dayOrders[getDateKey(date)] || []).some(
           (item) =>
@@ -816,22 +813,18 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-base font-bold uppercase tracking-wide">
-                    {canChooseCustomer
-                      ? "Drop Off Location (Optional)"
-                      : "Lokasi Pengantaran *"}
+                    Lokasi Pengantaran *
                   </FormLabel>
                   <Select
                     onValueChange={(location) => {
-                      if (!canChooseCustomer) {
-                        form.setValue(
-                          "dayOrders",
-                          repriceDayOrders(
-                            form.getValues("dayOrders"),
-                            priceListItems,
-                            location,
-                          ),
-                        );
-                      }
+                      form.setValue(
+                        "dayOrders",
+                        repriceDayOrders(
+                          form.getValues("dayOrders"),
+                          priceListItems,
+                          location,
+                        ),
+                      );
                       field.onChange(location);
                     }}
                     value={field.value}
@@ -857,6 +850,9 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                     </SelectContent>
                   </Select>
                   <FormMessage />
+                  <p className="text-xs text-muted-foreground">
+                    Menu dan harga mengikuti lokasi pengantaran yang dipilih.
+                  </p>
                 </FormItem>
               )}
             />
@@ -990,9 +986,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                   >
                                     <div className="flex-1">
                                       <p className="font-medium text-sm">
-                                        {canChooseCustomer
-                                          ? item.name
-                                          : getPackageDisplayName(item.name)}
+                                        {getPackageDisplayName(item.name)}
                                       </p>
                                       <p className="text-xs text-muted-foreground">
                                         {formatCurrency(item.unit_price)} each
@@ -1072,11 +1066,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                             }
                                           >
                                             <span className="flex-1">
-                                              {canChooseCustomer
-                                                ? item.name
-                                                : getPackageDisplayName(
-                                                    item.name,
-                                                  )}
+                                              {getPackageDisplayName(item.name)}
                                             </span>
                                             <span className="text-sm text-muted-foreground">
                                               {formatCurrency(item.price)}
@@ -1095,11 +1085,7 @@ export function CreateOrderDialog({ onOrderCreated }: CreateOrderDialogProps) {
                                             }
                                           >
                                             <span className="flex-1">
-                                              {canChooseCustomer
-                                                ? item.name
-                                                : getPackageDisplayName(
-                                                    item.name,
-                                                  )}
+                                              {getPackageDisplayName(item.name)}
                                             </span>
                                             <span className="text-sm text-muted-foreground">
                                               {formatCurrency(item.price)}

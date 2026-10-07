@@ -98,3 +98,34 @@ test("office links select only an active unambiguous pickup point", () => {
     "",
   );
 });
+
+test("the Trinity screenshot catalog excludes every higher-priced Hermina variant", () => {
+  const actualCatalog = [
+    item("pas", "Porsi Pas", 20000),
+    item("mantap", "Porsi Mantap", 25000),
+    item("pas-hermina", "Porsi Pas - Hermina", 25000),
+    item("kenyang", "Porsi Kenyang", 30000),
+    item("mantap-hermina", "Porsi Mantap - Hermina", 30000),
+    item("kenyang-hermina", "Porsi Kenyang - Hermina", 35000),
+  ];
+  const trinity = getOfficePriceList(actualCatalog, "Trinity - 18 Floor");
+  assert.deepEqual(
+    trinity.map(({ name, price }) => ({ name, price })),
+    [
+      { name: "Porsi Pas", price: 20000 },
+      { name: "Porsi Mantap", price: 25000 },
+      { name: "Porsi Kenyang", price: 30000 },
+    ],
+  );
+  const hermina = repriceDayOrders(
+    { day: [{ name: "Porsi Mantap", qty: 1, unit_price: 25000 }] },
+    actualCatalog,
+    "Hermina",
+  );
+  assert.deepEqual(hermina.day, [
+    { name: "Porsi Mantap - Hermina", qty: 1, unit_price: 30000 },
+  ]);
+  assert.deepEqual(repriceDayOrders(hermina, actualCatalog, "Gama Tower").day, [
+    { name: "Porsi Mantap", qty: 1, unit_price: 25000 },
+  ]);
+});
