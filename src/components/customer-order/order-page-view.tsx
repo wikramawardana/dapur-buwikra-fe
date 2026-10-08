@@ -2,7 +2,6 @@
 
 import {
   ArrowLeft,
-  ChefHat,
   Copy,
   History,
   Images,
@@ -15,6 +14,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
+import { BrandMark } from "@/components/brand-mark";
 import { CustomerLoginGate } from "@/components/customer-order/customer-login-gate";
 import { CustomerOrderForm } from "@/components/customer-order/customer-order-form";
 import { WeeklyMenuPreview } from "@/components/customer-order/weekly-menu-preview";
@@ -107,11 +107,10 @@ export function OrderPageView({ initialWeek }: OrderPageViewProps) {
           <div className="flex items-center gap-3">
             <Link
               href="/"
+              aria-label="Dapur Bu Wikra — halaman utama"
               className="flex items-center gap-2 font-black text-lg sm:text-2xl tracking-tight text-black hover:text-brut-blue transition-colors"
             >
-              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center border-2 border-black bg-yellow-300">
-                <ChefHat className="h-5 w-5 sm:h-6 sm:w-6 text-black" />
-              </div>
+              <BrandMark className="h-9 w-9 shrink-0 sm:h-10 sm:w-10" />
               <span className="hidden sm:inline">Dapur Bu Wikra</span>
             </Link>
           </div>

@@ -1,9 +1,9 @@
 "use client";
 
-import { ChefHat } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import { Suspense } from "react";
+import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -82,9 +82,7 @@ function LoginForm() {
 
       <Card className="w-full max-w-sm bg-white border-3 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative">
         <CardHeader className="text-center space-y-5 pb-2 pt-8">
-          <div className="mx-auto flex items-center justify-center w-16 h-16 bg-black">
-            <ChefHat className="w-9 h-9 text-white" />
-          </div>
+          <BrandMark className="mx-auto h-16 w-16" />
 
           <div className="space-y-1">
             <CardTitle className="text-2xl font-black tracking-tight text-black uppercase">
@@ -133,9 +131,7 @@ function LoginLoading() {
     <div className="min-h-screen w-full flex items-center justify-center bg-[#f5f5f0] p-4">
       <Card className="w-full max-w-sm bg-white border-3 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative">
         <CardHeader className="text-center space-y-5 pb-2 pt-8">
-          <div className="mx-auto flex items-center justify-center w-16 h-16 bg-black">
-            <ChefHat className="w-9 h-9 text-white" />
-          </div>
+          <BrandMark className="mx-auto h-16 w-16" />
           <div className="space-y-1">
             <CardTitle className="text-2xl font-black tracking-tight text-black uppercase">
               Dapur Bu Wikra

@@ -1,5 +1,6 @@
-import { ChefHat, Images, Utensils } from "lucide-react";
+import { Images, Utensils } from "lucide-react";
 import Link from "next/link";
+import { BrandMark } from "@/components/brand-mark";
 import {
   CatalogSection,
   FaqSection,
@@ -21,11 +22,10 @@ function App() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
+              aria-label="Dapur Bu Wikra — halaman utama"
               className="flex items-center gap-2.5 font-black text-xl sm:text-2xl tracking-tight text-black hover:opacity-80 transition-opacity"
             >
-              <div className="flex h-11 w-11 items-center justify-center border-3 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                <ChefHat className="h-6 w-6 text-black" />
-              </div>
+              <BrandMark className="h-11 w-11 shrink-0" />
               <span className="hidden sm:inline font-black tracking-tight text-black">
                 {content.header.brand}
               </span>
@@ -75,9 +75,7 @@ function App() {
       <footer className="border-t-4 border-black bg-black text-white py-12 px-4">
         <div className="container mx-auto max-w-6xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center border-2 border-white bg-yellow-300">
-              <ChefHat className="h-6 w-6 text-black" />
-            </div>
+            <BrandMark className="h-11 w-11 shrink-0" />
             <div>
               <p className="font-black text-lg text-white">DAPUR BU WIKRA</p>
               <p className="text-xs text-white/60">
