@@ -19,7 +19,9 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-const CATALOG_BASE_URL = "https://static.wikra.cloud/landing/catalog-volume-1";
+const CATALOG_BASE_URL = process.env.NEXT_PUBLIC_ASSET_URL
+  ? `${process.env.NEXT_PUBLIC_ASSET_URL}/landing/catalog-volume-1`
+  : "https://static.cuwi.app/landing/catalog-volume-1";
 
 const CATALOG_SLIDES = [
   {

@@ -13,8 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const STORY_ASSET_BASE_URL =
-  process.env.NEXT_PUBLIC_ASSET_URL ||
-  "https://static.wikra.cloud/landing/story";
+  process.env.NEXT_PUBLIC_ASSET_URL || "https://static.cuwi.app/landing/story";
 
 const STORY_SLIDES = [
   {

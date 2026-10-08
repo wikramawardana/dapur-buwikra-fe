@@ -38,6 +38,16 @@ const nextConfig: NextConfig = {
         hostname: "static.wikra.cloud",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "static.cuwi.app",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "cuwi.app",
+        pathname: "/**",
+      },
     ],
   },
 };
