@@ -38,6 +38,7 @@ function logRequest(
 function isPublicRoute(pathname: string): boolean {
   if (
     pathname === "/" ||
+    pathname === "/icon" ||
     pathname === "/qris" ||
     pathname === "/payment/qris" ||
     pathname === "/portfolio" ||

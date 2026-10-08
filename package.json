@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test:office-pricing": "node --test tests/office-pricing.test.mjs",
     "prepare": "husky",
+    "test:login": "node --test tests/login-redirect.test.mjs",
     "test:security": "node --test tests/menu-generator-auth.test.mjs",
     "test:language": "node --test tests/cms-language.test.mjs"
   },
